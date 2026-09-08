@@ -1,81 +1,52 @@
-# PUR-Bridge v1.1
+# PUR-Oracle v2
 
-**A publication-oriented, auditable HMPUR decision framework that turns failed global inverse design into a prospective experiment-selection problem.**
+A deterministic polyurethane inverse-design workflow built around four separable layers:
 
-## Paper logic
+**complete-data oracle -> backward constraint analysis -> blind Agent recovery -> prospective wet-lab validation**
 
-`source-aware evidence -> frozen global baseline -> external falsification -> abstention -> structured patent anchors -> Agent experiment selection -> prospective E6* wet-lab test -> model update`
+The optimizer, not the LLM, owns the scientific answer. The Agent is evaluated only after the gold solution is frozen.
 
-The central design choice is deliberate: **E1–E5 are not repeated in the laboratory.** Their published 130 C viscosities are frozen historical anchors for a preregistered missing-cell problem. Wet-lab evidence begins at E6*, a previously unreported C-rich/high-A counterfactual.
+## Frozen conceptual optimum
 
-## Preregistered E6* hypotheses
+Within the 928-candidate WO2018173768-inspired PPG/4,4'-MDI design space, v2 applies literature-derived preferred viscosity targets plus hard chemistry/process constraints. **117 candidates pass all hard gates.** The unique optimum is:
 
-At 130 C:
+- candidate: `WO_INV_0579`
+- PPG400 / PPG2000 = `40 / 60` parts
+- NCO:OH = `1.7`
+- 4,4'-MDI = `55.30525` parts per 100 polyol parts
+- MDI fraction of polyol + MDI = `35.61 wt%`
+- oracle eta80 = `3.4427 Pa.s`
+- oracle eta120 = `0.4098 Pa.s`
+- eta80/eta120 = `8.4016`
 
-- H_strong: `27 x (43/26) = 44.65 Pa.s`
-- H_weak: `27 x (24/22) = 29.45 Pa.s`
-- equal-prior geometric midpoint: `36.27 Pa.s`
-- robust zones: `<=33` weak-consistent; `33-40` indeterminate; `>=40` strong-consistent
+Preferred-window geometric centers are 3.4785 Pa.s, 0.4243 Pa.s and 8.1548.
 
-The continuous mechanism statistic is
+## Why this point is selected
 
-`theta = [ln(E6*/E5) - delta_D] / [delta_balanced - delta_D]`
+Backward analysis shows that the same 40/60 blend at NCO:OH=1.6 is even closer to the property centers, but its MDI fraction is only 34.23 wt% and fails the frozen 35 wt% lower bound. The constrained optimum therefore moves to NCO:OH=1.7. At fixed NCO:OH=1.7, changing the PPG400/PPG2000 ratio in either direction moves the response away from the joint preferred center.
 
-where theta=0 is D-rich-like and theta=1 is balanced-like.
+This is a **constraint-intersection optimum**, not a black-box guess.
 
-## Why an Agent is included
+## Workflow
 
-The LLM does **not** generate numerical predictions or formulations. Deterministic tools enforce:
+1. Freeze the complete candidate response table and literature-derived constraints.
+2. Exhaustively rank the full finite design space.
+3. Freeze the unique conceptual optimum.
+4. Run backward analysis to identify active constraints and local response directions.
+5. Hide oracle score/rank/gold ID from the Agent while keeping the complete data and rules visible.
+6. Benchmark whether the Agent recovers the same optimum and explanation.
+7. Use wet-lab experiments only to validate the already-frozen optimum and predicted property windows.
 
-- material-equivalence hard gates;
-- information-gain calculation;
-- minimum independent-batch replication;
-- uncertainty-aware replicate/advance decisions;
-- explicit abstention.
+## Active v2 files
 
-The LLM may retrieve provenance and explain tool outputs, but it cannot override them.
+- `configs/oracle_v2.json` - frozen constraints and objective.
+- `data/oracle_top30_compact.csv` - compact audit snapshot of the highest-ranked candidates.
+- `results/oracle_v2/oracle_best.json` - frozen gold optimum.
+- `docs/WORKFLOW_V2.md` - scientific workflow.
+- `docs/PAPER_MODEL_V2.md` - manuscript architecture.
+- `docs/AGENT_BLIND_BENCHMARK_V2.md` - answer-withheld Agent evaluation.
+- `docs/VALIDATION_EXPERIMENT_V2.md` - experiment-as-validation specification.
 
-## Repository layout
+## Claim boundary
 
-- `data/historical_anchor_truth.csv` - frozen patent anchors used by the preregistered local model.
-- `data/prospective_candidates.csv` - E6* plus deferred E7-E9 transfer candidates.
-- `data/e6_measurement_template.csv` - raw-data schema for prospective E6* experiments.
-- `data/material_equivalence_template.csv` - auditable raw-material gate input.
-- `src/pur_bridge/` - anchor model, information gain, Agent policy, material gate, batch analysis and Andrade fitting.
-- `scripts/` - reproducible analysis entry points.
-- `docs/PAPER_MODEL_V1.md` - publication architecture.
-- `docs/REPRODUCIBILITY_AND_CLAIMS.md` - claim boundaries and preregistration discipline.
-- `legacy/` - frozen v0.7 summary/manifest retained as baseline evidence.
-
-## Installation and tests
-
-```bash
-python -m pip install -e '.[dev]'
-pytest
-python scripts/run_anchor_analysis.py
-```
-
-Analyze real E6* data after filling the template:
-
-```bash
-python scripts/analyze_e6_batches.py path/to/e6_measurements.csv
-```
-
-Evaluate material compatibility:
-
-```bash
-python scripts/evaluate_material_gate.py path/to/material_audit.csv
-```
-
-## Scientific discipline
-
-- Do not refit v0.7 to make the external failures disappear.
-- Do not synthesize E1–E5 simply to clean up the historical story.
-- Do not describe patent point values as noise-free experimental truth; they are frozen historical anchors.
-- Do not call E7–E9 validated before measurement.
-- Do not allow an LLM to create numerical predictions or bypass hard gates.
-- Treat abstention and request-for-replication as valid scientific actions.
-
-## Current status
-
-The computational/preregistration layer is ready. **Current material-gate state is `AUDIT_REQUIRED` until real supplier documentation/COAs are entered.** No prospective E6* result is stored in this repository. Files under `examples/` are synthetic demonstrations only and must not be cited as experimental evidence.
+`PUR_SIM_V1` is a deterministic benchmark scenario, not wet-lab evidence. v2 guarantees the unique optimum only inside the frozen candidate space, objective and constraints. Prospective experiments determine whether that model-defined optimum transfers to physical polyurethane behavior.

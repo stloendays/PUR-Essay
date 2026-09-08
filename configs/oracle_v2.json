@@ -1,0 +1,28 @@
+{
+  "workflow_id": "PUR_ORACLE_BACKWARD_V2",
+  "candidate_space": "WO2018173768-inspired PPG/4,4-MDI constrained grid",
+  "polyol_basis_parts": 100.0,
+  "hard_constraints": {
+    "eta80_broad_pa_s": [0.85, 10.0],
+    "eta120_broad_pa_s": [0.16, 0.80],
+    "ratio_broad": [6.0, 13.0],
+    "eta80_preferred_pa_s": [2.2, 5.5],
+    "eta120_preferred_pa_s": [0.30, 0.60],
+    "ratio_preferred": [7.0, 9.5],
+    "nco_oh": [1.3, 3.0],
+    "mdi_fraction_of_polyol_plus_mdi": [0.35, 0.49],
+    "require_chemistry_in_domain": true,
+    "require_full_oracle_interval_inside_broad_window": true
+  },
+  "objective": {
+    "space": "log10",
+    "center": "geometric_midpoint_of_preferred_window",
+    "weights": {"eta80": 1.0, "eta120": 1.0, "ratio": 1.0},
+    "tie_break": ["higher_broad_margin", "lower_domain_ratio", "candidate_id_lexicographic"]
+  },
+  "agent_benchmark": {
+    "agent_sees_complete_candidate_responses": true,
+    "hidden_fields": ["oracle_score", "oracle_rank", "oracle_is_best", "gold_candidate_id"],
+    "task": "recover the deterministic constrained optimum and explain the backward path without access to the gold answer"
+  }
+}

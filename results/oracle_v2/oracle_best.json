@@ -1,0 +1,22 @@
+{
+  "workflow_id": "PUR_ORACLE_BACKWARD_V2",
+  "gold_candidate_id": "WO_INV_0579",
+  "target_centers": {
+    "eta80": 3.4785054261852175,
+    "eta120": 0.4242640687119285,
+    "ratio": 8.154753215150045
+  },
+  "best": {
+    "blend": "PPG2000:60+PPG400:40",
+    "nco_oh": 1.7,
+    "mdi_parts_per_100_polyol": 55.30525,
+    "mdi_fraction_total": 0.35610676393747154,
+    "eta80_pa_s": 3.4426950235,
+    "eta120_pa_s": 0.4097650681,
+    "ratio": 8.4016313049,
+    "oracle_score": 0.00041602203507206195,
+    "effective_polyol_mw_g_mol": 769.2307692308,
+    "blend_entropy_bits": 0.9709505945,
+    "apparent_activation_energy_kj_mol": 61.4257145636
+  }
+}
