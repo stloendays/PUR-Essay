@@ -1,0 +1,6 @@
+{
+  "AUDIT_REQUIRED": {"action": "audit_material_equivalence", "candidate_id": null, "reason": "Critical material evidence is incomplete; resolve identity/specification evidence before spending the prospective experiment.", "information_gain_nats": null},
+  "ANCHOR_COMPATIBLE": {"action": "run_experiment", "candidate_id": "E6_star", "reason": "Material gate=ANCHOR_COMPATIBLE. E6_star is the unique missing C-rich/high-A counterfactual; interpret as patent-anchored prospective counterfactual.", "information_gain_nats": 0.6429674869101062},
+  "SURROGATE_ONLY": {"action": "run_experiment", "candidate_id": "E6_star", "reason": "Material gate=SURROGATE_ONLY. E6_star is the unique missing C-rich/high-A counterfactual; interpret as specification-matched surrogate transfer test.", "information_gain_nats": 0.6429674869101062},
+  "INCOMPATIBLE": {"action": "abstain_and_redesign_modern_system", "candidate_id": null, "reason": "Material-equivalence gate is incompatible; absolute comparison with historical anchors is not defensible.", "information_gain_nats": null}
+}

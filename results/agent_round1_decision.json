@@ -1,0 +1,6 @@
+{
+  "action": "audit_material_equivalence",
+  "candidate_id": null,
+  "reason": "Critical material evidence is incomplete; resolve identity/specification evidence before spending the prospective experiment.",
+  "information_gain_nats": null
+}

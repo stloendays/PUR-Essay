@@ -1,0 +1,8 @@
+material,disclosed_chemistry,mw_approx,oh_value_mgkoh_g,tg_c_approx,eta130_pa_s_approx,crystallinity,gate_role
+Polyester_A,"isophthalic acid; butanediol; dimethyl phthalate; adipic acid",3500,"27-34",-20,5,"partially crystalline","chemistry identity + disclosed property match"
+Polyester_B,"dimethyl phthalate; adipic acid; hexanediol",3500,"27-34",-40,3,"partially crystalline","chemistry identity + disclosed property match"
+Polyester_C,"isophthalic acid; neopentyl glycol; ethylene glycol; adipic acid; phthalic acid; hydroxypivalyl hydroxypivalate (HPHP)",3500,"31-39",30,30,"amorphous","chemistry identity + disclosed property match; HPHP must not be omitted"
+Polyester_D,"neopentyl glycol; ethylene glycol; adipic acid; phthalic anhydride",2000,"50-60",10,5,"amorphous","chemistry identity + disclosed property match"
+PPG425,"polypropylene glycol; average molecular weight about 425",425,"~264 theoretical; use actual COA",,,,"identity + OH value + water"
+Tackifier,"polymerized beta-pinene resin; original Hercules grade not disclosed",,,,,,"surrogate must be explicitly named and characterized; do not claim exact historical grade"
+MDI,"4,4'-methylene diphenyl diisocyanate",250.3,,,,,"identity + actual NCO content"

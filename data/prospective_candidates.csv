@@ -1,0 +1,5 @@
+id,A,B,C,D,PPG425,tackifier,MDI,nco_oh,status,design_role,notes
+E6_star,29.2,5.9,10.5,1.2,23.4,5.9,23.9,1.4,prospective_unmeasured,missing_cell,"Exact counterfactual completion of Example 9 scaffold; only A/B allocation changed within polyester block. Final MDI charge must be COA/OH corrected."
+E7,16.24,14.81,14.71,0.44,22.88,6.36,24.56,1.450,deferred,transfer_candidate,"J2-026676; evaluate only after E6_star update."
+E8,19.96,12.82,8.94,4.29,22.90,6.29,24.81,1.459,deferred,transfer_candidate,"J2-011853; evaluate only after E6_star update."
+E9,23.14,11.47,2.38,9.20,23.10,5.42,25.28,1.465,deferred,transfer_candidate,"J2-067942; evaluate only after E6_star update."

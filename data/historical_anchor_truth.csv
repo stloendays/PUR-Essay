@@ -1,0 +1,6 @@
+id,patent_example,A,B,C,D,PPG425,tackifier,MDI,nco_oh,eta130_pa_s,status,role,source_id,source_locator,source_url
+E1,Example 5,23.3,11.7,5.8,5.8,23.3,5.8,24.3,1.4,26,frozen_historical_anchor,balanced_lowA,US5932680A,Example 5,https://patents.google.com/patent/US5932680A/en
+E2,Example 6,29.2,5.8,5.8,5.8,23.3,5.8,24.3,1.4,43,frozen_historical_anchor,balanced_highA,US5932680A,Example 6,https://patents.google.com/patent/US5932680A/en
+E3,Example 7,23.3,11.6,1.2,10.5,23.3,5.8,24.3,1.4,22,frozen_historical_anchor,D_rich_lowA,US5932680A,Example 7,https://patents.google.com/patent/US5932680A/en
+E4,Example 8,29.1,5.8,1.1,10.5,23.3,5.8,24.3,1.4,24,frozen_historical_anchor,D_rich_highA,US5932680A,Example 8,https://patents.google.com/patent/US5932680A/en
+E5,Example 9,23.4,11.7,10.5,1.2,23.4,5.9,23.9,1.4,27,frozen_historical_anchor,C_rich_lowA,US5932680A,Example 9,https://patents.google.com/patent/US5932680A/en

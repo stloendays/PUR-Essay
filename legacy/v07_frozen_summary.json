@@ -1,0 +1,14 @@
+{
+  "status": "frozen baseline; do not refit post hoc to the external tests",
+  "AAS_external_log_MAE_120C": 0.1897,
+  "WO_external_log_MAE_80C": 0.6292,
+  "WO_external_log_MAE_120C": 1.3641,
+  "WO_success_labels_recovered": "4/9",
+  "US865_correct_temperature_trend": "25%",
+  "US865_chemistry_in_domain": "1/4",
+  "US865_MDI_isomer_reported_contrast": 2.31,
+  "US865_MDI_isomer_model_contrast": 1.00,
+  "inverse_design_candidates_enumerated": 928,
+  "uncertainty_certified_candidates": 0,
+  "source_blocked_q80_radius_log10": 1.180092
+}

@@ -1,0 +1,8 @@
+material,critical,chemistry_status,property_status,evidence,notes
+Polyester_A,true,UNKNOWN,UNKNOWN,,
+Polyester_B,true,UNKNOWN,UNKNOWN,,
+Polyester_C,true,UNKNOWN,UNKNOWN,,HPHP-type component is required by the patent disclosure.
+Polyester_D,true,UNKNOWN,UNKNOWN,,
+PPG425,true,UNKNOWN,UNKNOWN,,Use genuine average-MW ~425 polypropylene glycol.
+4_4_MDI,true,UNKNOWN,UNKNOWN,,Record actual NCO content.
+beta_pinene_tackifier,false,FAMILY_MATCH,UNKNOWN,,Exact historical Hercules grade is undisclosed; document modern grade and properties.

@@ -1,0 +1,39 @@
+{
+  "version": "PUR-Bridge-v1.1",
+  "frozen_historical_anchors": ["E1", "E2", "E3", "E4", "E5"],
+  "round1_prospective_target": "E6_star",
+  "primary_endpoint": {
+    "stage": "prepolymer",
+    "temperature_c": 130,
+    "minimum_independent_batches": 3,
+    "minimum_technical_reads_per_batch": 3,
+    "technical_cv_target_pct": 3.0
+  },
+  "secondary_temperatures_c": [110, 120, 130],
+  "decision": {
+    "strong_consistent_min_pa_s": 40.0,
+    "weak_consistent_max_pa_s": 33.0,
+    "indeterminate_low_pa_s": 33.0,
+    "indeterminate_high_pa_s": 40.0,
+    "primary_log_sigma_sensitivity": [0.05, 0.08, 0.10, 0.12, 0.15],
+    "require_batch_ci_clearance_before_transfer": true
+  },
+  "material_gate": {
+    "states": ["ANCHOR_COMPATIBLE", "SURROGATE_ONLY", "AUDIT_REQUIRED", "INCOMPATIBLE"],
+    "default_before_coa_audit": "AUDIT_REQUIRED"
+  },
+  "agent": {
+    "allow_llm_numeric_prediction": false,
+    "allow_llm_override_hard_gates": false,
+    "round1_policy": "audit_materials_then_maximize_hypothesis_information_gain",
+    "round2_policy": "if_E6_imprecise_or_indeterminate_replicate_else_rank_transfer_candidates_or_abstain",
+    "abstention_is_valid_action": true
+  },
+  "legacy_v07": {
+    "status": "frozen_baseline_only",
+    "allow_posthoc_refit_to_external_tests": false,
+    "source_blocked_q80_log10_radius": 1.180092,
+    "wo_enumerated_candidates": 928,
+    "wo_uncertainty_certified": 0
+  }
+}
