@@ -10,6 +10,7 @@ on:
       - 'configs/frontier_v1.json'
       - 'src/pur_science/**'
       - 'scripts/freeze_frontier_v1.py'
+      - 'scripts/analyze_frontier_depth_v1.py'
       - '.github/workflows/render-r-figures.yml'
 
 permissions:
@@ -33,7 +34,10 @@ jobs:
       - name: Materialize and freeze PUR-FRONTIER V1
         run: python scripts/freeze_frontier_v1.py
 
-      - name: Verify frozen frontier
+      - name: Recompute FRONTIER-DEPTH V1
+        run: python scripts/analyze_frontier_depth_v1.py
+
+      - name: Verify frozen science outputs
         shell: bash
         run: |
           set -euo pipefail
@@ -42,19 +46,33 @@ jobs:
           test -s results/frontier_v1/manifest.json
           test -s results/frontier_v1/ranking_metrics.json
           test -s results/frontier_v1/rank_preservation_control.csv
+          test -s results/frontier_depth_v1/summary.json
+          test -s results/frontier_depth_v1/mdi_floor_phase_nominal.csv
+          test -s results/frontier_depth_v1/mdi_floor_phase_robust.csv
+          test -s results/frontier_depth_v1/uncertainty_scale_sweep.csv
+          test -s results/frontier_depth_v1/uncertainty_scale_phase.csv
+          test -s results/frontier_depth_v1/objective_weight_stability_nominal.csv
+          test -s results/frontier_depth_v1/objective_weight_stability_robust.csv
+          test -s results/frontier_depth_v1/rheology_state_rank.csv
           python - <<'PY'
           import json
           from pathlib import Path
           d=json.loads(Path('results/frontier_v1/frontier_v1_decision.json').read_text())
           m=json.loads(Path('results/frontier_v1/manifest.json').read_text())
+          s=json.loads(Path('results/frontier_depth_v1/summary.json').read_text())
           assert m['gold_status']=='GOLD'
           assert d['gold_status']=='GOLD'
           assert d['n_candidates']==928
+          assert s['frozen_reproduction']['L0']=='WO_INV_0419'
+          assert s['frozen_reproduction']['L1']=='WO_INV_0579'
+          assert s['frozen_reproduction']['L2']=='WO_INV_0420'
           print('L0',d['property_winner'])
           print('L1',d['constrained_winner'])
           print('L2',d['robust_winner'])
           print('nominal feasible',d['n_feasible_nominal'])
           print('robust feasible',d['n_feasible_robust'])
+          print('uncertainty crossover',s['uncertainty_scale']['L1_L2_score_crossover_roots'])
+          print('robustness cliff',s['uncertainty_scale']['global_max_broad_scale'])
           PY
 
       - name: Set up R
@@ -75,7 +93,7 @@ jobs:
             any::scales
             any::svglite
             any::jsonlite
-          cache-version: 3
+          cache-version: 4
 
       - name: Record R environment
         run: Rscript -e 'sessionInfo()'
@@ -91,36 +109,38 @@ jobs:
             Figure2_temperature_Andrade \
             Figure3_free_NCO_coupling \
             Figure4_chemistry_amplification_interaction \
-            Figure5_decision_frontier; do
+            Figure5_decision_frontier \
+            Figure6_uncertainty_objective_geometry; do
             for ext in png pdf svg; do
               test -s "figures/final/${stem}.${ext}"
             done
           done
-          ls -lh figures/final results/frontier_v1
+          ls -lh figures/final results/frontier_v1 results/frontier_depth_v1
 
-      - name: Upload publication figures and frontier snapshot
+      - name: Upload publication figures and frozen science snapshots
         uses: actions/upload-artifact@v4
         with:
-          name: PUR-frontier-and-manuscript-render
+          name: PUR-frontier-depth-and-manuscript-render
           path: |
             figures/final/*.png
             figures/final/*.pdf
             figures/final/*.svg
             results/frontier_v1/*
+            results/frontier_depth_v1/*
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit frozen frontier and publication figures
+      - name: Commit frozen analyses and publication figures
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/frontier_v1 figures/final/*.png figures/final/*.pdf figures/final/*.svg
+          git add results/frontier_v1 results/frontier_depth_v1 figures/final/*.png figures/final/*.pdf figures/final/*.svg
           if git diff --cached --quiet; then
-            echo "Frozen frontier and rendered figures are already up to date."
+            echo "Frozen analyses and rendered figures are already up to date."
             exit 0
           fi
-          git commit -m "Freeze PUR-FRONTIER V1 and render manuscript figures [skip ci]"
+          git commit -m "Freeze FRONTIER depth analyses and render manuscript figures [skip ci]"
           git push
