@@ -42,18 +42,18 @@ pC <- ggplot(pat, aes(state, eta130, group = background, colour = background)) +
   geom_point(size = 2.65) +
   geom_text(
     aes(label = paste0(eta130, " Pa·s")),
-    nudge_y = 1.05,
+    nudge_y = 0.85,
     show.legend = FALSE,
     size = 2.50,
     colour = PUR_COL[["ink"]]
   ) +
   scale_colour_manual(values = c("C/D balanced" = PUR_COL[["balanced"]], "D-rich" = PUR_COL[["drich"]])) +
-  scale_y_continuous(limits = c(18, 48), breaks = seq(20, 45, 5), expand = expansion(mult = c(0, 0.035))) +
+  scale_y_continuous(limits = c(18, 52), breaks = seq(20, 50, 5), expand = expansion(mult = c(0, 0.025))) +
   labs(x = "A/B composition state", y = expression(eta[130]~"(Pa·s)")) +
-  annotate("text", x = 1.04, y = 46.0, label = "High-A / Low-A", hjust = 0, size = 2.45, colour = PUR_COL[["ink"]]) +
-  annotate("text", x = 1.04, y = 43.9, label = "1.654×  balanced", hjust = 0, size = 2.45, colour = PUR_COL[["balanced"]]) +
-  annotate("text", x = 1.04, y = 41.8, label = "1.091×  D-rich", hjust = 0, size = 2.45, colour = PUR_COL[["drich"]]) +
-  annotate("text", x = 1.04, y = 39.7, label = "ratio-of-ratios = 1.516", hjust = 0, size = 2.45, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 1.04, y = 50.5, label = "High-A / Low-A", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 1.04, y = 48.4, label = "1.654×  balanced", hjust = 0, size = 2.42, colour = PUR_COL[["balanced"]]) +
+  annotate("text", x = 1.04, y = 46.3, label = "1.091×  D-rich", hjust = 0, size = 2.42, colour = PUR_COL[["drich"]]) +
+  annotate("text", x = 1.04, y = 44.2, label = "ratio-of-ratios = 1.516", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
   theme(
     legend.position = "bottom",
     legend.direction = "vertical",
@@ -66,4 +66,4 @@ fig4 <- (pA | pB | pC) +
   plot_layout(widths = c(0.90, 1.07, 1.28)) +
   plot_annotation(tag_levels = "A")
 
-save_pur_figure(fig4, "figures/final/Figure4_chemistry_amplification_interaction", width_mm = 180, height_mm = 80)
+save_pur_figure(fig4, "figures/final/Figure4_chemistry_amplification_interaction", width_mm = 180, height_mm = 82)
