@@ -21,7 +21,7 @@ experimental/public evidence
   -> L1 nominal chemistry/process feasibility
   -> L2 interval/domain robustness
   -> backward active-boundary analysis
-  -> reachability
+  -> decision/uncertainty phase maps + objective geometry
   -> blinded PUR-RECOVER V1 Agent benchmark
   -> prospective wet-lab validation
 ```
@@ -30,7 +30,7 @@ The experimental/public science layer and synthetic decision benchmark are kept 
 
 ## Frozen PUR-FRONTIER V1
 
-The complete 928-candidate response snapshot is now stored losslessly and SHA256-verified. `scripts/freeze_frontier_v1.py` reconstructs it automatically and regenerates the full frontier from `configs/frontier_v1.json`.
+The complete 928-candidate response snapshot is stored losslessly and SHA256-verified. `scripts/freeze_frontier_v1.py` reconstructs it automatically and regenerates the full frontier from `configs/frontier_v1.json`.
 
 | Layer | Frozen result | Meaning |
 |---|---|---|
@@ -80,6 +80,20 @@ NCO:OH* = 1.7719836724.
 
 Projection onto the frozen 0.1 grid gives the first reachable point at **1.8**, candidate `WO_INV_0420` — the same candidate selected independently by L2 robust ranking.
 
+## Deeper deterministic decision geometry
+
+`FRONTIER-DEPTH V1` studies why the selected decision changes rather than treating the winner as a single immutable point. The current non-Agent core includes:
+
+- MDI-floor decision phase maps;
+- nominal-to-robust ranking propagation;
+- uncertainty-scaling phase transitions;
+- the robustness cliff where no broad-window robust candidate remains;
+- objective-weight stability basins;
+- a Pareto opportunity set;
+- the two-independent-DOF rheology-state geometry implied by `eta80 = eta120 * ratio`.
+
+These analyses remain properties of the frozen synthetic `PUR_SIM_V1` benchmark and are not presented as experimental polyurethane laws.
+
 ## PUR-RECOVER V1 Agent
 
 The Agent does not define the gold answer. Primary runs use anonymised candidates/materials and hide rank, scores, mapping files and future wet-lab results. Deterministic tools perform ranking, constraint checks, backward solving, reachability and local sweeps.
@@ -97,15 +111,25 @@ The primary metric is **complete_decision_recovery**. A successful run must reco
 
 The formal repeated API benchmark is the next execution stage. Mock/offline runs are tests only and are not manuscript performance results.
 
+### Current vs historical Agent code
+
+**Current paper Agent:** `src/pur_agent/` (`PUR_RECOVER_V1`).
+
+**Historical code:** `src/pur_bridge/agent.py` contains the old E6 / information-gain / experiment-selection pathway. It is retained for provenance and legacy compatibility but must not be used as the current paper Agent implementation.
+
+Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-paste local-Claude handoff is stored at `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md`.
+
 ## Figures
 
 - Figure 2: formulation-specific Andrade temperature response and apparent activation energies.
-- Figure 3: free-NCO coupling to viscosity and thermal sensitivity.
-- Figure 4: temperature-amplified chemistry contrast and composition-context interaction.
-- **Figure 5: frozen L0/L1/L2 decision frontier, backward boundary and nominal-to-robust rank propagation.**
-- Figure 6: reserved for the repeated PUR-RECOVER Agent benchmark.
+- Figure 3: free-NCO coupling to viscosity and thermal sensitivity, evaluated within the source-supported temperature range.
+- Figure 4: temperature-amplified chemistry contrast, composition-context interaction and published temperature-induced rheological rank reversal.
+- **Figure 5: frozen L0/L1/L2 decision frontier, backward boundary, rank propagation and MDI-floor phase behavior.**
+- **Figure 6: uncertainty phase transition, robustness cliff, objective-weight stability and rheology-state objective geometry.**
+- **Figure 7: formal repeated PUR-RECOVER V1 Agent benchmark — render only from real API run records.**
+- **Figure 8: prospective wet-lab physical validation — insert only after experiments are completed.**
 
-Formal R sources are in `figures/R/`; PNG/PDF/SVG outputs are in `figures/final/`.
+Formal R sources are in `figures/R/`; PNG/PDF/SVG outputs for completed deterministic figures are in `figures/final/`.
 
 ## Reproducibility
 
@@ -116,27 +140,34 @@ python -m venv .venv
 pip install -e ".[agent,dev]"
 pytest
 
-# Regenerate the exact deterministic gold and Figure 5
+# Regenerate exact deterministic science and completed R figures
 python scripts/freeze_frontier_v1.py
+python scripts/analyze_frontier_depth_v1.py
 Rscript figures/R/render_all_figures.R
 
-# Build the blind benchmark
+# Build the primary blind benchmark
 python scripts/build_blind_bundle.py
 python scripts/verify_no_leakage.py
 
-# Offline smoke
+# Offline smoke — infrastructure only
 python scripts/run_agent_once.py --provider mock --condition pur_agent
+python scripts/run_baselines.py --runs 2 --provider mock
 
-# Real API — key stays in the environment
+# Real API — key stays in the local environment
 export OPENAI_API_KEY="..."
 export OPENAI_BASE_URL=""       # optional
 export OPENAI_MODEL="..."
-python scripts/run_agent_benchmark.py --runs 20
-python scripts/run_baselines.py --runs 20
+python scripts/run_agent_benchmark.py --runs 5
+python scripts/run_baselines.py --conditions direct_llm tool_llm pur_agent --runs 5
+
+# Formal repeated benchmark after the pilot/config is frozen
+# Target 30-50 independent runs per comparable LLM condition if cost permits.
+
+python scripts/evaluate_agent_runs.py results/recover_v1
 python scripts/summarize_benchmark.py
 ```
 
-The current CI test suite passes and the Figure workflow rebuilds the frontier from the hash-verified response snapshot before rendering Figure 5.
+Never commit a real API credential. Failed/invalid/timeout runs are retained as benchmark outcomes rather than silently deleted.
 
 ## Repository map
 
@@ -144,16 +175,19 @@ The current CI test suite passes and the Figure workflow rebuilds the frontier f
 |---|---|
 | `docs/RHEOLOGY_SCIENCE_V1.md`, `docs/NON_AGENT_WORKFLOW_V3.md` | source-grounded physical rheology layer |
 | `docs/FRONTIER_V1.md`, `configs/frontier_v1.json`, `src/pur_science/` | frozen deterministic L0/L1/L2 frontier |
+| `docs/FRONTIER_DEPTH_V1.md`, `results/frontier_depth_v1/` | constraint/uncertainty phase maps, objective geometry, Pareto and stability analyses |
 | `results/frontier_v1/` | frozen decision, scores, ranking metrics and preservation control |
 | `data/pur_sim_v1/` | 928-design grid + hash-verified frozen response snapshot |
-| `docs/AGENT_STRATEGY_V1.md`, `configs/recover_v1.json`, `src/pur_agent/` | blinded Agent strategy |
+| `docs/AGENT_STRATEGY_V1.md`, `docs/AGENT_HANDOFF_CURRENT.md`, `configs/recover_v1.json`, `src/pur_agent/` | current blinded PUR-RECOVER V1 Agent |
+| `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md` | developer handoff prompt for local Claude |
+| `src/pur_bridge/agent.py`, `legacy/` | historical E6 / old Agent provenance; not the current benchmark |
 | `benchmark/`, `gold/`, `results/recover_v1/` | blind inputs, evaluator-only gold and Agent outputs |
 | `figures/`, `data/figures/` | manuscript figure sources and render data |
-| `manuscript/` | versioned paper drafts |
+| `manuscript/` | versioned paper drafts and current non-Agent Results |
 | `configs/oracle_v2.json`, `results/oracle_v2/` | historical frozen PUR-ORACLE V2 provenance |
 
 ## Claim boundary
 
-Experimental/public evidence supports the physical rheology conclusions: formulation-specific temperature sensitivity, free-NCO trends, temperature-amplified chemistry contrast and composition-context effects.
+Experimental/public evidence supports the physical rheology conclusions: formulation-specific temperature sensitivity, free-NCO trends, temperature-amplified chemistry contrast, temperature-induced rheological rank reversal in published patent points, and composition-context effects within their stated evidence limits.
 
-`PUR_SIM_V1` supports finite-space optimisation, constraint propagation, interval robustness, backward design and blind Agent recovery only. It does not establish a universal optimum over all polyurethane chemistry. Prospective wet-lab results remain outside the primary blind Agent benchmark.
+`PUR_SIM_V1` supports finite-space optimisation, constraint propagation, interval robustness, decision-phase analysis, objective-geometry analysis, backward design and blind Agent recovery only. It does not establish a universal optimum over all polyurethane chemistry. Prospective wet-lab results remain outside the primary blind Agent benchmark.
