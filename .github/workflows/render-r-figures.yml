@@ -9,7 +9,7 @@ on:
       - '.github/workflows/render-r-figures.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   render-figures:
@@ -67,3 +67,18 @@ jobs:
             figures/final/*.svg
           if-no-files-found: error
           retention-days: 30
+
+      - name: Commit rendered publication figures
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add figures/final/*.png figures/final/*.pdf figures/final/*.svg
+          if git diff --cached --quiet; then
+            echo "Rendered figures are already up to date."
+            exit 0
+          fi
+          git commit -m "Render Figure 2-4 outputs [skip ci]"
+          git push
