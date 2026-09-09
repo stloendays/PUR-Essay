@@ -2,13 +2,16 @@
 """Freeze PUR-FRONTIER V1 from the complete PUR_SIM_V1 table.
 
 Outputs (results/frontier_v1/):
-  frontier_table.csv        every candidate with scores, checks and ranks
-  frontier_v1_decision.json named decision chain (L0/L1/L2, active constraint, backward, reachability, trends)
-  expectation_check.json    agreement/disagreement with values documented before the freeze
-  manifest.json             input hashes, config hash, status
+  frontier_table.csv                 every candidate with scores, checks and ranks
+  frontier_v1_decision.json          complete named decision chain
+  expectation_check.json             agreement/disagreement with pre-freeze hypotheses
+  ranking_metrics.json               nominal-to-robust rank propagation statistics
+  rank_preservation_control.csv      fixed-chemistry local control
+  rank_preservation_control_summary.json
+  manifest.json                      input/config/decision hashes and gold status
 
 The script never edits scientific inputs. If candidates_full.csv is absent, the frozen
-XZ/base64 snapshot in data/pur_sim_v1 is losslessly reconstructed and SHA256-verified.
+XZ/base64 multipart snapshot is losslessly reconstructed and SHA256-verified.
 """
 from __future__ import annotations
 
@@ -18,6 +21,7 @@ import sys
 from pathlib import Path
 
 import _bootstrap  # noqa: F401
+import numpy as np
 import pandas as pd
 
 from pur_agent.data_access import sha256_file
@@ -75,6 +79,67 @@ def expectation_check(decision: dict, expected: dict | None) -> dict:
     return out
 
 
+def _pairwise_inversions(values: np.ndarray) -> int:
+    inv = 0
+    for i in range(len(values) - 1):
+        inv += int(np.sum(values[i + 1:] < values[i]))
+    return inv
+
+
+def ranking_diagnostics(frontier: pd.DataFrame, decision: dict, out: Path) -> tuple[dict, dict]:
+    """Record global rank propagation plus a fixed-chemistry preservation control."""
+    ranked = frontier[frontier["robust_rank"].notna()].copy().sort_values("nominal_rank")
+    rho = float(ranked["nominal_rank"].corr(ranked["robust_rank"], method="spearman"))
+    tau = float(ranked["nominal_rank"].corr(ranked["robust_rank"], method="kendall"))
+    inv = _pairwise_inversions(ranked["robust_rank"].to_numpy(dtype=float))
+    total_pairs = int(len(ranked) * (len(ranked) - 1) / 2)
+    metrics = {
+        "comparison_set": "robust-eligible candidates",
+        "n": int(len(ranked)),
+        "spearman_rho": rho,
+        "kendall_tau": tau,
+        "pairwise_inversions": inv,
+        "total_pairs": total_pairs,
+        "inversion_fraction": inv / total_pairs if total_pairs else None,
+        "inversion_percent": 100.0 * inv / total_pairs if total_pairs else None,
+        "nominal_top_on_comparison_set": str(ranked.sort_values("nominal_rank").iloc[0]["cid"]),
+        "robust_top": str(ranked.sort_values("robust_rank").iloc[0]["cid"]),
+        "top1_inversion": str(ranked.sort_values("nominal_rank").iloc[0]["cid"]) != str(ranked.sort_values("robust_rank").iloc[0]["cid"]),
+    }
+    (out / "ranking_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    ranked[["cid", "blend", "nco_oh", "nominal_rank", "robust_rank", "property_score", "robust_score"]].to_csv(
+        out / "frontier_rank_pairs.csv", index=False
+    )
+
+    rw = frontier.loc[frontier["cid"] == decision["robust_winner"]].iloc[0]
+    hi = min(float(rw["nco_oh"]) + 0.7, float(frontier["nco_oh"].max()))
+    ctl = frontier[
+        (frontier["blend"] == rw["blend"])
+        & frontier["nco_oh"].between(float(rw["nco_oh"]), hi)
+        & frontier["feasible_robust"]
+    ].copy()
+    ctl["nominal_local_rank"] = ctl["property_score"].rank(method="first").astype(int)
+    ctl["robust_local_rank"] = ctl["robust_score"].rank(method="first").astype(int)
+    ctl = ctl.sort_values("nco_oh")
+    local_tau = float(ctl["nominal_local_rank"].corr(ctl["robust_local_rank"], method="kendall")) if len(ctl) > 1 else None
+    ordered = ctl.sort_values("nominal_local_rank")
+    local_inv = _pairwise_inversions(ordered["robust_local_rank"].to_numpy(dtype=float))
+    local_pairs = int(len(ctl) * (len(ctl) - 1) / 2)
+    control = {
+        "blend": str(rw["blend"]),
+        "nco_range": [float(rw["nco_oh"]), hi],
+        "n": int(len(ctl)),
+        "kendall_tau": local_tau,
+        "pairwise_inversions": local_inv,
+        "total_pairs": local_pairs,
+    }
+    ctl[["cid", "blend", "nco_oh", "property_score", "robust_score", "nominal_local_rank", "robust_local_rank"]].to_csv(
+        out / "rank_preservation_control.csv", index=False
+    )
+    (out / "rank_preservation_control_summary.json").write_text(json.dumps(control, indent=2), encoding="utf-8")
+    return metrics, control
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--candidates", default=str(ROOT / "data" / "pur_sim_v1" / "candidates_full.csv"))
@@ -113,11 +178,13 @@ def main() -> int:
     (out / "frontier_v1_decision.json").write_text(json.dumps(decision, indent=2, default=str), encoding="utf-8")
     exp = expectation_check(decision, cfg.get("expected_from_docs"))
     (out / "expectation_check.json").write_text(json.dumps(exp, indent=2), encoding="utf-8")
+    metrics, control = ranking_diagnostics(frontier, decision, out)
+
     manifest = {
         "workflow_id": cfg.get("workflow_id"),
         "gold_status": status,
         "frozen_utc": utc_now(),
-        "candidate_table": str(cand),
+        "candidate_table": str(cand.relative_to(ROOT) if ROOT in cand.parents else cand),
         "candidate_table_sha256": sha256_file(cand),
         "config_sha256": sha256_json(cfg),
         "n_candidates": int(len(df)),
@@ -135,6 +202,8 @@ def main() -> int:
         "active_constraint": decision["active_constraint"]["name"],
         "backward": {k: decision["backward_design"][k] for k in ("continuous_threshold", "nearest_reachable_grid_value", "reachable")},
         "local_trends": {k: decision["local_trends"][k] for k in ("nco_direction", "composition_axis", "composition_direction")},
+        "rank_propagation": metrics,
+        "rank_preservation_control": control,
         "expectation_all_agree": exp.get("all_agree"),
         "out": str(out),
     }, indent=2))
