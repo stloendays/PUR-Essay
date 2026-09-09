@@ -13,6 +13,23 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -e '.[dev]'
+      - run: pip install -e '.[agent,dev]'
       - run: pytest
-      - run: python scripts/run_anchor_analysis.py
+      # Offline end-to-end of the benchmark scripts on the test fixture (no API key, nothing written into the repo)
+      - name: Offline benchmark smoke (mock provider)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'EOF'
+          import sys; sys.path.insert(0, "tests")
+          from conftest import make_toy_table
+          make_toy_table().to_csv("/tmp/toy.csv", index=False)
+          EOF
+          python scripts/freeze_frontier_v1.py --candidates /tmp/toy.csv --config tests/fixture_config.json --out /tmp/frontier --allow-partial
+          python scripts/build_blind_bundle.py --candidates /tmp/toy.csv --config tests/fixture_config.json --blind-dir /tmp/b/blind --evaluator-dir /tmp/b/evaluator_only --gold-dir /tmp/gold
+          python scripts/verify_no_leakage.py --blind-dir /tmp/b/blind --evaluator-dir /tmp/b/evaluator_only --config tests/fixture_config.json
+          python scripts/run_agent_once.py --provider mock --condition pur_agent --blind-dir /tmp/b/blind --out /tmp/r/once.json
+          python scripts/run_baselines.py --provider mock --runs 1 --blind-dir /tmp/b/blind --results-root /tmp/r
+          python scripts/summarize_benchmark.py /tmp/r
+      - name: Frozen legacy analysis still runs (results are not committed back)
+        run: python scripts/run_anchor_analysis.py > /dev/null && git checkout -- results/

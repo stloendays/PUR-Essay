@@ -1,0 +1,13 @@
+{
+  "_comment": "Example run matrix. No secrets here: keys come from the environment (see .env.example).",
+  "providers": {
+    "openai": {"provider": "auto", "env": ["OPENAI_API_KEY", "OPENAI_MODEL"]},
+    "openai_compatible": {"provider": "auto", "env": ["OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL"], "note": "falls back to Chat Completions if the Responses API is not served"},
+    "offline": {"provider": "mock", "env": []}
+  },
+  "planned_matrix": {
+    "runs_per_condition": 30,
+    "conditions": ["oracle", "direct_llm", "tool_llm", "pur_agent", "pur_agent_no_backward", "pur_agent_no_constraint_checker", "pur_agent_no_provenance", "pur_agent_single_pass"],
+    "benchmarks": ["PUR_RECOVER_V1 (anonymous, primary)", "PUR_RECOVER_V1_NAMED (secondary)"]
+  }
+}

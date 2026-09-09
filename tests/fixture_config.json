@@ -1,0 +1,109 @@
+{
+  "workflow_id": "TEST_FIXTURE_V1",
+  "benchmark_id": "TEST_RECOVER",
+  "polyol_basis_parts": 100.0,
+  "columns": {
+    "candidate_id": "source_candidate_id",
+    "blend": "blend",
+    "nco_oh": "nco_oh",
+    "mdi_parts": "mdi_parts",
+    "eta80": "eta80",
+    "eta120": "eta120",
+    "ratio": "ratio",
+    "domain_ratio": "domain_ratio",
+    "uncertainty_radius": "unc",
+    "chemistry_in_domain": "in_domain"
+  },
+  "hard_constraints": {
+    "eta80_broad_pa_s": [
+      0.85,
+      10.0
+    ],
+    "eta120_broad_pa_s": [
+      0.16,
+      0.8
+    ],
+    "ratio_broad": [
+      6.0,
+      13.0
+    ],
+    "eta80_preferred_pa_s": [
+      2.2,
+      5.5
+    ],
+    "eta120_preferred_pa_s": [
+      0.3,
+      0.6
+    ],
+    "ratio_preferred": [
+      7.0,
+      9.5
+    ],
+    "nco_oh": [
+      1.3,
+      3.0
+    ],
+    "mdi_fraction_of_polyol_plus_mdi": [
+      0.35,
+      0.49
+    ],
+    "require_chemistry_in_domain": true,
+    "require_full_oracle_interval_inside_broad_window": true
+  },
+  "objective": {
+    "space": "log10",
+    "weights": {
+      "eta80": 1.0,
+      "eta120": 1.0,
+      "ratio": 1.0
+    },
+    "tie_break": [
+      "higher_broad_margin",
+      "lower_domain_ratio",
+      "candidate_id_lexicographic"
+    ]
+  },
+  "robustness": {
+    "enabled": true,
+    "method": "worst_case_interval",
+    "require_interval_inside_preferred": true,
+    "domain_ratio_max": 1.0
+  },
+  "backward": {
+    "constraint": "mdi_fraction_min",
+    "variable": "nco_oh"
+  },
+  "local_trends": {
+    "response": "eta80"
+  },
+  "anonymization": {
+    "component_columns": [
+      "X",
+      "Y"
+    ],
+    "material_prefix": "Polyol",
+    "seed": 7
+  },
+  "blind": {
+    "drop_columns": [
+      "oracle_rank"
+    ]
+  },
+  "required_outputs": [
+    "property_winner",
+    "constrained_winner",
+    "robust_winner_or_explicit_abstention",
+    "active_constraint",
+    "backward_design",
+    "local_trends"
+  ],
+  "evaluation": {
+    "backward_threshold_tolerance_nco_oh": 0.03,
+    "top_k": [
+      1,
+      3,
+      5
+    ]
+  },
+  "_comment": "TEST FIXTURE config for CI smoke runs on tests/conftest.make_toy_table(). Not a scientific definition."
+}

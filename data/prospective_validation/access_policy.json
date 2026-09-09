@@ -1,0 +1,5 @@
+{
+  "agent_access": false,
+  "primary_benchmark_ids_blocked": ["PUR_RECOVER_V1"],
+  "reason": "Prospective wet-lab results must not enter the primary blind Agent benchmark."
+}

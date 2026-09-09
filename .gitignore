@@ -13,3 +13,9 @@ dist/
 results/local_*
 results/recover_v1/run_*.json
 benchmark/recover_v1/evaluator_only/
+gold/**
+!gold/README.md
+benchmark/**/evaluator_only/
+results/recover_v1/runs/
+results/recover_v1/**/runs/
+results/project_state_audit.json

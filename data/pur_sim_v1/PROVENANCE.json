@@ -1,0 +1,33 @@
+{
+  "file": "design_space_928.csv",
+  "what": "Enumerated WO2018173768-inspired PPG/4,4'-MDI design grid: candidate IDs, blend, PPG parts (100-part polyol basis), NCO:OH, nominal MDI parts. Descriptor columns only; NO response values.",
+  "derived_from": {
+    "path": "C:\\Users\\ASUS\\Documents\\Codex\\2026-08-06\\referenced-chatgpt-conversation-this-is-an-3\\outputs\\PUR_Bridge_v0_7_results\\v07_wo_inverse_design_candidates.csv",
+    "sha256": "f07a27fa3772d5898b1da8437bdd6f171f4ba2c3e4e307946d7baca6f6f0c4b3",
+    "generated": "PUR-Bridge v0.7 outputs, 2026-08-07"
+  },
+  "columns_dropped": [
+    "formulation_id",
+    "fixed_half_shrinkage_pa_s_eta_80c_pa_s",
+    "fixed_half_shrinkage_pa_s_eta_120c_pa_s",
+    "fixed_half_shrinkage_pa_s_ratio_low_high",
+    "fixed_half_shrinkage_pa_s_window_distance",
+    "fixed_half_shrinkage_pa_s_window_feasible",
+    "statistical_pa_s_eta_80c_pa_s",
+    "statistical_pa_s_eta_120c_pa_s",
+    "statistical_pa_s_ratio_low_high",
+    "statistical_pa_s_window_distance",
+    "statistical_pa_s_window_feasible",
+    "q80_ratio_lower",
+    "q80_ratio_upper",
+    "risk_certified",
+    "chemistry_domain_ratio",
+    "chemistry_in_domain",
+    "nearest_training_formulation_id",
+    "pareto_optimal"
+  ],
+  "why_dropped": "v0.7 response predictions come from the frozen v0.7 ML model and are NOT PUR_SIM_V1 responses; they must not be mixed with the ORACLE V2 / FRONTIER V1 response table.",
+  "consistency_check": "candidate ids, blends, nco_oh and mdi_parts of WO_INV_0341/0342/0420/0437/0454/0470/0471/0579/0580/0660 match data/oracle_top30_compact.csv exactly",
+  "imported": "2026-09-09",
+  "sha256": "ecd5d8f734a6cf319eb872b802a45027707ba62a0cc9ffdf964ad2d45fe9eea8"
+}

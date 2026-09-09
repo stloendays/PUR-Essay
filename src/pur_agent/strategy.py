@@ -39,9 +39,11 @@ class StrategyCheck:
 class RecoveryStrategy:
     """Policy guardrail for complete-decision recovery.
 
-    The LLM may choose tool order, but it may not finalize a scientific decision
-    until the deterministic decision chain has been inspected. This prevents a
-    lucky winner guess from being scored as a complete scientific recovery.
+    The LLM may choose tool order, but it may not finalize a scientific decision until the
+    deterministic decision chain has been inspected. This prevents a lucky winner guess from
+    being scored as a complete scientific recovery. Tools that are not available in the
+    current condition (ablations) are not required, so an ablated Agent can still finalize;
+    it is then scored on what it could not recover.
     """
 
     stages: tuple[StrategyStage, ...] = (
@@ -55,18 +57,22 @@ class RecoveryStrategy:
         StrategyStage.FINAL,
     )
 
-    def check_trace(self, tool_names: Iterable[str], *, robust_required: bool = True) -> StrategyCheck:
+    def check_trace(self, tool_names: Iterable[str], *, robust_required: bool = True, available_tools: Iterable[str] | None = None) -> StrategyCheck:
         called = set(tool_names)
         required = dict(REQUIRED_TOOL_FAMILIES)
         if not robust_required:
             required.pop(StrategyStage.ROBUST_RANKING, None)
+        available = set(available_tools) if available_tools is not None else None
 
         missing_stages: list[str] = []
         missing_tools: list[str] = []
         for stage, family in required.items():
-            if not family.issubset(called):
+            fam = family if available is None else (family & available)
+            if not fam:
+                continue
+            if not fam.issubset(called):
                 missing_stages.append(stage.value)
-                missing_tools.extend(sorted(family - called))
+                missing_tools.extend(sorted(fam - called))
 
         complete = not missing_stages
         reason = (

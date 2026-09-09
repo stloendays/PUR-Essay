@@ -3,10 +3,10 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pur-bridge"
-version = "2.1.0"
-description = "Source-grounded PUR rheology, deterministic decision frontiers, and blinded scientific Agent recovery"
-requires-python = ">=3.10"
+name = "pur-essay"
+version = "3.0.0"
+description = "Source-grounded PUR rheology, deterministic decision frontier (PUR-FRONTIER V1) and blinded scientific-Agent recovery benchmark (PUR-RECOVER V1)"
+requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.24",
   "pandas>=2.0",
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-agent = ["openai>=2.0"]
+agent = ["openai>=1.60"]
 dev = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
