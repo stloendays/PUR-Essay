@@ -1,7 +1,13 @@
 {
   "workflow_id": "PUR_FRONTIER_V1",
-  "definition_status": "PRE_FREEZE_AWAITING_COMPLETE_RESPONSE_TABLE",
+  "definition_status": "DATABASE_SYNC_2026_09_09",
   "builds_on": "PUR_ORACLE_BACKWARD_V2",
+  "science_basis": {
+    "repository": "stloendays/Database-For-PUR",
+    "commit": "d1f6d818702e56769564be1759fa4d6fc83abc52",
+    "decision_state_summary": "data/derived/rheology_v2/decision_state_objective_summary.json",
+    "robust_reachability_summary": "data/derived/rheology_v2/robust_reachability_summary_v1.json"
+  },
   "candidate_space": "WO2018173768-inspired PPG/4,4-MDI constrained grid (PUR_SIM_V1, synthetic; 58 blends x 16 NCO:OH points = 928 candidates)",
   "polyol_basis_parts": 100.0,
   "columns": {
@@ -30,26 +36,40 @@
   },
   "objective": {
     "space": "log10",
-    "center": "geometric_midpoint_of_preferred_window",
-    "weights": {"eta80": 1.0, "eta120": 1.0, "ratio": 1.0},
+    "definition": "independent_rheology_state",
+    "reason": "eta80, eta120 and eta80/eta120 are algebraically dependent. Use eta120 plus thermal sensitivity ratio as the two independent objective coordinates; keep eta80 as a processing-window gate.",
+    "coordinates": ["eta120", "ratio"],
+    "centers": {
+      "eta120": 0.4242640687119285,
+      "ratio": 8.154753215150045
+    },
+    "halfwidth_log10": {
+      "eta120": 0.1505149978319906,
+      "ratio": 0.06631278263729548
+    },
+    "formula": "J_state = sum_k (log10(y_k / center_k) / halfwidth_log10_k)^2",
     "tie_break": ["higher_broad_margin", "lower_domain_ratio", "candidate_id_lexicographic"]
   },
   "layers": {
-    "L0_property": "argmin property_score over all candidates, no constraints",
-    "L1_constrained": "argmin property_score over candidates passing the point-response rheology windows, NCO:OH, MDI-fraction and chemistry-domain gates; uncertainty is not a nominal hard gate",
-    "L2_robust": "argmin minimax worst_case_interval score over L1-feasible candidates with domain_ratio <= domain_ratio_max"
+    "L0_property": "argmin J_state over all candidates, no constraints",
+    "L1_constrained": "argmin J_state over candidates passing the point-response rheology windows, NCO:OH, MDI-fraction and chemistry-domain gates",
+    "L2_robust": "strict interval certification over L1: all actual lower/upper response intervals lie inside the preferred windows and domain_ratio <= 1; if the robust set is empty, no winner is assigned and a reachability gap is reported"
   },
   "robustness": {
     "enabled": true,
-    "method": "minimax_worst_case_interval",
-    "definition": "robust_score = sum_k w_k * (|log10(y_k / c_k)| + r)^2, where r is the frozen log10 interval radius; this is the exact worst case of the nominal squared-log objective over the independent response intervals when the same radius r is used for each response",
-    "require_interval_inside_preferred": false,
+    "method": "strict_interval_minimax",
+    "require_interval_inside_preferred": true,
+    "require_actual_response_intervals": true,
     "domain_ratio_max": 1.0,
+    "empty_set_policy": "abstain_and_report_reachability_gap",
+    "ranking_if_nonempty": "minimax worst-case normalized J_state over the actual response intervals",
     "diagnostics": {
       "report_interval_inside_broad": true,
-      "report_interval_inside_preferred": true
+      "report_interval_inside_preferred": true,
+      "report_window_expansion_gap": true,
+      "report_uniform_uncertainty_shrink_gap": true
     },
-    "rationale": "The complete-data response defines nominal feasibility. Uncertainty is propagated into the decision through a parameter-free minimax score rather than used as a second certification gate. Full-interval containment is reported diagnostically, not used to delete otherwise admissible candidates. The only additional L2 eligibility gate is the frozen in-domain reference domain_ratio <= 1.0."
+    "rationale": "The latest Database-For-PUR audit showed that strict preferred-window containment is unreachable for the frozen PUR_SIM_V1 uncertainty definition. The scientific result is therefore an empty robust set plus a quantitative reachability gap, not an artificial L2 winner."
   },
   "backward": {
     "constraint": "mdi_fraction_min",
@@ -58,7 +78,7 @@
     "manifold": "mdi_parts = k_blend * nco_oh (exact on the frozen grid)"
   },
   "local_trends": {
-    "evaluated_at": "robust_winner (falls back to constrained_winner if the robust layer is not yet computable)",
+    "evaluated_at": "robust_winner if one exists; otherwise constrained_winner",
     "response": "eta80",
     "nco_axis": "increasing NCO:OH along the same blend",
     "composition_axis": "increasing parts of the higher-MDI-demand component within the same two-component family at fixed NCO:OH"
@@ -68,14 +88,15 @@
     "nco_oh_grid": [1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
     "n_blends": 58
   },
-  "expected_from_docs": {
-    "note": "Pre-freeze hypotheses and historically frozen values are audit references only. The freeze script reports disagreement and never edits data to match them.",
+  "expected_from_database_audit": {
+    "note": "These values are provenance/audit references only and must be stripped from blind bundles. They are not inputs to the Agent.",
     "property_winner": "WO_INV_0419",
-    "constrained_winner": "WO_INV_0579",
+    "constrained_winner": "WO_INV_0420",
+    "historical_oracle_v2_winner": "WO_INV_0579",
     "robust_winner": null,
-    "prior_robust_hypothesis": "WO_INV_0420",
+    "strict_robust_feasible_count": 0,
     "active_constraint": "mdi_fraction",
-    "backward_continuous_threshold": 1.772,
+    "backward_continuous_threshold": 1.771983672436162,
     "nearest_reachable_grid_value": 1.8
   },
   "evaluation": {
