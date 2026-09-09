@@ -2,77 +2,85 @@
 
 This directory contains the versioned manuscript source for PUR-Essay.
 
-## Active draft
+## Active manuscript state
 
-- `PUR_manuscript_draft_v0.2.md`
-- Title: **From Temperature-Amplified Rheology to Auditable Formulation Decisions in Polyurethane Prepolymers**
-- Status: scientific draft; source-grounded rheology results are written, while final FRONTIER, Agent and experimental results remain explicitly pending.
+Title: **From Temperature-Amplified Rheology to Auditable Formulation Decisions in Polyurethane Prepolymers**
 
-## Completed in v0.2
+- v0.2: source-grounded rheology + pre-FRONTIER draft.
+- v0.3: adds the fully frozen PUR-FRONTIER V1 decision results and Figure 5 interpretation.
 
-- Abstract and Introduction.
-- Source/protocol heterogeneity section.
-- Andrade rheology analysis for 39 prepolymers / 4,559 temperature-viscosity points.
-- Free-NCO coupling analysis.
-- Temperature-amplified chemistry contrast.
+## Results now complete enough for the deterministic paper core
+
+### Source-grounded rheology
+
+- 39 prepolymers / 4,559 temperature-viscosity points.
+- Andrade median R² = 0.9967; 37/39 at R² >= 0.98.
+- formulation-specific apparent activation energy.
+- free-NCO coupling to viscosity and temperature sensitivity.
+- temperature-amplified chemistry contrast.
 - US5932680A composition-context interaction.
-- Historical PUR-ORACLE V2 constrained-decision section.
-- Backward-design interpretation.
-- PUR-RECOVER V1 methodology and complete-decision-recovery definition.
-- Prospective wet-lab validation design.
-- Methods, Discussion, Conclusions and preliminary references.
-- Figure 2-4 captions aligned to the formal R sources in `figures/R/` and rendered outputs in `figures/final/`.
 
-## FRONTIER V1 status
+### Frozen PUR-FRONTIER V1
 
-The pre-freeze robustness definition has now been audited and fixed **before** any FRONTIER gold is generated.
+```text
+928 total candidates
+141 nominally feasible
+117 robust-admissible
 
-Current rule:
+L0 property winner      WO_INV_0419
+L1 constrained winner   WO_INV_0579
+L2 robust winner        WO_INV_0420
+```
 
-1. L0: nominal property score over all 928 candidates.
-2. L1: nominal point-response rheology + chemistry/process constraints. Uncertainty intervals are not a nominal hard gate.
-3. L2: parameter-free minimax worst-case extension of the same log-space objective over the frozen uncertainty interval, with `domain_ratio <= 1.0` as the additional robust eligibility condition.
-4. Full-interval containment inside broad/preferred windows is diagnostic only and is not used to delete candidates.
-5. No L2 winner is hard-coded. The earlier `WO_INV_0420` result remains a prior hypothesis and a verified first-reachable point on the 50/50 backward trajectory, not the final robust gold.
+Rank propagation over the 117 robust-admissible candidates:
 
-Definition: `configs/frontier_v1.json`. Rationale: `docs/FRONTIER_V1.md`.
+```text
+Spearman rho = 0.9851
+Kendall tau  = 0.8918
+367 / 6786 inversions = 5.41%
+```
 
-The exact L0/L1/L2 frontier still cannot be frozen because the original complete `PUR_SIM_V1` 928-row response table is absent from the repository. The old v0.7 model output is not a valid replacement and no missing responses are fabricated.
+Fixed 50/50 PPG700/PPG1000 NCO control:
+
+```text
+Kendall tau = 1.0
+0 / 28 inversions
+```
+
+Backward design from `WO_INV_0419` gives the MDI-fraction boundary at NCO:OH = 1.77198 and the first reachable grid point at 1.8 (`WO_INV_0420`), independently matching the robust L2 winner.
+
+## Figure status
+
+- Figure 2 — final R/PNG/PDF/SVG.
+- Figure 3 — final R/PNG/PDF/SVG.
+- Figure 4 — final R/PNG/PDF/SVG.
+- **Figure 5 — now real-data-driven and generated from frozen `results/frontier_v1/`; final R/PNG/PDF/SVG.**
+- Figure 6 — reserved for formal repeated PUR-RECOVER API benchmark.
+
+Figure 5 is not a schematic. Its R source refuses publication rendering unless the FRONTIER manifest has `gold_status = GOLD`.
 
 ## Intentionally pending
 
-1. **Restore the exact PUR_SIM_V1 response table** as `data/pur_sim_v1/candidates_full.csv` and run `scripts/freeze_frontier_v1.py`.
-2. **Figure 5**: render the final decision-frontier propagation only after the full-table freeze. A schematic must not be substituted for data-derived L0/L2 results.
-3. **PUR-RECOVER V1 benchmark**: build the blind bundle from frozen FRONTIER gold and run repeated API experiments.
-4. **Figure 6**: render Agent benchmark after repeated runs are complete.
-5. **Prospective wet-lab results**: insert only after the frozen experimental matrix is completed; never expose these results to the primary blind Agent bundle.
-6. Authors, affiliations, acknowledgements, journal-specific formatting and final reference pass.
+1. **PUR-RECOVER V1 formal API benchmark**: build the anonymised blind bundle from frozen FRONTIER gold and run repeated real-model trials/baselines.
+2. **Figure 6**: render only after repeated Agent results are available.
+3. **Prospective wet-lab validation**: insert actual pre-MDI/prepolymer temperature-viscosity curves and Ea only after experiments are completed.
+4. Authors, affiliations, acknowledgements, journal-specific formatting and final literature/reference pass.
 
-## Already verified independently of the missing response table
-
-For the 50/50 PPG700/PPG1000 design trajectory:
-
-- `mdi_parts = 30.3875 * NCO:OH`;
-- the 35 wt% MDI boundary occurs continuously at NCO:OH = 1.7720;
-- the first reachable frozen grid point is NCO:OH = 1.8 (`WO_INV_0420`);
-- NCO:OH = 1.7 (`WO_INV_0419`) lies below the MDI floor at approximately 34.06 wt%.
-
-These are backward/reachability results from the real design grid, not assertions about the final L0 or L2 winner.
+Mock Agent runs are infrastructure tests and must not be reported as model performance.
 
 ## Claim boundary
 
 - Experimental/public rheology evidence supports the physical conclusions in Sections 2.1-2.5.
-- Synthetic `PUR_SIM_V1` responses support finite-space decision/benchmark analyses only and are not empirical rheology evidence.
-- Historical `PUR-ORACLE V2` remains frozen for provenance and is not silently rewritten.
-- FRONTIER V1 has a fixed pre-result decision rule, but no new L0/L2 gold is reported until the exact full response table is restored.
-- Prospective wet-lab data and evaluator-only gold files remain outside the primary blinded Agent input.
+- `PUR_SIM_V1` is a synthetic finite-space decision benchmark; it supports L0/L1/L2 decision propagation, backward design and Agent evaluation only.
+- Historical PUR-ORACLE V2 remains frozen for provenance.
+- PUR-FRONTIER V1 is now frozen and hash-reproducible.
+- Prospective wet-lab data and evaluator-only gold remain outside the primary blind Agent input.
 
-## Figure sources
+## Reproduction
 
-- `figures/R/Figure2.R` -> `figures/final/Figure2_temperature_Andrade.*`
-- `figures/R/Figure3.R` -> `figures/final/Figure3_free_NCO_coupling.*`
-- `figures/R/Figure4.R` -> `figures/final/Figure4_chemistry_amplification_interaction.*`
-- Figure 5 -> pending frozen full-table FRONTIER results.
-- Figure 6 -> pending repeated PUR-RECOVER results.
+```bash
+python scripts/freeze_frontier_v1.py
+Rscript figures/R/render_all_figures.R
+```
 
-All future manuscript revisions should create a new versioned draft or update the active draft with an explicit commit message. Do not alter frozen historical files or scientific definitions post hoc to make later results look cleaner.
+The response table is reconstructed from the frozen multipart XZ/base64 snapshot and SHA256-verified before the frontier is produced.
