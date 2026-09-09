@@ -1,0 +1,34 @@
+{
+  "property_winner": {
+    "expected_from_docs": "WO_INV_0419",
+    "computed": "WO_INV_0419",
+    "agrees": true
+  },
+  "constrained_winner": {
+    "expected_from_docs": "WO_INV_0579",
+    "computed": "WO_INV_0579",
+    "agrees": true
+  },
+  "robust_winner": {
+    "expected_from_docs": "WO_INV_0420",
+    "computed": "WO_INV_0420",
+    "agrees": true
+  },
+  "active_constraint": {
+    "expected_from_docs": "mdi_fraction",
+    "computed": "mdi_fraction",
+    "agrees": true
+  },
+  "backward_continuous_threshold": {
+    "expected_from_docs": 1.772,
+    "computed": 1.771983672436161,
+    "agrees": true
+  },
+  "nearest_reachable_grid_value": {
+    "expected_from_docs": 1.8,
+    "computed": 1.8,
+    "agrees": true
+  },
+  "all_agree": true,
+  "note": "Disagreements are reported, never patched."
+}

@@ -1,0 +1,13 @@
+{
+  "comparison_set": "robust-eligible candidates",
+  "n": 117,
+  "spearman_rho": 0.9850814488453294,
+  "kendall_tau": 0.8918361332154434,
+  "pairwise_inversions": 367,
+  "total_pairs": 6786,
+  "inversion_fraction": 0.05408193339227822,
+  "inversion_percent": 5.408193339227822,
+  "nominal_top_on_comparison_set": "WO_INV_0579",
+  "robust_top": "WO_INV_0420",
+  "top1_inversion": true
+}

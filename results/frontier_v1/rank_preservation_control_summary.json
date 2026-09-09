@@ -1,0 +1,11 @@
+{
+  "blend": "PPG1000:50+PPG700:50",
+  "nco_range": [
+    1.8,
+    2.5
+  ],
+  "n": 8,
+  "kendall_tau": 0.9999999999999998,
+  "pairwise_inversions": 0,
+  "total_pairs": 28
+}
