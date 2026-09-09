@@ -15,8 +15,9 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -e '.[agent,dev]'
       - run: pytest
-      # Offline end-to-end of the benchmark scripts on the test fixture (no API key, nothing written into the repo)
-      - name: Offline benchmark smoke (mock provider)
+
+      # Small fixture smoke: fast development regression without touching the frozen benchmark.
+      - name: Offline benchmark smoke on toy fixture
         shell: bash
         run: |
           set -euo pipefail
@@ -31,5 +32,28 @@ jobs:
           python scripts/run_agent_once.py --provider mock --condition pur_agent --blind-dir /tmp/b/blind --out /tmp/r/once.json
           python scripts/run_baselines.py --provider mock --runs 1 --blind-dir /tmp/b/blind --results-root /tmp/r
           python scripts/summarize_benchmark.py /tmp/r
+
+      # Full frozen benchmark smoke: reconstruct 928 responses, freeze gold, anonymize, scan for leakage,
+      # then make the deterministic mock traverse the same Agent tool chain. This is infrastructure QA,
+      # not a manuscript model-performance result.
+      - name: Validate frozen PUR-RECOVER blind bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf benchmark/recover_v1 gold/recover_v1 /tmp/full-agent
+          python scripts/freeze_frontier_v1.py --out /tmp/full-frontier
+          python scripts/build_blind_bundle.py
+          python scripts/verify_no_leakage.py
+          python scripts/run_agent_once.py --provider mock --condition pur_agent --out /tmp/full-agent/mock.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/full-agent/mock.json').read_text())
+          assert r['decision_valid'] is True
+          ev=r.get('evaluation') or {}
+          assert ev.get('complete_decision_recovery') is True, ev
+          print('full frozen blind benchmark: PASS')
+          PY
+
       - name: Frozen legacy analysis still runs (results are not committed back)
         run: python scripts/run_anchor_analysis.py > /dev/null && git checkout -- results/
