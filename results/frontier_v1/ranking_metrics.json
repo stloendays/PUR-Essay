@@ -1,0 +1,18 @@
+{
+  "common_robust_set_n": 117,
+  "spearman_rho": 0.9850814488453294,
+  "kendall_tau": 0.8918361332154434,
+  "pairwise_inversions": 367,
+  "pairwise_pairs": 6786,
+  "inversion_fraction": 0.05408193339227822,
+  "constrained_winner_robust_rank": 6,
+  "robust_winner_nominal_rank": 4,
+  "rank_preservation_control": {
+    "family": "PPG1000:50+PPG700:50",
+    "nco_oh_range": [1.8, 2.5],
+    "n": 8,
+    "spearman_rho": 1.0,
+    "kendall_tau": 0.9999999999999998,
+    "pairwise_inversions": 0
+  }
+}
