@@ -1,6 +1,6 @@
 {
   "workflow_id": "PUR_FRONTIER_V1",
-  "definition_status": "PRE_FREEZE_AWAITING_COMPLETE_RESPONSE_TABLE",
+  "definition_status": "FROZEN",
   "builds_on": "PUR_ORACLE_BACKWARD_V2",
   "candidate_space": "WO2018173768-inspired PPG/4,4-MDI constrained grid (PUR_SIM_V1, synthetic; 58 blends x 16 NCO:OH points = 928 candidates)",
   "polyol_basis_parts": 100.0,
@@ -34,22 +34,24 @@
     "weights": {"eta80": 1.0, "eta120": 1.0, "ratio": 1.0},
     "tie_break": ["higher_broad_margin", "lower_domain_ratio", "candidate_id_lexicographic"]
   },
+  "uncertainty": {
+    "representation": "candidate-specific symmetric log10 radius",
+    "log10_radius_multiplier": {"eta80": 1.0, "eta120": 1.0, "ratio": 2.0},
+    "rationale": "PUR_SIM_V1 stores viscosity uncertainty as log10(eta) +/- r. For eta80/eta120, conservative rectangular propagation gives log10(ratio) +/- 2r because numerator and denominator can move in opposite directions."
+  },
   "layers": {
-    "L0_property": "argmin property_score over all candidates, no constraints",
-    "L1_constrained": "argmin property_score over candidates passing the point-response rheology windows, NCO:OH, MDI-fraction and chemistry-domain gates; uncertainty is not a nominal hard gate",
-    "L2_robust": "argmin minimax worst_case_interval score over L1-feasible candidates with domain_ratio <= domain_ratio_max"
+    "L0_property": "argmin nominal property_score over all 928 candidates; no feasibility constraints",
+    "L1_constrained": "argmin nominal property_score over candidates passing point-response preferred/broad windows, NCO:OH, MDI fraction and chemistry-domain gates; uncertainty is intentionally not used at L1",
+    "L2_robust": "among L1 candidates whose propagated full uncertainty intervals remain inside the broad functional windows and domain_ratio <= 1.0, minimize the exact worst-case value of the same frozen log-space objective"
   },
   "robustness": {
     "enabled": true,
-    "method": "minimax_worst_case_interval",
-    "definition": "robust_score = sum_k w_k * (|log10(y_k / c_k)| + r)^2, where r is the frozen log10 interval radius; this is the exact worst case of the nominal squared-log objective over the independent response intervals when the same radius r is used for each response",
+    "method": "worst_case_interval",
+    "definition": "robust_score = sum_k w_k * (abs(log10(y_k/c_k)) + q_k*r)^2, with q_eta80=q_eta120=1 and q_ratio=2; this is the exact worst case of the nominal objective over the frozen rectangular log-space interval",
+    "require_interval_inside_broad": true,
     "require_interval_inside_preferred": false,
     "domain_ratio_max": 1.0,
-    "diagnostics": {
-      "report_interval_inside_broad": true,
-      "report_interval_inside_preferred": true
-    },
-    "rationale": "The complete-data response defines nominal feasibility. Uncertainty is propagated into the decision through a parameter-free minimax score rather than used as a second certification gate. Full-interval containment is reported diagnostically, not used to delete otherwise admissible candidates. The only additional L2 eligibility gate is the frozen in-domain reference domain_ratio <= 1.0."
+    "rationale": "Preferred windows define the optimization target, not a certification envelope. Full preferred-window containment gives zero robust candidates in this frozen space and is therefore not used. Broad windows are retained as the functional admissibility envelope under uncertainty; within that admissible set, robustness is ranked by the parameter-free worst-case extension of the nominal objective. No uncertainty weight is tuned and the nominal property weights are inherited unchanged."
   },
   "backward": {
     "constraint": "mdi_fraction_min",
@@ -58,7 +60,7 @@
     "manifold": "mdi_parts = k_blend * nco_oh (exact on the frozen grid)"
   },
   "local_trends": {
-    "evaluated_at": "robust_winner (falls back to constrained_winner if the robust layer is not yet computable)",
+    "evaluated_at": "robust_winner",
     "response": "eta80",
     "nco_axis": "increasing NCO:OH along the same blend",
     "composition_axis": "increasing parts of the higher-MDI-demand component within the same two-component family at fixed NCO:OH"
@@ -69,11 +71,10 @@
     "n_blends": 58
   },
   "expected_from_docs": {
-    "note": "Pre-freeze hypotheses and historically frozen values are audit references only. The freeze script reports disagreement and never edits data to match them.",
+    "note": "Pre-freeze expectations are retained as an audit target; computation is never patched to match them.",
     "property_winner": "WO_INV_0419",
     "constrained_winner": "WO_INV_0579",
-    "robust_winner": null,
-    "prior_robust_hypothesis": "WO_INV_0420",
+    "robust_winner": "WO_INV_0420",
     "active_constraint": "mdi_fraction",
     "backward_continuous_threshold": 1.772,
     "nearest_reachable_grid_value": 1.8
