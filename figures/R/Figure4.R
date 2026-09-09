@@ -20,7 +20,15 @@ pat <- read_csv("data/figures/us5932680_interaction.csv", show_col_types = FALSE
   )
 
 rev <- read_csv("data/figures/us5932680_rank_reversal.csv", show_col_types = FALSE) %>%
-  mutate(example = factor(example, levels = c("Example 1", "Example 4")))
+  mutate(
+    example = factor(example, levels = c("Example 1", "Example 4")),
+    label_y = case_when(
+      example == "Example 1" & temperature_c == 90 ~ 205,
+      example == "Example 4" & temperature_c == 90 ~ 92,
+      example == "Example 1" & temperature_c == 110 ~ 52,
+      TRUE ~ 64
+    )
+  )
 
 pair_long <- pairs %>%
   select(pair, iso, pNCO, ratio45, ratio75) %>%
@@ -50,7 +58,7 @@ pB <- ggplot(pairs, aes(reorder(pair, amplification_45_75), amplification_45_75,
   scale_colour_manual(values = c("44M" = PUR_COL[["C"]], "MLQ" = PUR_COL[["D"]])) +
   coord_flip() +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
-  labs(x = NULL, y = "Low-temperature amplification: (C/P)45 / (C/P)75") +
+  labs(x = NULL, y = "Chemistry amplification, (C/P)45 / (C/P)75") +
   annotate("text", x = 1, y = medamp * 1.03, label = sprintf("Median = %.2f×", medamp),
            hjust = 0, size = 2.60, colour = PUR_COL[["ink"]]) +
   theme(legend.position = "top", legend.direction = "horizontal", legend.justification = "left")
@@ -76,16 +84,16 @@ pC <- ggplot(pat, aes(state, eta130, group = background, colour = background)) +
 pD <- ggplot(rev, aes(temperature_c, eta_pa_s, group = example, colour = example)) +
   geom_line(linewidth = 1.00) +
   geom_point(size = 2.65) +
-  geom_text(aes(label = eta_pa_s), nudge_x = 0.7, show.legend = FALSE,
-            size = 2.45, colour = PUR_COL[["ink"]]) +
+  geom_text(aes(y = label_y, label = eta_pa_s), show.legend = FALSE,
+            size = 2.40, colour = PUR_COL[["ink"]]) +
   scale_colour_manual(values = c("Example 1" = PUR_COL[["T80"]], "Example 4" = PUR_COL[["P"]])) +
   scale_x_continuous(breaks = c(90, 110), limits = c(88, 114)) +
   scale_y_log10(breaks = c(50, 60, 100, 200), labels = label_number(accuracy = 1)) +
   labs(x = "Temperature (°C)", y = "Published viscosity (Pa·s)") +
-  annotate("text", x = 89, y = 220, label = "190 > 98", hjust = 0,
-           size = 2.50, colour = PUR_COL[["ink"]]) +
-  annotate("text", x = 106.5, y = 48, label = "55 < 60", hjust = 0,
-           size = 2.50, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 89, y = 225, label = "190 > 98", hjust = 0,
+           size = 2.45, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 106.4, y = 47.5, label = "55 < 60", hjust = 0,
+           size = 2.45, colour = PUR_COL[["ink"]]) +
   theme(legend.position = "bottom", legend.direction = "horizontal", legend.justification = "left")
 
 fig4 <- ((pA | pB) / (pC | pD)) +
