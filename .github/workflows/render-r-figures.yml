@@ -6,6 +6,7 @@ on:
     paths:
       - 'figures/R/**'
       - 'data/figures/**'
+      - 'results/frontier_v1/**'
       - '.github/workflows/render-r-figures.yml'
 
 permissions:
@@ -35,12 +36,13 @@ jobs:
             any::patchwork
             any::scales
             any::svglite
-          cache-version: 1
+            any::jsonlite
+          cache-version: 2
 
       - name: Record R environment
         run: Rscript -e 'sessionInfo()'
 
-      - name: Render Figure 2-4
+      - name: Render eligible manuscript figures
         run: Rscript figures/R/render_all_figures.R
 
       - name: Verify outputs
@@ -55,12 +57,22 @@ jobs:
               test -s "figures/final/${stem}.${ext}"
             done
           done
+
+          if [[ -s results/frontier_v1/frontier_table.csv && \
+                -s results/frontier_v1/frontier_v1_decision.json && \
+                -s results/frontier_v1/manifest.json ]]; then
+            for ext in png pdf svg; do
+              test -s "figures/final/Figure5_decision_frontier.${ext}"
+            done
+          else
+            echo "FRONTIER V1 gold absent; Figure 5 correctly skipped."
+          fi
           ls -lh figures/final
 
       - name: Upload publication figures
         uses: actions/upload-artifact@v4
         with:
-          name: PUR-Figure2-4-R-render
+          name: PUR-manuscript-R-render
           path: |
             figures/final/*.png
             figures/final/*.pdf
@@ -80,5 +92,5 @@ jobs:
             echo "Rendered figures are already up to date."
             exit 0
           fi
-          git commit -m "Render Figure 2-4 outputs [skip ci]"
+          git commit -m "Render manuscript R figures [skip ci]"
           git push
