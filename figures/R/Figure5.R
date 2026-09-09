@@ -64,7 +64,10 @@ pA <- ggplot(tab, aes(mdi_fraction, property_score)) +
     values = setNames(c(PUR_COL[["T80"]], PUR_COL[["P"]], PUR_COL[["C"]]), c(property_id, nominal_id, robust_id)),
     labels = setNames(c("L0 property", "L1 nominal", "L2 robust"), c(property_id, nominal_id, robust_id))
   ) +
-  scale_y_log10(labels = label_number(accuracy = 0.001)) +
+  scale_y_continuous(
+    trans = pseudo_log_trans(base = 10),
+    labels = label_number(accuracy = 0.001)
+  ) +
   labs(x = "MDI fraction of polyol + MDI", y = "Nominal property objective, J") +
   annotate("text", x = 0.351, y = Inf, label = "35 wt% MDI floor", hjust = 0, vjust = 1.4,
            size = 2.45, colour = PUR_COL[["mid"]]) +
