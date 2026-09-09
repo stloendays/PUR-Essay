@@ -3,93 +3,111 @@
 Data-driven polyurethane / HMPUR prepolymer rheology and formulation-decision research, with a blinded scientific-Agent benchmark layered on top of a deterministic science workflow.
 
 ```text
-The Agent is not the scientist that defines the answer.
 The deterministic scientific workflow defines and freezes the answer.
 The Agent is a blinded decision-recovery system evaluated against that answer.
 The wet-lab experiment independently evaluates whether the frozen computational decision transfers to reality.
 ```
 
-## Two strictly separated parts
-
-### A. Non-Agent scientific layer (owns all scientific truth)
+## Scientific workflow
 
 ```text
-heterogeneous experimental/public evidence
-  -> source + protocol harmonization          docs/RHEOLOGY_SCIENCE_V1.md
-  -> per-formulation rheology, Andrade fit    ln(eta) = A + B/T, Ea_app = R B
-  -> rheological state (eta_ref, Ea)
+experimental/public evidence
+  -> source + protocol harmonization
+  -> formulation-specific Andrade rheology (eta_ref, Ea)
   -> free-NCO / chemistry / temperature trends
   -> composition-context interaction
-  -> candidate response landscape (PUR_SIM_V1, synthetic)
-  -> nominal ranking -> feasibility -> minimax uncertainty/domain robustness   PUR-FRONTIER V1
-  -> backward boundary -> reachability
-  -> prospective wet-lab validation           data/prospective_validation/ (agent_access = false)
+  -> PUR_SIM_V1 finite candidate landscape
+  -> L0 property ranking
+  -> L1 nominal chemistry/process feasibility
+  -> L2 interval/domain robustness
+  -> backward active-boundary analysis
+  -> reachability
+  -> blinded PUR-RECOVER V1 Agent benchmark
+  -> prospective wet-lab validation
 ```
 
-Code: `src/pur_science/` (objective, feasibility gates, frontier L0/L1/L2, backward threshold, reachability, local trends, Andrade).
-Pre-freeze decision rule: `configs/frontier_v1.json`.
+The experimental/public science layer and synthetic decision benchmark are kept strictly separate. `PUR_SIM_V1` is not used as empirical evidence for physical polyurethane rheology.
 
-### B. Agent layer (PUR-RECOVER V1, never a source of truth)
+## Frozen PUR-FRONTIER V1
 
-```text
-deterministic science -> freeze gold decision -> hide answer -> Agent receives admissible data
-  -> Agent reasons / calls deterministic tools -> evaluator compares to frozen gold
-```
+The complete 928-candidate response snapshot is now stored losslessly and SHA256-verified. `scripts/freeze_frontier_v1.py` reconstructs it automatically and regenerates the full frontier from `configs/frontier_v1.json`.
 
-Code: `src/pur_agent/`. The Agent can only read `benchmark/recover_v1/blind/` through a filesystem guard that refuses gold/evaluator/mapping/oracle/results/prospective paths.
-
-## Decision frontier
-
-```text
-property optimum -> nominal feasible optimum -> minimax robust optimum
-                 -> active constraint -> backward threshold -> reachable formulation
-```
-
-| Layer | Definition | Current status |
+| Layer | Frozen result | Meaning |
 |---|---|---|
-| L0 property-only | argmin `J = Σ log10(y/c)^2` over all 928 candidates | prior hypothesis `WO_INV_0419`; requires full response table to verify |
-| L1 nominal constrained | same `J` after point-response broad/preferred windows, NCO:OH, MDI-fraction and chemistry-domain gates | historical ORACLE V2 winner `WO_INV_0579`; FRONTIER recomputation still requires full table |
-| L2 robust | argmin `Σ (|log10(y/c)| + r)^2` over L1 candidates with `domain_ratio <= 1` | **not predetermined**; requires full response table |
+| L0 property-only | `WO_INV_0419` | closest nominal rheology to the preferred target, but MDI fraction = 34.06 wt% < 35 wt% floor |
+| L1 nominal constrained | `WO_INV_0579` | best point-feasible candidate under rheology + chemistry/process gates |
+| L2 robust | `WO_INV_0420` | best worst-case candidate after broad-window uncertainty propagation and domain support |
 
-FRONTIER V1 deliberately does **not** use full uncertainty-interval containment as a nominal or preferred-window hard gate. Complete-data responses define nominal feasibility; uncertainty is propagated afterwards through the same objective using a parameter-free worst-case/minimax score. Interval containment remains a diagnostic rather than a second certification task. See `docs/FRONTIER_V1.md`.
+Counts:
 
-The earlier `WO_INV_0420` result is retained only as a prior robust hypothesis and, independently, as a verified backward-design point on the 50/50 PPG700/PPG1000 trajectory. It is **not** hard-coded as the robust gold.
+```text
+928 total candidates
+141 nominally feasible
+117 robust-admissible
+```
 
-Verified from the real design grid: for the 50/50 PPG700/PPG1000 blend,
+The L2 rule is a parameter-free worst-case extension of the same nominal log-space objective. The stored viscosity uncertainty radius is propagated as `q=(1,1,2)` for eta80, eta120 and eta80/eta120, respectively; the ratio receives `2r` because numerator and denominator can move in opposite directions. Full uncertainty intervals must remain inside the broad functional windows, while preferred windows remain the optimisation target rather than a certification envelope.
+
+## Decision-frontier inversion
+
+Among the 117 robust-admissible candidates:
+
+```text
+Spearman rho = 0.9851
+Kendall tau  = 0.8918
+367 / 6786 pairwise inversions = 5.41%
+nominal top  = WO_INV_0579
+robust top   = WO_INV_0420
+```
+
+Thus global ordering remains strongly preserved while the top material decision changes. This is a **decision-frontier inversion**, not a global failure of rheological screening.
+
+A fixed-chemistry PPG700/PPG1000 = 50/50 control over NCO:OH = 1.8-2.5 gives Kendall tau = 1.0 and 0/28 inversions, showing that the robust transformation does not mechanically manufacture ranking inversions.
+
+## Backward design
+
+For the L0 winner's 50/50 PPG700/PPG1000 trajectory,
 
 ```text
 mdi_parts = 30.3875 * NCO:OH
 ```
 
-so the 35 wt% MDI floor is crossed continuously at **NCO:OH = 1.7720**, and the first reachable 0.1-grid point is **1.8** (`WO_INV_0420`). `WO_INV_0419` at NCO:OH 1.7 has about 34.06 wt% MDI and fails this boundary.
-
-## Data status — current blocker
-
-The complete `PUR_SIM_V1` response table (928 rows with eta80, eta120, ratio, uncertainty radius and domain descriptors) is **not in this repository**. See `docs/PROJECT_STATE_AUDIT.md` and `data/pur_sim_v1/README.md`.
-
-Available:
-
-- `data/pur_sim_v1/design_space_928.csv` — real 928-row formulation/design grid;
-- `data/oracle_top30_compact.csv` — historical 10-row feasible ranked snapshot;
-- `results/oracle_v2/oracle_best.json` — frozen historical L1 result.
-
-The old v0.7 response table comes from a different model and is not substituted. No response values are reconstructed or fabricated to fill the gap.
-
-Restore the exact original response table as:
+so the 35 wt% MDI floor is crossed at
 
 ```text
-data/pur_sim_v1/candidates_full.csv
+NCO:OH* = 1.7719836724.
 ```
 
-then run:
+Projection onto the frozen 0.1 grid gives the first reachable point at **1.8**, candidate `WO_INV_0420` — the same candidate selected independently by L2 robust ranking.
 
-```bash
-python scripts/freeze_frontier_v1.py
-```
+## PUR-RECOVER V1 Agent
 
-The freeze script refuses partial input by default, records data/config hashes, computes L0/L1/L2, and reports any disagreement with prior hypotheses without modifying the data.
+The Agent does not define the gold answer. Primary runs use anonymised candidates/materials and hide rank, scores, mapping files and future wet-lab results. Deterministic tools perform ranking, constraint checks, backward solving, reachability and local sweeps.
 
-## Quick start
+The primary metric is **complete_decision_recovery**. A successful run must recover:
+
+- L0 property winner;
+- L1 constrained winner;
+- L2 robust winner;
+- active constraint;
+- backward threshold;
+- reachable grid point;
+- local NCO direction;
+- local composition direction.
+
+The formal repeated API benchmark is the next execution stage. Mock/offline runs are tests only and are not manuscript performance results.
+
+## Figures
+
+- Figure 2: formulation-specific Andrade temperature response and apparent activation energies.
+- Figure 3: free-NCO coupling to viscosity and thermal sensitivity.
+- Figure 4: temperature-amplified chemistry contrast and composition-context interaction.
+- **Figure 5: frozen L0/L1/L2 decision frontier, backward boundary and nominal-to-robust rank propagation.**
+- Figure 6: reserved for the repeated PUR-RECOVER Agent benchmark.
+
+Formal R sources are in `figures/R/`; PNG/PDF/SVG outputs are in `figures/final/`.
+
+## Reproducibility
 
 ```bash
 git pull
@@ -98,57 +116,44 @@ python -m venv .venv
 pip install -e ".[agent,dev]"
 pytest
 
-# 1. Restore the exact full PUR_SIM_V1 table, then freeze the deterministic frontier
+# Regenerate the exact deterministic gold and Figure 5
 python scripts/freeze_frontier_v1.py
+Rscript figures/R/render_all_figures.R
 
-# 2. Build anonymised blind bundle + evaluator-only gold and verify isolation
+# Build the blind benchmark
 python scripts/build_blind_bundle.py
 python scripts/verify_no_leakage.py
 
-# 3. Dry run without API key
+# Offline smoke
 python scripts/run_agent_once.py --provider mock --condition pur_agent
 
-# 4. Real API runs — secrets only through environment variables
+# Real API — key stays in the environment
 export OPENAI_API_KEY="..."
 export OPENAI_BASE_URL=""       # optional
 export OPENAI_MODEL="..."
-python scripts/run_agent_once.py
 python scripts/run_agent_benchmark.py --runs 20
 python scripts/run_baselines.py --runs 20
 python scripts/summarize_benchmark.py
 ```
 
-`--provider auto` uses the OpenAI Responses API and falls back to Chat Completions for compatible providers that do not expose Responses. Prompts, deterministic tools and evaluator remain fixed.
-
-Secondary named-chemistry benchmark:
-
-```bash
-python scripts/build_blind_bundle.py --no-anonymize --blind-dir benchmark/recover_v1_named/blind --evaluator-dir benchmark/recover_v1_named/evaluator_only
-```
-
-## Benchmark conditions and metrics
-
-Conditions (`src/pur_agent/conditions.py`): deterministic oracle, direct LLM, tool-using LLM, full PUR-Agent, and planned ablations.
-
-Primary metric: **complete_decision_recovery**. A run must recover the decision chain, not merely guess a winner. Component metrics include top-1/3/5 recovery, oracle rank, objective regret, hard-constraint violations, backward-threshold error, reachability accuracy, explanation fidelity, tool calls, token usage, API calls and latency.
+The current CI test suite passes and the Figure workflow rebuilds the frontier from the hash-verified response snapshot before rendering Figure 5.
 
 ## Repository map
 
 | Path | Role |
 |---|---|
-| `docs/PROJECT_STATE_AUDIT.md` | project/version/data-gap audit |
-| `docs/RHEOLOGY_SCIENCE_V1.md`, `docs/NON_AGENT_WORKFLOW_V3.md` | active experimental/public science layer |
-| `docs/FRONTIER_V1.md`, `configs/frontier_v1.json`, `src/pur_science/` | pre-freeze deterministic frontier rule and implementation |
+| `docs/RHEOLOGY_SCIENCE_V1.md`, `docs/NON_AGENT_WORKFLOW_V3.md` | source-grounded physical rheology layer |
+| `docs/FRONTIER_V1.md`, `configs/frontier_v1.json`, `src/pur_science/` | frozen deterministic L0/L1/L2 frontier |
+| `results/frontier_v1/` | frozen decision, scores, ranking metrics and preservation control |
+| `data/pur_sim_v1/` | 928-design grid + hash-verified frozen response snapshot |
 | `docs/AGENT_STRATEGY_V1.md`, `configs/recover_v1.json`, `src/pur_agent/` | blinded Agent strategy |
-| `docs/WORKFLOW_V2.md`, `docs/PAPER_MODEL_V2.md`, `configs/oracle_v2.json`, `results/oracle_v2/` | frozen historical PUR-ORACLE V2 provenance |
-| `data/pur_sim_v1/` | design grid and location for restored full response table |
-| `results/frontier_v1/` | generated only after complete-table freeze |
-| `benchmark/`, `gold/`, `results/recover_v1/` | blind benchmark, evaluator-only gold and Agent outputs |
-| `figures/`, `data/figures/` | manuscript Figures 2–4 and their source data |
+| `benchmark/`, `gold/`, `results/recover_v1/` | blind inputs, evaluator-only gold and Agent outputs |
+| `figures/`, `data/figures/` | manuscript figure sources and render data |
 | `manuscript/` | versioned paper drafts |
+| `configs/oracle_v2.json`, `results/oracle_v2/` | historical frozen PUR-ORACLE V2 provenance |
 
 ## Claim boundary
 
 Experimental/public evidence supports the physical rheology conclusions: formulation-specific temperature sensitivity, free-NCO trends, temperature-amplified chemistry contrast and composition-context effects.
 
-`PUR_SIM_V1` is a synthetic decision benchmark. It supports finite-space optimisation, constraint propagation, interval robustness, backward calculation and blind Agent recovery only. Synthetic candidate responses are not described as experimentally discovered physical laws, and prospective wet-lab results never enter the primary blind Agent benchmark.
+`PUR_SIM_V1` supports finite-space optimisation, constraint propagation, interval robustness, backward design and blind Agent recovery only. It does not establish a universal optimum over all polyurethane chemistry. Prospective wet-lab results remain outside the primary blind Agent benchmark.
