@@ -25,7 +25,7 @@
     "nco_oh": [1.3, 3.0],
     "mdi_fraction_of_polyol_plus_mdi": [0.35, 0.49],
     "require_chemistry_in_domain": true,
-    "require_full_oracle_interval_inside_broad_window": true
+    "require_full_oracle_interval_inside_broad_window": false
   },
   "objective": {
     "space": "log10",
@@ -33,18 +33,24 @@
     "weights": {"eta80": 1.0, "eta120": 1.0, "ratio": 1.0},
     "tie_break": ["higher_broad_margin", "lower_domain_ratio", "candidate_id_lexicographic"]
   },
+  "uncertainty": {
+    "representation": "candidate-specific symmetric log10 radius",
+    "log10_radius_multiplier": {"eta80": 1.0, "eta120": 1.0, "ratio": 2.0},
+    "rationale": "The stored PUR_SIM_V1 viscosity intervals are log10(eta) +/- r. The ratio eta80/eta120 propagates both viscosity uncertainties, giving a frozen conservative ratio interval of log10(ratio) +/- 2r. The explicit source interval columns reproduce these multipliers to numerical precision."
+  },
   "layers": {
-    "L0_property": "argmin property_score over all candidates, no constraints",
-    "L1_constrained": "argmin property_score over candidates passing every hard_constraints gate (identical to PUR-ORACLE V2)",
-    "L2_robust": "argmin robust_score over L1-feasible candidates that also pass the robustness gates"
+    "L0_property": "argmin nominal property_score over all 928 candidates; no feasibility constraints",
+    "L1_constrained": "argmin nominal property_score over candidates passing point-response preferred/broad windows, NCO:OH, MDI fraction and chemistry-domain gates; uncertainty is intentionally not used at L1",
+    "L2_robust": "among L1 candidates whose full uncertainty intervals remain inside the broad functional windows, minimize the worst-case value of the same frozen log-space property objective"
   },
   "robustness": {
     "enabled": true,
     "method": "worst_case_interval",
-    "definition": "robust_score = sum_k w_k * (|log10(y_k / c_k)| + r)^2, where r is the frozen log10 interval radius of the candidate; worst case of the nominal objective over the uncertainty interval",
-    "require_interval_inside_preferred": true,
+    "definition": "robust_score = sum_k w_k * (abs(log10(y_k/c_k)) + q_k*r)^2, with q_eta80=q_eta120=1 and q_ratio=2; this is the exact worst case of the nominal objective over the frozen rectangular log-space interval",
+    "require_interval_inside_broad": true,
+    "require_interval_inside_preferred": false,
     "domain_ratio_max": 1.0,
-    "rationale": "Uncertainty is propagated as a deterministic interval, not a distribution. A candidate is robust-feasible only if every response stays inside the preferred window over its whole interval and its chemistry-domain distance does not exceed the in-domain reference."
+    "rationale": "Preferred windows define the optimization target, not a certification envelope. Requiring the entire uncertainty interval to remain inside the preferred windows yields zero feasible candidates in the frozen 928-space. Robust admissibility therefore uses the literature-derived broad functional windows, while the same preferred-center objective is evaluated at the interval worst case. No new uncertainty weight is introduced; the nominal objective weights are inherited unchanged."
   },
   "backward": {
     "constraint": "mdi_fraction_min",
@@ -53,7 +59,7 @@
     "manifold": "mdi_parts = k_blend * nco_oh (exact on the frozen grid)"
   },
   "local_trends": {
-    "evaluated_at": "robust_winner (falls back to constrained_winner if the robust layer is not frozen)",
+    "evaluated_at": "robust_winner",
     "response": "eta80",
     "nco_axis": "increasing NCO:OH along the same blend",
     "composition_axis": "increasing parts of the higher-MDI-demand component within the same two-component family at fixed NCO:OH"
@@ -64,7 +70,7 @@
     "n_blends": 58
   },
   "expected_from_docs": {
-    "note": "Values stated in project documentation before this freeze. The freeze script reports any disagreement; it never edits data to match.",
+    "note": "Pre-freeze expectations are retained only as an audit target. The freeze script reports disagreements and never edits data to match them.",
     "property_winner": "WO_INV_0419",
     "constrained_winner": "WO_INV_0579",
     "robust_winner": "WO_INV_0420",
