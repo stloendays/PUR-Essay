@@ -889,10 +889,10 @@
 <text x='104.21' y='65.21' style='font-size: 6.69px;fill: #6F6F6F; font-family: "Liberation Sans";' textLength='48.56px' lengthAdjust='spacingAndGlyphs'>frozen 35% floor</text>
 <text x='97.59' y='195.44' text-anchor='end' style='font-size: 6.40px;fill: #B04A4A; font-family: "Liberation Sans";' textLength='14.19px' lengthAdjust='spacingAndGlyphs'>0419</text>
 <text x='97.59' y='204.66' text-anchor='end' style='font-size: 6.40px;fill: #B04A4A; font-family: "Liberation Sans";' textLength='21.66px' lengthAdjust='spacingAndGlyphs'>34.06%</text>
-<line x1='99.45' y1='193.70' x2='104.41' y2='186.34' style='stroke-width: 1.17; stroke: #B04A4A; stroke-dasharray: 3.13,3.13; stroke-linecap: butt;' />
-<polygon points='104.18,189.73 104.41,186.34 101.36,187.83 ' style='stroke-width: 1.17; stroke: #B04A4A; stroke-dasharray: 3.13,3.13; stroke-linecap: butt; fill: #B04A4A;' />
-<text x='105.24' y='182.69' style='font-size: 6.26px;fill: #202020; font-family: "Liberation Sans";' textLength='54.14px' lengthAdjust='spacingAndGlyphs'>backward feasibility</text>
-<text x='105.24' y='191.70' style='font-size: 6.26px;fill: #202020; font-family: "Liberation Sans";' textLength='72.88px' lengthAdjust='spacingAndGlyphs'>NCO:OH 1.772 → grid 1.8</text>
+<line x1='113.71' y1='185.90' x2='103.71' y2='191.66' style='stroke-width: 1.17; stroke: #B04A4A; stroke-dasharray: 3.13,3.13; stroke-linecap: butt;' />
+<polygon points='105.41,188.71 103.71,191.66 107.11,191.66 ' style='stroke-width: 1.17; stroke: #B04A4A; stroke-dasharray: 3.13,3.13; stroke-linecap: butt; fill: #B04A4A;' />
+<text x='114.95' y='182.74' style='font-size: 6.12px;fill: #202020; font-family: "Liberation Sans";' textLength='52.94px' lengthAdjust='spacingAndGlyphs'>backward threshold</text>
+<text x='114.95' y='191.55' style='font-size: 6.12px;fill: #202020; font-family: "Liberation Sans";' textLength='71.27px' lengthAdjust='spacingAndGlyphs'>NCO:OH 1.772 → grid 1.8</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MTAuMjR8MC4wMHwyNDMuNzg=)'>
 <polyline points='56.28,212.59 56.28,46.22 ' style='stroke-width: 0.96; stroke: #202020; stroke-linecap: square;' />
@@ -1137,8 +1137,8 @@
 <text x='389.08' y='101.03' style='font-size: 6.69px;fill: #202020; font-family: "Liberation Sans";' textLength='45.22px' lengthAdjust='spacingAndGlyphs'>Top-1 inversion</text>
 <text x='390.97' y='179.18' style='font-size: 6.69px;fill: #3D5A80; font-family: "Liberation Sans";' textLength='36.33px' lengthAdjust='spacingAndGlyphs'>0579: 1 → 6</text>
 <text x='390.97' y='185.64' style='font-size: 6.69px;fill: #2A9D8F; font-family: "Liberation Sans";' textLength='36.33px' lengthAdjust='spacingAndGlyphs'>0420: 4 → 1</text>
-<text x='428.01' y='171.34' style='font-size: 5.83px;fill: #6F6F6F; font-family: "Liberation Sans";' textLength='73.50px' lengthAdjust='spacingAndGlyphs'>control: 50/50 PPG700/1000</text>
-<text x='428.01' y='179.74' style='font-size: 5.83px;fill: #6F6F6F; font-family: "Liberation Sans";' textLength='65.95px' lengthAdjust='spacingAndGlyphs'>τ = 1.000; 0/28 inversions</text>
+<text x='428.96' y='171.34' style='font-size: 5.83px;fill: #6F6F6F; font-family: "Liberation Sans";' textLength='49.53px' lengthAdjust='spacingAndGlyphs'>50/50 blend control</text>
+<text x='428.96' y='179.74' style='font-size: 5.83px;fill: #6F6F6F; font-family: "Liberation Sans";' textLength='65.95px' lengthAdjust='spacingAndGlyphs'>τ = 1.000; 0/28 inversions</text>
 </g>
 <g clip-path='url(#cpMC4wMHw1MTAuMjR8MC4wMHwyNDMuNzg=)'>
 <polyline points='384.33,186.38 384.33,72.43 ' style='stroke-width: 0.96; stroke: #202020; stroke-linecap: square;' />
