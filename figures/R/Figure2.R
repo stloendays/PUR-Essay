@@ -40,7 +40,7 @@ pB <- ggplot(fits, aes(r2, polyol, colour = polyol)) +
     labels = label_number(accuracy = 0.01)
   ) +
   labs(x = expression(Andrade~R^2), y = NULL) +
-  annotate("text", x = 0.982, y = 3.32, label = "37/39 ≥ 0.98", hjust = 0, size = 2.65, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 0.977, y = 3.32, label = "37/39 ≥ 0.98", hjust = 1, size = 2.65, colour = PUR_COL[["ink"]]) +
   theme(legend.position = "none", plot.margin = margin(4, 6, 7, 5))
 
 pC <- ggplot(fits, aes(polyol, Ea_kJmol, colour = polyol)) +
