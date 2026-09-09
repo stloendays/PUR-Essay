@@ -55,7 +55,7 @@ pB <- ggplot(eff, aes(slope_Ea_kJmol_per_pctNCO, family)) +
   geom_point(aes(colour = slope_Ea_kJmol_per_pctNCO < 0), size = 2.25) +
   scale_colour_manual(values = c(`TRUE` = PUR_COL[["C"]], `FALSE` = PUR_COL[["mid"]]), guide = "none") +
   scale_x_continuous(breaks = c(-3, -2, -1, 0), expand = expansion(mult = c(0.04, 0.10))) +
-  labs(x = expression(Delta*E[a,app]~"/ +1 wt%-pt NCO"*"\n"*"(kJ mol"^{-1}*")"), y = NULL) +
+  labs(x = "ΔEa / +1 wt%-pt NCO\n(kJ mol⁻¹)", y = NULL) +
   annotate("text", x = -3.05, y = 10.72, label = "9/11 families decrease", hjust = 0,
            size = 2.50, colour = PUR_COL[["ink"]]) +
   theme(plot.margin = margin(5, 7, 6, 5))
