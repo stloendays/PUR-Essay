@@ -40,7 +40,7 @@ jobs:
       - name: Record R environment
         run: Rscript -e 'sessionInfo()'
 
-      - name: Render Figure 2-4
+      - name: Render Figure 2-5
         run: Rscript figures/R/render_all_figures.R
 
       - name: Verify outputs
@@ -50,7 +50,8 @@ jobs:
           for stem in \
             Figure2_temperature_Andrade \
             Figure3_free_NCO_coupling \
-            Figure4_chemistry_amplification_interaction; do
+            Figure4_chemistry_amplification_interaction \
+            Figure5_decision_frontier; do
             for ext in png pdf svg; do
               test -s "figures/final/${stem}.${ext}"
             done
@@ -60,7 +61,7 @@ jobs:
       - name: Upload publication figures
         uses: actions/upload-artifact@v4
         with:
-          name: PUR-Figure2-4-R-render
+          name: PUR-Figure2-5-R-render
           path: |
             figures/final/*.png
             figures/final/*.pdf
@@ -80,5 +81,5 @@ jobs:
             echo "Rendered figures are already up to date."
             exit 0
           fi
-          git commit -m "Render Figure 2-4 outputs [skip ci]"
+          git commit -m "Render Figure 2-5 outputs [skip ci]"
           git push
