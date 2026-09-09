@@ -46,12 +46,12 @@ pA <- ggplot(tab, aes(mdi_fraction * 100, property_score)) +
            size = 2.35, colour = PUR_COL[["mid"]]) +
   annotate("text", x = 33.7, y = 8.0e-5, label = "0419\n34.06%", hjust = 1,
            size = 2.25, colour = PUR_COL[["T80"]]) +
-  annotate("segment", x = 34.15, xend = 35.35, y = 1.05e-4, yend = 1.7e-4,
+  annotate("segment", x = 37.6, xend = 35.18, y = 1.75e-4, yend = 1.20e-4,
            linewidth = 0.55, linetype = "22", colour = PUR_COL[["T80"]],
            arrow = grid::arrow(length = grid::unit(1.2, "mm"), type = "closed")) +
-  annotate("text", x = 35.55, y = 1.85e-4,
-           label = "backward feasibility\nNCO:OH 1.772 → grid 1.8", hjust = 0,
-           size = 2.20, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 37.9, y = 1.85e-4,
+           label = "backward threshold\nNCO:OH 1.772 → grid 1.8", hjust = 0,
+           size = 2.15, colour = PUR_COL[["ink"]]) +
   theme(legend.position = "top", legend.direction = "horizontal", legend.justification = "left")
 
 # B — changing only the MDI floor generates a sequence of decision phases.
@@ -111,8 +111,8 @@ pC <- ggplot(ranked, aes(nominal_rank, robust_rank)) +
   annotate("text", x = 7, y = 3.2, label = "0420: 4 → 1", hjust = 0,
            size = 2.35, colour = PUR_COL[["C"]]) +
   annotate(
-    "text", x = 46, y = 7,
-    label = sprintf("control: 50/50 PPG700/1000\nτ = %.3f; %d/%d inversions",
+    "text", x = 47, y = 7,
+    label = sprintf("50/50 blend control\nτ = %.3f; %d/%d inversions",
                     control$kendall_tau, control$pairwise_inversions, control$total_pairs),
     hjust = 0, vjust = 0, size = 2.05, colour = PUR_COL[["mid"]]
   ) +
