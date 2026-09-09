@@ -7,4 +7,9 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+.env
+.env.*
+!.env.example
 results/local_*
+results/recover_v1/run_*.json
+benchmark/recover_v1/evaluator_only/
