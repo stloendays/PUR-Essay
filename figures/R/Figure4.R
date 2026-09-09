@@ -48,12 +48,12 @@ pC <- ggplot(pat, aes(state, eta130, group = background, colour = background)) +
     colour = PUR_COL[["ink"]]
   ) +
   scale_colour_manual(values = c("C/D balanced" = PUR_COL[["balanced"]], "D-rich" = PUR_COL[["drich"]])) +
-  scale_y_continuous(limits = c(18, 52), breaks = seq(20, 50, 5), expand = expansion(mult = c(0, 0.025))) +
+  scale_y_continuous(limits = c(18, 54), breaks = seq(20, 50, 5), expand = expansion(mult = c(0, 0.02))) +
   labs(x = "A/B composition state", y = expression(eta[130]~"(Pa·s)")) +
-  annotate("text", x = 1.04, y = 50.5, label = "High-A / Low-A", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
-  annotate("text", x = 1.04, y = 48.4, label = "1.654×  balanced", hjust = 0, size = 2.42, colour = PUR_COL[["balanced"]]) +
-  annotate("text", x = 1.04, y = 46.3, label = "1.091×  D-rich", hjust = 0, size = 2.42, colour = PUR_COL[["drich"]]) +
-  annotate("text", x = 1.04, y = 44.2, label = "ratio-of-ratios = 1.516", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 1.04, y = 53.0, label = "High-A / Low-A", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
+  annotate("text", x = 1.04, y = 51.0, label = "1.654×  balanced", hjust = 0, size = 2.42, colour = PUR_COL[["balanced"]]) +
+  annotate("text", x = 1.04, y = 49.0, label = "1.091×  D-rich", hjust = 0, size = 2.42, colour = PUR_COL[["drich"]]) +
+  annotate("text", x = 1.04, y = 47.0, label = "ratio-of-ratios = 1.516", hjust = 0, size = 2.42, colour = PUR_COL[["ink"]]) +
   theme(
     legend.position = "bottom",
     legend.direction = "vertical",
