@@ -1,0 +1,5 @@
+background,state,A,B,C,D,eta130,example
+C/D balanced,Low A,23.3,11.7,5.8,5.8,26,Example 5
+C/D balanced,High A,29.2,5.8,5.8,5.8,43,Example 6
+D-rich,Low A,23.3,11.6,1.2,10.5,22,Example 7
+D-rich,High A,29.1,5.8,1.1,10.5,24,Example 8
