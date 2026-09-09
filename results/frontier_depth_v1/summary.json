@@ -15,7 +15,9 @@
     "inversion_fraction": 0.05408193339227822
   },
   "uncertainty_scale": {
-    "L1_L2_score_crossover_roots": [0.36369836285881074],
+    "L1_L2_score_crossover_roots": [
+      0.3636983628588113
+    ],
     "global_max_broad_scale": 1.8062623245594274,
     "last_candidate": "WO_INV_0440",
     "last_bottleneck": "ratio"
@@ -26,36 +28,146 @@
     "best_candidate": "WO_INV_0374",
     "best_scale": 0.6559962045632565,
     "required_uncertainty_reduction_fraction": 0.34400379543674353,
-    "bottleneck_counts": {"ratio": 124, "eta120": 16, "eta80": 1}
+    "bottleneck_counts": {
+      "ratio": 124,
+      "eta120": 16,
+      "eta80": 1
+    }
   },
   "objective_geometry": {
     "constraint": "eta80 = eta120 * ratio",
     "center_inconsistency_delta_log10": -0.0023456099550197645,
-    "J3_induced_metric_on_eta120_ratio": [[2, 1], [1, 2]],
-    "metric_eigenvalues": [3, 1],
+    "J3_induced_metric_on_eta120_ratio": [
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "metric_eigenvalues": [
+      3,
+      1
+    ],
     "principal_weight_ratio": 3.0,
-    "normalized_state_halfwidths": {"eta120": 0.1505149978319906, "ratio": 0.06631278263729548},
-    "state_winners": {"L0": "WO_INV_0419", "L1": "WO_INV_0420", "L2": "WO_INV_0404"}
+    "normalized_state_halfwidths": {
+      "eta120": 0.1505149978319906,
+      "ratio": 0.06631278263729548
+    },
+    "state_winners": {
+      "L0": "WO_INV_0419",
+      "L1": "WO_INV_0420",
+      "L2": "WO_INV_0404"
+    }
   },
   "weight_stability": {
     "samples": 50000,
     "seed": 20260909,
     "nominal_top": [
-      {"winner": "WO_INV_0579", "count": 39924, "fraction": 0.79848},
-      {"winner": "WO_INV_0420", "count": 5097, "fraction": 0.10194},
-      {"winner": "WO_INV_0341", "count": 3166, "fraction": 0.06332},
-      {"winner": "WO_INV_0470", "count": 934, "fraction": 0.01868},
-      {"winner": "WO_INV_0677", "count": 821, "fraction": 0.01642},
-      {"winner": "WO_INV_0404", "count": 52, "fraction": 0.00104}
+      {
+        "winner": "WO_INV_0579",
+        "count": 39924,
+        "fraction": 0.79848
+      },
+      {
+        "winner": "WO_INV_0420",
+        "count": 5097,
+        "fraction": 0.10194
+      },
+      {
+        "winner": "WO_INV_0341",
+        "count": 3166,
+        "fraction": 0.06332
+      },
+      {
+        "winner": "WO_INV_0470",
+        "count": 934,
+        "fraction": 0.01868
+      },
+      {
+        "winner": "WO_INV_0677",
+        "count": 821,
+        "fraction": 0.01642
+      },
+      {
+        "winner": "WO_INV_0404",
+        "count": 52,
+        "fraction": 0.00104
+      },
+      {
+        "winner": "WO_INV_0454",
+        "count": 4,
+        "fraction": 8e-05
+      },
+      {
+        "winner": "WO_INV_0680",
+        "count": 2,
+        "fraction": 4e-05
+      }
     ],
     "robust_top": [
-      {"winner": "WO_INV_0420", "count": 22077, "fraction": 0.44154},
-      {"winner": "WO_INV_0341", "count": 18125, "fraction": 0.3625},
-      {"winner": "WO_INV_0470", "count": 2841, "fraction": 0.05682},
-      {"winner": "WO_INV_0404", "count": 2730, "fraction": 0.0546},
-      {"winner": "WO_INV_0437", "count": 1424, "fraction": 0.02848},
-      {"winner": "WO_INV_0677", "count": 1201, "fraction": 0.02402},
-      {"winner": "WO_INV_0454", "count": 1135, "fraction": 0.0227}
+      {
+        "winner": "WO_INV_0420",
+        "count": 22077,
+        "fraction": 0.44154
+      },
+      {
+        "winner": "WO_INV_0341",
+        "count": 18125,
+        "fraction": 0.3625
+      },
+      {
+        "winner": "WO_INV_0470",
+        "count": 2841,
+        "fraction": 0.05682
+      },
+      {
+        "winner": "WO_INV_0404",
+        "count": 2730,
+        "fraction": 0.0546
+      },
+      {
+        "winner": "WO_INV_0437",
+        "count": 1424,
+        "fraction": 0.02848
+      },
+      {
+        "winner": "WO_INV_0677",
+        "count": 1201,
+        "fraction": 0.02402
+      },
+      {
+        "winner": "WO_INV_0454",
+        "count": 1135,
+        "fraction": 0.0227
+      },
+      {
+        "winner": "WO_INV_0472",
+        "count": 348,
+        "fraction": 0.00696
+      },
+      {
+        "winner": "WO_INV_0359",
+        "count": 64,
+        "fraction": 0.00128
+      },
+      {
+        "winner": "WO_INV_0680",
+        "count": 31,
+        "fraction": 0.00062
+      },
+      {
+        "winner": "WO_INV_0389",
+        "count": 20,
+        "fraction": 0.0004
+      },
+      {
+        "winner": "WO_INV_0374",
+        "count": 4,
+        "fraction": 8e-05
+      }
     ]
   },
   "pareto5": {

@@ -1,7 +1,7 @@
 {
   "workflow_id": "PUR_FRONTIER_V1",
   "gold_status": "GOLD",
-  "frozen_utc": "2026-09-09T14:59:06+00:00",
+  "frozen_utc": "2026-09-09T15:14:10+00:00",
   "candidate_table": "data/pur_sim_v1/candidates_full.csv",
   "candidate_table_sha256": "d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9",
   "config_sha256": "a1a64d6d37d17b6ee99c22f78c17f6b65bf5c1bc998bacaf2d8026ba7b884f5d",
