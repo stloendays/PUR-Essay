@@ -23,9 +23,10 @@ pA <- ggplot() +
   annotate("text", x = 0.665, y = 10.72, label = "Median 80 °C: 0.742", hjust = 0, size = 2.58, colour = PUR_COL[["T80"]]) +
   annotate("text", x = 0.665, y = 9.84, label = "Median 120 °C: 0.783", hjust = 0, size = 2.58, colour = PUR_COL[["T120"]]) +
   theme(
-    legend.position = c(0.27, 0.08),
+    legend.position = "bottom",
     legend.direction = "horizontal",
-    legend.background = element_rect(fill = alpha("white", 0.92), colour = NA)
+    legend.justification = "left",
+    plot.margin = margin(5, 4, 2, 5)
   )
 
 pB <- ggplot(eff, aes(slope_Ea_kJmol_per_pctNCO, family)) +
@@ -45,7 +46,7 @@ pC <- ggplot(eff, aes(multiplier_eta120, multiplier_eta80, colour = polyol)) +
   scale_x_continuous(breaks = seq(0.70, 0.95, 0.05)) +
   scale_y_continuous(breaks = seq(0.70, 0.95, 0.05)) +
   labs(x = "120 °C multiplier", y = "80 °C multiplier") +
-  annotate("text", x = 0.675, y = 0.955, label = "below diagonal = stronger effect at 80 °C", hjust = 0, vjust = 1, size = 2.35, colour = PUR_COL[["mid"]]) +
+  annotate("text", x = 0.675, y = 0.955, label = "below diagonal:\nstronger at 80 °C", hjust = 0, vjust = 1, size = 2.30, colour = PUR_COL[["mid"]]) +
   theme(
     legend.position = "top",
     legend.direction = "horizontal",
@@ -57,4 +58,4 @@ fig3 <- (pA | pB | pC) +
   plot_layout(widths = c(1.24, 1.16, 1.08)) +
   plot_annotation(tag_levels = "A")
 
-save_pur_figure(fig3, "figures/final/Figure3_free_NCO_coupling", width_mm = 180, height_mm = 80)
+save_pur_figure(fig3, "figures/final/Figure3_free_NCO_coupling", width_mm = 180, height_mm = 82)
