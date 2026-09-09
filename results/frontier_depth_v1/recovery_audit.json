@@ -1,0 +1,34 @@
+{
+  "status": "RECOVERED_HASH_LINKED",
+  "historical_archive": {
+    "file": "v07_inverse_design.zip",
+    "sha256": "9cb2c24117528a5639bfd67c0e0b7c090ab487bb6389ef40cd8e76a3197951b3"
+  },
+  "old_v07_member": {
+    "path": "v07_inverse_design/v07_wo_inverse_design_candidates.csv",
+    "shape": [928, 26],
+    "sha256": "f07a27fa3772d5898b1da8437bdd6f171f4ba2c3e4e307946d7baca6f6f0c4b3",
+    "role": "legacy v0.7 ML predictions; not PUR_SIM_V1"
+  },
+  "pur_sim_v1_member": {
+    "path": "v07_inverse_design/v07_wo_inverse_design_candidates_模拟.csv",
+    "shape": [928, 51],
+    "sha256": "d623755189481b38a629276c37b85b49e0634901f8e338196677a08b32593abd",
+    "simulation_protocol_id": "PUR_SIM_V1"
+  },
+  "canonical_projection": {
+    "columns": [
+      "source_candidate_id", "blend", "nco_oh", "mdi_parts", "PPG400", "PPG700", "PPG1000", "PPG2000",
+      "simulated_eta_80c_pa_s", "simulated_eta_120c_pa_s", "simulated_ratio_80c_120c",
+      "simulated_domain_ratio", "simulated_log10_interval_radius", "simulated_chemistry_in_domain_flag"
+    ],
+    "sha256": "d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9",
+    "matches_repository_frozen_snapshot": true
+  },
+  "local_oracle_projection_audit": {
+    "shared_scientific_columns_compared": 28,
+    "mismatched_columns": 0,
+    "maximum_numeric_difference": 0.0
+  },
+  "claim_boundary": "Recovered table is synthetic PUR_SIM_V1 benchmark truth, not experimental evidence."
+}
