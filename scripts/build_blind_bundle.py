@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Build the PUR-RECOVER V1 blind bundle (Agent-readable) and the evaluator-only gold files.
+"""Build the PUR-RECOVER V1 blind bundle and evaluator-only gold.
 
-  benchmark/recover_v1/blind/            candidates.csv, benchmark_config.json, task.json, manifest.json, provenance.json
-  benchmark/recover_v1/evaluator_only/   gold_mapping.json, gold_decision.json, gold_decision_blind.json
-  gold/recover_v1/                       copies of the evaluator-only files
+Agent-readable:
+  benchmark/recover_v1/blind/
 
-Runs the leakage scan afterwards and exits non-zero if it fails.
+Evaluator-only:
+  benchmark/recover_v1/evaluator_only/
+  gold/recover_v1/
+
+If the raw 928-row CSV is absent on a fresh clone, the frozen multipart PUR_SIM_V1
+snapshot is reconstructed and SHA256-verified automatically. The script runs the
+leakage scan after bundle construction and exits non-zero on failure.
 """
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ import pandas as pd
 
 from pur_agent.blind_bundle import build_blind_bundle, verify_no_leakage
 from pur_agent.config import load_benchmark_config
+from pur_science.dataio import materialize_pur_sim_v1
 
 ROOT = _bootstrap.ROOT
 
@@ -32,24 +38,30 @@ def main() -> int:
     ap.add_argument("--evaluator-dir", default=str(ROOT / "benchmark" / "recover_v1" / "evaluator_only"))
     ap.add_argument("--gold-dir", default=str(ROOT / "gold" / "recover_v1"))
     ap.add_argument("--seed", type=int, default=None, help="anonymization seed (default: config anonymization.seed)")
-    ap.add_argument("--no-anonymize", action="store_true", help="secondary named-chemistry benchmark: keep source IDs and material names")
+    ap.add_argument("--no-anonymize", action="store_true", help="secondary named-chemistry benchmark")
     args = ap.parse_args()
 
     cand = Path(args.candidates)
     if not cand.is_file():
-        print(f"ERROR: candidate table not found: {cand} (see data/pur_sim_v1/README.md)", file=sys.stderr)
-        return 2
+        try:
+            cand = materialize_pur_sim_v1(cand)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"ERROR: unable to materialize complete PUR_SIM_V1 table: {exc}", file=sys.stderr)
+            return 2
+
     cfg = load_benchmark_config(args.config, repo_root=ROOT)
     seed = args.seed if args.seed is not None else int(cfg.get("anonymization", {}).get("seed", 20260909))
     if args.no_anonymize:
         cfg["benchmark_id"] = cfg.get("benchmark_id", "PUR_RECOVER_V1") + "_NAMED"
         cfg["anonymization"] = {"component_columns": [], "material_prefix": "", "seed": seed}
+
     df = pd.read_csv(cand)
     originals = [str(x) for x in df[cfg["columns"]["candidate_id"]].unique()]
     materials = list(cfg.get("anonymization", {}).get("component_columns", []))
 
     manifest = build_blind_bundle(cand, cfg, args.blind_dir, args.evaluator_dir, seed=seed)
-    gold_dir = Path(args.gold_dir); gold_dir.mkdir(parents=True, exist_ok=True)
+    gold_dir = Path(args.gold_dir)
+    gold_dir.mkdir(parents=True, exist_ok=True)
     for name in ("gold_mapping.json", "gold_decision.json", "gold_decision_blind.json"):
         src = Path(args.evaluator_dir) / name
         if src.is_file():
@@ -58,11 +70,13 @@ def main() -> int:
     if args.no_anonymize:
         print(json.dumps({"manifest": manifest, "leakage_check": "SKIPPED (named benchmark keeps identities by design)"}, indent=2))
         return 0
+
     gold_texts = [p.read_text(encoding="utf-8") for p in Path(args.evaluator_dir).glob("*.json")]
     violations = verify_no_leakage(args.blind_dir, originals, materials, gold_texts=gold_texts)
     if violations:
         print("Leakage check FAILED:\n" + "\n".join(violations[:30]), file=sys.stderr)
         return 1
+
     print(json.dumps({"manifest": manifest, "leakage_check": "PASS"}, indent=2))
     return 0
 
