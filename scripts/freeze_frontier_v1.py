@@ -7,8 +7,8 @@ Outputs (results/frontier_v1/):
   expectation_check.json    agreement/disagreement with the values documented before the freeze
   manifest.json             input hashes, config hash, status
 
-The script never edits input data. If the table is incomplete it refuses unless --allow-partial
-is given, and then every output is stamped NOT_GOLD_PARTIAL_INPUT.
+The script never edits scientific inputs. If candidates_full.csv is absent, the frozen
+XZ/base64 snapshot in data/pur_sim_v1 is losslessly reconstructed and hash-verified.
 """
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ from pur_agent.data_access import sha256_file
 from pur_agent.logging_utils import sha256_json, utc_now
 from pur_science import canonicalize, compute_frontier, frontier_decision
 from pur_science.canonical import BLEND, CID, MDI_PARTS, NCO
+from pur_science.dataio import materialize_pur_sim_v1
 
 ROOT = _bootstrap.ROOT
 
@@ -33,9 +34,7 @@ def check_against_design_space(df: pd.DataFrame, cfg: dict, design_csv: Path) ->
     idc = cfg["columns"]["candidate_id"]
     m = ds.merge(df[[idc, cfg["columns"]["blend"], cfg["columns"]["nco_oh"], cfg["columns"]["mdi_parts"]]], left_on="source_candidate_id", right_on=idc, suffixes=("_design", ""))
     return {
-        "design_rows": int(len(ds)),
-        "table_rows": int(len(df)),
-        "matched_ids": int(len(m)),
+        "design_rows": int(len(ds)), "table_rows": int(len(df)), "matched_ids": int(len(m)),
         "blend_mismatch": int((m["blend_design"] != m[cfg["columns"]["blend"]]).sum()) if len(m) else None,
         "nco_max_abs_diff": float((m["nco_oh_design"] - m[cfg["columns"]["nco_oh"]]).abs().max()) if len(m) else None,
         "mdi_parts_max_abs_diff": float((m["mdi_parts_design"] - m[cfg["columns"]["mdi_parts"]]).abs().max()) if len(m) else None,
@@ -54,15 +53,11 @@ def expectation_check(decision: dict, expected: dict | None) -> dict:
         "backward_continuous_threshold": (expected.get("backward_continuous_threshold"), bw["continuous_threshold"]),
         "nearest_reachable_grid_value": (expected.get("nearest_reachable_grid_value"), bw["nearest_reachable_grid_value"]),
     }
-    out = {}
-    all_ok = True
+    out = {}; all_ok = True
     for k, (exp, got) in items.items():
-        if exp is None:
-            ok = None
-        elif isinstance(exp, (int, float)) and isinstance(got, (int, float)):
-            ok = abs(float(exp) - float(got)) <= 5e-3
-        else:
-            ok = str(exp) == str(got)
+        if exp is None: ok = None
+        elif isinstance(exp, (int, float)) and isinstance(got, (int, float)): ok = abs(float(exp) - float(got)) <= 5e-3
+        else: ok = str(exp) == str(got)
         all_ok &= (ok is not False)
         out[k] = {"expected_from_docs": exp, "computed": got, "agrees": ok}
     out["all_agree"] = bool(all_ok)
@@ -76,27 +71,29 @@ def main() -> int:
     ap.add_argument("--config", default=str(ROOT / "configs" / "frontier_v1.json"))
     ap.add_argument("--design-space", default=str(ROOT / "data" / "pur_sim_v1" / "design_space_928.csv"))
     ap.add_argument("--out", default=str(ROOT / "results" / "frontier_v1"))
-    ap.add_argument("--allow-partial", action="store_true", help="accept a table with fewer rows than design_space.n_candidates (outputs marked NOT_GOLD)")
+    ap.add_argument("--allow-partial", action="store_true")
     args = ap.parse_args()
 
     cand = Path(args.candidates)
     if not cand.is_file():
-        print(f"ERROR: candidate table not found: {cand}\nSupply the complete PUR_SIM_V1 table (see data/pur_sim_v1/README.md).", file=sys.stderr)
-        return 2
+        try:
+            cand = materialize_pur_sim_v1(cand)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"ERROR: unable to materialize complete PUR_SIM_V1 candidate table: {exc}", file=sys.stderr)
+            return 2
     cfg = json.loads(Path(args.config).read_text(encoding="utf-8"))
     df = pd.read_csv(cand)
     expected_n = int(cfg.get("design_space", {}).get("n_candidates", len(df)))
     status = "GOLD"
     if len(df) != expected_n:
         if not args.allow_partial:
-            print(f"ERROR: table has {len(df)} rows, frozen design space has {expected_n}. Refusing to freeze a partial frontier (use --allow-partial for a diagnostic, non-gold run).", file=sys.stderr)
+            print(f"ERROR: table has {len(df)} rows, frozen design space has {expected_n}.", file=sys.stderr)
             return 3
         status = "NOT_GOLD_PARTIAL_INPUT"
 
     table = canonicalize(df, cfg)
     frontier = compute_frontier(table, cfg)
-    decision = frontier_decision(table, cfg)
-    decision["gold_status"] = status
+    decision = frontier_decision(table, cfg); decision["gold_status"] = status
 
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     frontier.to_csv(out / "frontier_table.csv", index=False)
@@ -104,22 +101,21 @@ def main() -> int:
     exp = expectation_check(decision, cfg.get("expected_from_docs"))
     (out / "expectation_check.json").write_text(json.dumps(exp, indent=2), encoding="utf-8")
     manifest = {
-        "workflow_id": cfg.get("workflow_id"),
-        "gold_status": status,
-        "frozen_utc": utc_now(),
-        "candidate_table": str(cand),
-        "candidate_table_sha256": sha256_file(cand),
-        "config_sha256": sha256_json(cfg),
-        "n_candidates": int(len(df)),
+        "workflow_id": cfg.get("workflow_id"), "gold_status": status, "frozen_utc": utc_now(),
+        "candidate_table": str(cand), "candidate_table_sha256": sha256_file(cand),
+        "config_sha256": sha256_json(cfg), "n_candidates": int(len(df)),
         "design_space_check": check_against_design_space(df, cfg, Path(args.design_space)) if Path(args.design_space).is_file() else None,
         "decision_sha256": sha256_json(decision),
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    print(json.dumps({"status": status, "property_winner": decision["property_winner"], "constrained_winner": decision["constrained_winner"],
-                      "robust_winner": decision["robust_winner"], "active_constraint": decision["active_constraint"]["name"],
-                      "backward": {k: decision["backward_design"][k] for k in ("continuous_threshold", "nearest_reachable_grid_value", "reachable")},
-                      "local_trends": {k: decision["local_trends"][k] for k in ("nco_direction", "composition_axis", "composition_direction")},
-                      "expectation_all_agree": exp.get("all_agree"), "out": str(out)}, indent=2))
+    print(json.dumps({
+        "status": status, "property_winner": decision["property_winner"],
+        "constrained_winner": decision["constrained_winner"], "robust_winner": decision["robust_winner"],
+        "n_feasible_nominal": decision["n_feasible_nominal"], "n_feasible_robust": decision["n_feasible_robust"],
+        "active_constraint": decision["active_constraint"]["name"],
+        "backward": {k: decision["backward_design"][k] for k in ("continuous_threshold", "nearest_reachable_grid_value", "reachable")},
+        "local_trends": {k: decision["local_trends"][k] for k in ("nco_direction", "composition_axis", "composition_direction")},
+        "expectation_all_agree": exp.get("all_agree"), "out": str(out)}, indent=2))
     return 0
 
 
