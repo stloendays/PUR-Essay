@@ -1,0 +1,41 @@
+{
+  "artifact": "PUR_SIM_V1 complete response table",
+  "rows": 928,
+  "source_handoff": "/mnt/data/v07_inverse_design.zip",
+  "source_member": "v07_inverse_design/v07_wo_inverse_design_candidates_模拟.csv",
+  "source_status": "user-supplied project handoff; synthetic benchmark output, not experimental evidence",
+  "recovered_on": "2026-09-09",
+  "frozen_columns": [
+    "source_candidate_id",
+    "blend",
+    "nco_oh",
+    "mdi_parts",
+    "PPG400",
+    "PPG700",
+    "PPG1000",
+    "PPG2000",
+    "simulated_eta_80c_pa_s",
+    "simulated_eta_120c_pa_s",
+    "simulated_ratio_80c_120c",
+    "simulated_domain_ratio",
+    "simulated_log10_interval_radius",
+    "simulated_chemistry_in_domain_flag"
+  ],
+  "candidate_table_sha256": "d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9",
+  "repository_encoding": {
+    "compression": "XZ/LZMA",
+    "text_encoding": "base64",
+    "parts": 4,
+    "directory": "data/pur_sim_v1/candidates_full_parts",
+    "ordering": "lexicographic part_01.b64 ... part_04.b64"
+  },
+  "reconstruction": "pur_science.dataio.materialize_pur_sim_v1",
+  "descriptor_consistency": "candidate ID, blend, NCO:OH and MDI parts are checked against data/pur_sim_v1/design_space_928.csv by scripts/freeze_frontier_v1.py",
+  "uncertainty_audit": {
+    "eta80_log10_radius_multiplier": 1.0,
+    "eta120_log10_radius_multiplier": 1.0,
+    "ratio_log10_radius_multiplier": 2.0,
+    "interpretation": "viscosity intervals are log10(eta)+/-r; ratio interval conservatively propagates numerator and denominator bounds as log10(ratio)+/-2r"
+  },
+  "claim_boundary": "Synthetic deterministic benchmark data only. Do not use as empirical evidence for physical polyurethane rheology."
+}
