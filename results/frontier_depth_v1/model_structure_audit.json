@@ -1,0 +1,24 @@
+{
+  "synthetic_PUR_SIM_V1": {
+    "n_blends": 58,
+    "d_ln_eta80_d_ncooh_mean": -0.2613983798092169,
+    "d_ln_eta80_d_ncooh_sd": 6.173810860211561e-12,
+    "d_ln_eta120_d_ncooh_mean": -0.4000000000120959,
+    "d_ln_eta120_d_ncooh_sd": 5.548821392545363e-11,
+    "d_Ea_d_ncooh_mean": 4.0000000000000036,
+    "d_Ea_d_ncooh_sd": 4.680988102675427e-15,
+    "interpretation": "NCO:OH effect is exactly blend-invariant in the deterministic synthetic response surface."
+  },
+  "source_derived_Pugar": {
+    "n_high_quality_families": 11,
+    "eta45_multiplier_median": 0.70874280936858,
+    "eta45_multiplier_range": [0.597202695134016, 0.9553388417068884],
+    "eta75_multiplier_median": 0.7362536374785549,
+    "eta75_multiplier_range": [0.6617378242621869, 0.9483393155613656],
+    "dEa_per_pctNCO_median": -0.8054786573462529,
+    "dEa_negative_families": 9,
+    "dEa_range": [-3.150018196683032, 0.2257450953843752],
+    "interpretation": "Real source-derived families show substantial chemistry dependence in free-NCO response."
+  },
+  "claim_boundary": "NCO:OH and free-NCO wt% are different coordinates, so magnitudes are not directly compared. The audit tests structural heterogeneity, not numerical calibration."
+}
