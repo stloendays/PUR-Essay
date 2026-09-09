@@ -1,4 +1,4 @@
-name: Render R manuscript figures
+name: Freeze FRONTIER and render R manuscript figures
 
 on:
   workflow_dispatch:
@@ -6,18 +6,56 @@ on:
     paths:
       - 'figures/R/**'
       - 'data/figures/**'
-      - 'results/frontier_v1/**'
+      - 'data/pur_sim_v1/**'
+      - 'configs/frontier_v1.json'
+      - 'src/pur_science/**'
+      - 'scripts/freeze_frontier_v1.py'
       - '.github/workflows/render-r-figures.yml'
 
 permissions:
   contents: write
 
 jobs:
-  render-figures:
+  freeze-and-render:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python package
+        run: python -m pip install -e .
+
+      - name: Materialize and freeze PUR-FRONTIER V1
+        run: python scripts/freeze_frontier_v1.py
+
+      - name: Verify frozen frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s results/frontier_v1/frontier_table.csv
+          test -s results/frontier_v1/frontier_v1_decision.json
+          test -s results/frontier_v1/manifest.json
+          test -s results/frontier_v1/ranking_metrics.json
+          test -s results/frontier_v1/rank_preservation_control.csv
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('results/frontier_v1/frontier_v1_decision.json').read_text())
+          m=json.loads(Path('results/frontier_v1/manifest.json').read_text())
+          assert m['gold_status']=='GOLD'
+          assert d['gold_status']=='GOLD'
+          assert d['n_candidates']==928
+          print('L0',d['property_winner'])
+          print('L1',d['constrained_winner'])
+          print('L2',d['robust_winner'])
+          print('nominal feasible',d['n_feasible_nominal'])
+          print('robust feasible',d['n_feasible_robust'])
+          PY
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
@@ -37,60 +75,52 @@ jobs:
             any::scales
             any::svglite
             any::jsonlite
-          cache-version: 2
+          cache-version: 3
 
       - name: Record R environment
         run: Rscript -e 'sessionInfo()'
 
-      - name: Render eligible manuscript figures
+      - name: Render manuscript figures
         run: Rscript figures/R/render_all_figures.R
 
-      - name: Verify outputs
+      - name: Verify figure outputs
         shell: bash
         run: |
           set -euo pipefail
           for stem in \
             Figure2_temperature_Andrade \
             Figure3_free_NCO_coupling \
-            Figure4_chemistry_amplification_interaction; do
+            Figure4_chemistry_amplification_interaction \
+            Figure5_decision_frontier; do
             for ext in png pdf svg; do
               test -s "figures/final/${stem}.${ext}"
             done
           done
+          ls -lh figures/final results/frontier_v1
 
-          if [[ -s results/frontier_v1/frontier_table.csv && \
-                -s results/frontier_v1/frontier_v1_decision.json && \
-                -s results/frontier_v1/manifest.json ]]; then
-            for ext in png pdf svg; do
-              test -s "figures/final/Figure5_decision_frontier.${ext}"
-            done
-          else
-            echo "FRONTIER V1 gold absent; Figure 5 correctly skipped."
-          fi
-          ls -lh figures/final
-
-      - name: Upload publication figures
+      - name: Upload publication figures and frontier snapshot
         uses: actions/upload-artifact@v4
         with:
-          name: PUR-manuscript-R-render
+          name: PUR-frontier-and-manuscript-render
           path: |
             figures/final/*.png
             figures/final/*.pdf
             figures/final/*.svg
+            results/frontier_v1/*
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit rendered publication figures
+      - name: Commit frozen frontier and publication figures
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add figures/final/*.png figures/final/*.pdf figures/final/*.svg
+          git add results/frontier_v1 figures/final/*.png figures/final/*.pdf figures/final/*.svg
           if git diff --cached --quiet; then
-            echo "Rendered figures are already up to date."
+            echo "Frozen frontier and rendered figures are already up to date."
             exit 0
           fi
-          git commit -m "Render manuscript R figures [skip ci]"
+          git commit -m "Freeze PUR-FRONTIER V1 and render manuscript figures [skip ci]"
           git push
