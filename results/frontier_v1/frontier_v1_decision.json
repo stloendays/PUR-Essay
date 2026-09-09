@@ -1,0 +1,92 @@
+{
+  "workflow_id": "PUR_FRONTIER_V1",
+  "gold_status": "GOLD",
+  "n_candidates": 928,
+  "n_feasible_nominal": 141,
+  "n_feasible_robust": 117,
+  "property_winner": "WO_INV_0419",
+  "constrained_winner": "WO_INV_0579",
+  "robust_winner": "WO_INV_0420",
+  "decision_point": "WO_INV_0420",
+  "property_winner_detail": {
+    "blend": "PPG1000:50+PPG700:50",
+    "nco_oh": 1.7,
+    "mdi_fraction_total": 0.34062492272948314,
+    "property_score": 6.315176289868768e-05,
+    "eta80": 3.4259836391,
+    "eta120": 0.4199751814,
+    "ratio": 8.1575859501
+  },
+  "constrained_winner_detail": {
+    "blend": "PPG2000:60+PPG400:40",
+    "nco_oh": 1.7,
+    "mdi_fraction_total": 0.35610676393747154,
+    "property_score": 0.0004160220350720619,
+    "robust_score": 0.024936145769100942,
+    "robust_rank": 6
+  },
+  "robust_winner_detail": {
+    "blend": "PPG1000:50+PPG700:50",
+    "nco_oh": 1.8,
+    "mdi_fraction_total": 0.3535771424877584,
+    "property_score": 0.0008351860112308893,
+    "robust_score": 0.021897294012576327,
+    "nominal_rank": 4,
+    "eta80": 3.3375893216,
+    "eta120": 0.403507719,
+    "ratio": 8.2714385985,
+    "domain_ratio": 0.5375,
+    "log10_interval_radius": 0.0512
+  },
+  "active_constraint": {
+    "name": "mdi_fraction",
+    "threshold": 0.35,
+    "candidate_value": 0.34062492272948314,
+    "all_failures": ["mdi_fraction"]
+  },
+  "backward_design": {
+    "variable": "nco_oh",
+    "blend": "PPG1000:50+PPG700:50",
+    "continuous_threshold": 1.771983672436162,
+    "nearest_reachable_grid_value": 1.8,
+    "nearest_reachable_candidate_id": "WO_INV_0420",
+    "reachable": true
+  },
+  "local_trends": {
+    "nco_direction_eta80": "decrease",
+    "composition_axis": "PPG700",
+    "composition_direction_eta80": "decrease"
+  },
+  "ranking_propagation": {
+    "common_robust_set_n": 117,
+    "spearman_rho": 0.9850814488453294,
+    "kendall_tau": 0.8918361332154434,
+    "pairwise_inversions": 367,
+    "pairwise_pairs": 6786,
+    "inversion_fraction": 0.05408193339227822,
+    "constrained_winner_robust_rank": 6,
+    "robust_winner_nominal_rank": 4
+  },
+  "rank_preservation_control": {
+    "family": "PPG1000:50+PPG700:50",
+    "nco_oh_range": [1.8, 2.5],
+    "n": 8,
+    "spearman_rho": 1.0,
+    "kendall_tau": 0.9999999999999998,
+    "pairwise_inversions": 0
+  },
+  "robustness_definition": {
+    "enabled": true,
+    "method": "worst_case_interval",
+    "definition": "robust_score = sum_k w_k * (abs(log10(y_k/c_k)) + q_k*r)^2, with q_eta80=q_eta120=1 and q_ratio=2; this is the exact worst case of the nominal objective over the frozen rectangular log-space interval",
+    "require_interval_inside_broad": true,
+    "require_interval_inside_preferred": false,
+    "domain_ratio_max": 1.0,
+    "rationale": "Preferred windows define the optimization target, not a certification envelope. Requiring the entire uncertainty interval to remain inside the preferred windows yields zero feasible candidates in the frozen 928-space. Robust admissibility therefore uses the literature-derived broad functional windows, while the same preferred-center objective is evaluated at the interval worst case. No new uncertainty weight is introduced; the nominal objective weights are inherited unchanged."
+  },
+  "uncertainty_definition": {
+    "representation": "candidate-specific symmetric log10 radius",
+    "log10_radius_multiplier": {"eta80": 1.0, "eta120": 1.0, "ratio": 2.0},
+    "rationale": "The stored PUR_SIM_V1 viscosity intervals are log10(eta) +/- r. The ratio eta80/eta120 propagates both viscosity uncertainties, giving a frozen conservative ratio interval of log10(ratio) +/- 2r. The explicit source interval columns reproduce these multipliers to numerical precision."
+  }
+}
