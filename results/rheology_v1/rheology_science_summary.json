@@ -1,0 +1,47 @@
+{
+  "source_heterogeneity": {
+    "melt_viscosity_records": 70,
+    "sources": 10,
+    "temperatures_c": [25.0, 90.0, 100.0, 110.0, 120.0, 121.0, 130.0],
+    "units": ["Pa.s", "cP", "mPa.s"]
+  },
+  "pugar_andrade": {
+    "samples": 39,
+    "curve_points": 4559,
+    "median_r2": 0.9967001076270845,
+    "n_r2_ge_0_98": 37,
+    "median_Ea_kJ_mol": 51.09436515502145,
+    "Ea_range_kJ_mol": [34.73532697302946, 94.15329095221212]
+  },
+  "pNCO_effect": {
+    "matched_chemistry_families": 13,
+    "high_quality_families_min_r2_ge_0_98": 11,
+    "eta80_decreases_family_count_all": 13,
+    "eta120_decreases_family_count_all": 12,
+    "eta80_decreases_family_count_high_quality": 11,
+    "eta120_decreases_family_count_high_quality": 11,
+    "median_eta80_multiplier_per_plus1pctNCO": 0.7419269750636749,
+    "median_eta120_multiplier_per_plus1pctNCO": 0.783390341288847,
+    "median_dEa_kJ_mol_per_plus1pctNCO": -0.8054786573462529,
+    "Ea_decreases_family_count_high_quality": 9
+  },
+  "matched_C_vs_P": {
+    "n_pairs": 7,
+    "median_C_over_P_eta80": 4.200698796091161,
+    "median_C_over_P_eta120": 2.0640048431411797,
+    "median_low_temperature_amplification": 1.9919614656333193,
+    "median_delta_Ea_C_minus_P_kJ_mol": 19.88778525045079
+  },
+  "US5932680A_factor_interaction_130C": {
+    "balanced_A_shift_ratio": 1.6538461538461537,
+    "D_rich_A_shift_ratio": 1.0909090909090908,
+    "ratio_of_ratios": 1.516025641025641,
+    "log_interaction": 0.4160922006824507,
+    "note": "Effect-size interaction only; published point values have no replicate variance for inferential significance."
+  },
+  "claim_boundary": [
+    "Pugar fits are experimental-library reanalysis.",
+    "US5932680A values are published patent point values without replicate variance.",
+    "PUR_SIM_V1 synthetic candidate responses are not used as empirical evidence in this rheology module."
+  ]
+}
