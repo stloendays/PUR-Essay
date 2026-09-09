@@ -40,16 +40,29 @@ def objective_weights(config: dict[str, Any]) -> dict[str, float]:
     return {ETA80: float(w.get("eta80", 1.0)), ETA120: float(w.get("eta120", 1.0)), RATIO: float(w.get("ratio", 1.0))}
 
 
+def uncertainty_radius_multipliers(config: dict[str, Any]) -> dict[str, float]:
+    """Return the frozen multiplier applied to the stored log10 uncertainty radius.
+
+    PUR_SIM_V1 stores viscosity intervals as log10(eta) +/- r. Because the ratio is
+    eta80/eta120, the conservative frozen interval used by FRONTIER V1 is
+    log10(ratio) +/- 2r. Configs without an explicit uncertainty section retain the
+    historical all-ones behavior for backwards-compatible tests and legacy artifacts.
+    """
+    raw = config.get("uncertainty", {}).get("log10_radius_multiplier", {})
+    return {
+        ETA80: float(raw.get("eta80", 1.0)),
+        ETA120: float(raw.get("eta120", 1.0)),
+        RATIO: float(raw.get("ratio", 1.0)),
+    }
+
+
 def log_distance(frame: pd.DataFrame, centers: dict[str, float]) -> pd.DataFrame:
     """Signed log10 distance of each response from its center."""
     return pd.DataFrame({k: np.log10(frame[k] / centers[k]) for k in RESPONSES}, index=frame.index)
 
 
 def property_score(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Series:
-    """Frozen nominal objective: weighted sum of squared log10 distances to the preferred centers.
-
-    Identical to the ORACLE V2 `oracle_score` definition.
-    """
+    """Frozen nominal objective: weighted sum of squared log10 distances to preferred centers."""
     centers = objective_centers(config)
     weights = objective_weights(config)
     d = log_distance(frame, centers)
@@ -57,19 +70,22 @@ def property_score(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Series:
 
 
 def worst_case_property_score(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Series:
-    """FRONTIER V1 robust objective: worst case of the nominal objective over the frozen log10 interval.
+    """Worst case of the nominal objective over the frozen rectangular log10 interval.
 
-    Each response is known only within log10(y) +/- r. The worst-case squared distance to the
-    center is (|log10(y/c)| + r)^2. This is a deterministic, interval-based robust score; no
-    distributional assumption is made.
+    If a response k has nominal value y_k and uncertainty interval
+    log10(y_k) +/- q_k*r, the maximum squared distance from the preferred center c_k
+    is (abs(log10(y_k/c_k)) + q_k*r)^2. No probability distribution and no new
+    uncertainty weight are introduced: FRONTIER V1 inherits the nominal objective
+    weights unchanged.
     """
     if UNC_RADIUS not in frame.columns:
         raise KeyError("worst-case objective requires the uncertainty radius column")
     centers = objective_centers(config)
     weights = objective_weights(config)
+    mult = uncertainty_radius_multipliers(config)
     d = log_distance(frame, centers).abs()
     r = frame[UNC_RADIUS].astype(float)
-    return sum(weights[k] * (d[k] + r) ** 2 for k in RESPONSES)
+    return sum(weights[k] * (d[k] + mult[k] * r) ** 2 for k in RESPONSES)
 
 
 def _between(s: pd.Series, bounds: Iterable[float]) -> pd.Series:
@@ -77,15 +93,20 @@ def _between(s: pd.Series, bounds: Iterable[float]) -> pd.Series:
     return s.ge(lo) & s.le(hi)
 
 
-def _interval_inside(frame: pd.DataFrame, key: str, bounds: Iterable[float]) -> pd.Series:
+def _interval_inside(frame: pd.DataFrame, key: str, bounds: Iterable[float], *, radius_multiplier: float = 1.0) -> pd.Series:
     lo, hi = [float(x) for x in bounds]
-    r = frame[UNC_RADIUS].astype(float)
+    r = frame[UNC_RADIUS].astype(float) * float(radius_multiplier)
     lg = np.log10(frame[key])
     return (lg - r).ge(math.log10(lo)) & (lg + r).le(math.log10(hi))
 
 
 def nominal_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFrame:
-    """Boolean pass/fail per nominal hard constraint (ORACLE V2 gate set, applied only where configured)."""
+    """Boolean pass/fail per nominal hard constraint.
+
+    FRONTIER V1 intentionally keeps uncertainty out of L1. Historical configs may still
+    request an interval-inside-broad gate; when they do, the configured uncertainty
+    propagation multipliers are honored.
+    """
     hc = config["hard_constraints"]
     f = table.frame
     checks: dict[str, pd.Series] = {}
@@ -106,36 +127,50 @@ def nominal_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFram
     if hc.get("require_full_oracle_interval_inside_broad_window", False):
         if not table.has_uncertainty:
             raise KeyError("require_full_oracle_interval_inside_broad_window=true but no uncertainty radius column is available")
+        mult = uncertainty_radius_multipliers(config)
         inside = pd.Series(True, index=f.index)
         for k, key in BROAD_KEYS.items():
-            inside &= _interval_inside(f, k, hc[key])
+            inside &= _interval_inside(f, k, hc[key], radius_multiplier=mult[k])
         checks["interval_inside_broad"] = inside
     return pd.DataFrame(checks, index=f.index)
 
 
 def robust_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFrame:
-    """Additional FRONTIER V1 robust feasibility gates.
+    """Additional FRONTIER robust-feasibility gates.
 
-    - interval_inside_preferred: the whole log10 uncertainty interval of every response lies inside the preferred window.
-    - domain_ratio_max: the domain-distance descriptor does not exceed the frozen maximum.
+    FRONTIER V1 uses broad functional windows as the interval-certification envelope.
+    Preferred windows remain the optimization target and are not required to contain the
+    full uncertainty interval. The function also retains support for the earlier
+    interval-inside-preferred option so historical toy fixtures remain reproducible.
     """
-    r = config.get("robustness") or {}
-    if not r.get("enabled", False):
+    r_cfg = config.get("robustness") or {}
+    if not r_cfg.get("enabled", False):
         raise RuntimeError("Robust ranking is not frozen in this config; refuse to invent a robust score.")
     hc = config["hard_constraints"]
     f = table.frame
     checks: dict[str, pd.Series] = {}
-    if r.get("require_interval_inside_preferred", True):
+    mult = uncertainty_radius_multipliers(config)
+
+    if r_cfg.get("require_interval_inside_broad", False):
         if not table.has_uncertainty:
-            raise KeyError("Robust gate needs the uncertainty radius column")
+            raise KeyError("Robust broad-window gate needs the uncertainty radius column")
+        inside = pd.Series(True, index=f.index)
+        for k, key in BROAD_KEYS.items():
+            inside &= _interval_inside(f, k, hc[key], radius_multiplier=mult[k])
+        checks["interval_inside_broad"] = inside
+
+    if r_cfg.get("require_interval_inside_preferred", False):
+        if not table.has_uncertainty:
+            raise KeyError("Robust preferred-window gate needs the uncertainty radius column")
         inside = pd.Series(True, index=f.index)
         for k, key in PREFERRED_KEYS.items():
-            inside &= _interval_inside(f, k, hc[key])
+            inside &= _interval_inside(f, k, hc[key], radius_multiplier=mult[k])
         checks["interval_inside_preferred"] = inside
-    if r.get("domain_ratio_max") is not None:
+
+    if r_cfg.get("domain_ratio_max") is not None:
         if not table.has_domain_ratio:
             raise KeyError("Robust gate needs the domain_ratio column")
-        checks["domain_ratio_max"] = f[DOMAIN_RATIO].le(float(r["domain_ratio_max"]))
+        checks["domain_ratio_max"] = f[DOMAIN_RATIO].le(float(r_cfg["domain_ratio_max"]))
     return pd.DataFrame(checks, index=f.index)
 
 
