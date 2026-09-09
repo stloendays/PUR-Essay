@@ -1,5 +1,6 @@
 {
   "workflow_id": "PUR_FRONTIER_V1",
+  "definition_status": "PRE_FREEZE_AWAITING_COMPLETE_RESPONSE_TABLE",
   "builds_on": "PUR_ORACLE_BACKWARD_V2",
   "candidate_space": "WO2018173768-inspired PPG/4,4-MDI constrained grid (PUR_SIM_V1, synthetic; 58 blends x 16 NCO:OH points = 928 candidates)",
   "polyol_basis_parts": 100.0,
@@ -25,7 +26,7 @@
     "nco_oh": [1.3, 3.0],
     "mdi_fraction_of_polyol_plus_mdi": [0.35, 0.49],
     "require_chemistry_in_domain": true,
-    "require_full_oracle_interval_inside_broad_window": true
+    "require_full_oracle_interval_inside_broad_window": false
   },
   "objective": {
     "space": "log10",
@@ -35,16 +36,20 @@
   },
   "layers": {
     "L0_property": "argmin property_score over all candidates, no constraints",
-    "L1_constrained": "argmin property_score over candidates passing every hard_constraints gate (identical to PUR-ORACLE V2)",
-    "L2_robust": "argmin robust_score over L1-feasible candidates that also pass the robustness gates"
+    "L1_constrained": "argmin property_score over candidates passing the point-response rheology windows, NCO:OH, MDI-fraction and chemistry-domain gates; uncertainty is not a nominal hard gate",
+    "L2_robust": "argmin minimax worst_case_interval score over L1-feasible candidates with domain_ratio <= domain_ratio_max"
   },
   "robustness": {
     "enabled": true,
-    "method": "worst_case_interval",
-    "definition": "robust_score = sum_k w_k * (|log10(y_k / c_k)| + r)^2, where r is the frozen log10 interval radius of the candidate; worst case of the nominal objective over the uncertainty interval",
-    "require_interval_inside_preferred": true,
+    "method": "minimax_worst_case_interval",
+    "definition": "robust_score = sum_k w_k * (|log10(y_k / c_k)| + r)^2, where r is the frozen log10 interval radius; this is the exact worst case of the nominal squared-log objective over the independent response intervals when the same radius r is used for each response",
+    "require_interval_inside_preferred": false,
     "domain_ratio_max": 1.0,
-    "rationale": "Uncertainty is propagated as a deterministic interval, not a distribution. A candidate is robust-feasible only if every response stays inside the preferred window over its whole interval and its chemistry-domain distance does not exceed the in-domain reference."
+    "diagnostics": {
+      "report_interval_inside_broad": true,
+      "report_interval_inside_preferred": true
+    },
+    "rationale": "The complete-data response defines nominal feasibility. Uncertainty is propagated into the decision through a parameter-free minimax score rather than used as a second certification gate. Full-interval containment is reported diagnostically, not used to delete otherwise admissible candidates. The only additional L2 eligibility gate is the frozen in-domain reference domain_ratio <= 1.0."
   },
   "backward": {
     "constraint": "mdi_fraction_min",
@@ -53,7 +58,7 @@
     "manifold": "mdi_parts = k_blend * nco_oh (exact on the frozen grid)"
   },
   "local_trends": {
-    "evaluated_at": "robust_winner (falls back to constrained_winner if the robust layer is not frozen)",
+    "evaluated_at": "robust_winner (falls back to constrained_winner if the robust layer is not yet computable)",
     "response": "eta80",
     "nco_axis": "increasing NCO:OH along the same blend",
     "composition_axis": "increasing parts of the higher-MDI-demand component within the same two-component family at fixed NCO:OH"
@@ -64,10 +69,11 @@
     "n_blends": 58
   },
   "expected_from_docs": {
-    "note": "Values stated in project documentation before this freeze. The freeze script reports any disagreement; it never edits data to match.",
+    "note": "Pre-freeze hypotheses and historically frozen values are audit references only. The freeze script reports disagreement and never edits data to match them.",
     "property_winner": "WO_INV_0419",
     "constrained_winner": "WO_INV_0579",
-    "robust_winner": "WO_INV_0420",
+    "robust_winner": null,
+    "prior_robust_hypothesis": "WO_INV_0420",
     "active_constraint": "mdi_fraction",
     "backward_continuous_threshold": 1.772,
     "nearest_reachable_grid_value": 1.8
