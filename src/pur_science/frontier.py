@@ -18,6 +18,8 @@ from .reachability import check_reachability
 from .rheology import two_point_activation_energy_kj_mol
 
 # Priority used to name *the* active constraint when several nominal checks fail.
+# Interval containment appears here only for backward compatibility with historical configs;
+# FRONTIER V1's active config does not use it as a nominal gate.
 ACTIVE_CONSTRAINT_PRIORITY = (
     "mdi_fraction", "nco_oh", "chemistry_in_domain", "interval_inside_broad",
     "eta80_broad", "eta120_broad", "ratio_broad", "eta80_preferred", "eta120_preferred", "ratio_preferred",
@@ -59,7 +61,8 @@ def compute_frontier(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFr
 
     Columns added: property_score, broad_margin, per-check booleans, feasible_nominal,
     property_rank (all candidates), nominal_rank (nominally feasible only) and, when the
-    robust layer is frozen and the columns exist, robust_score, feasible_robust, robust_rank.
+    robust layer is enabled and the required columns exist, robust_score, feasible_robust,
+    robust_rank.
     """
     f = table.frame.copy()
     f["property_score"] = property_score(f, config)
@@ -85,8 +88,10 @@ def compute_frontier(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFr
             f[f"robust_check_{col}"] = rchecks[col]
         f["feasible_robust"] = f["feasible_nominal"] & (rchecks.all(axis=1) if len(rchecks.columns) else True)
         method = r.get("method", "worst_case_interval")
-        if method != "worst_case_interval":
-            raise ValueError(f"Unknown robust method {method!r}; FRONTIER V1 freezes worst_case_interval only")
+        if method not in {"worst_case_interval", "minimax_worst_case_interval"}:
+            raise ValueError(
+                f"Unknown robust method {method!r}; FRONTIER V1 supports only the deterministic worst-case interval objective"
+            )
         f["robust_score"] = worst_case_property_score(f, config)
         rob = _ordered(f[f["feasible_robust"]], "robust_score", config)
         f["robust_rank"] = np.nan
