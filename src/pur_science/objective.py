@@ -16,7 +16,7 @@ BROAD_KEYS = {ETA80: "eta80_broad_pa_s", ETA120: "eta120_broad_pa_s", RATIO: "ra
 
 
 def window_center(bounds: Iterable[float]) -> float:
-    """Geometric midpoint of a positive window (the frozen objective center)."""
+    """Geometric midpoint of a positive window."""
     lo, hi = [float(x) for x in bounds]
     if lo <= 0 or hi <= 0 or hi < lo:
         raise ValueError(f"Invalid positive window {bounds!r}")
@@ -24,52 +24,100 @@ def window_center(bounds: Iterable[float]) -> float:
 
 
 def mdi_fraction(mdi_parts: float, polyol_basis_parts: float = 100.0) -> float:
-    """MDI mass fraction of polyol + MDI for a formulation on a fixed polyol basis."""
     if mdi_parts < 0 or polyol_basis_parts <= 0:
         raise ValueError("mdi_parts must be >= 0 and polyol basis > 0")
     return mdi_parts / (polyol_basis_parts + mdi_parts)
 
 
+def objective_coordinates(config: dict[str, Any]) -> tuple[str, ...]:
+    """Return the response coordinates used by the frozen objective.
+
+    Historical ORACLE V2 used eta80, eta120 and eta80/eta120. The database-synchronised
+    rheology-state objective uses the two algebraically independent coordinates eta120 and
+    eta80/eta120 while retaining eta80 as a hard processing-window constraint.
+    """
+    coords = config.get("objective", {}).get("coordinates")
+    if coords is None:
+        return RESPONSES
+    mapping = {"eta80": ETA80, "eta120": ETA120, "ratio": RATIO}
+    out = tuple(mapping.get(str(k), str(k)) for k in coords)
+    bad = [k for k in out if k not in RESPONSES]
+    if bad:
+        raise ValueError(f"Unsupported objective coordinates: {bad}")
+    return out
+
+
 def objective_centers(config: dict[str, Any]) -> dict[str, float]:
+    obj = config.get("objective", {})
+    configured = obj.get("centers") or {}
     hc = config["hard_constraints"]
-    return {k: window_center(hc[key]) for k, key in PREFERRED_KEYS.items()}
+    out: dict[str, float] = {}
+    for k in objective_coordinates(config):
+        if k in configured:
+            out[k] = float(configured[k])
+        else:
+            out[k] = window_center(hc[PREFERRED_KEYS[k]])
+    return out
 
 
 def objective_weights(config: dict[str, Any]) -> dict[str, float]:
     w = config.get("objective", {}).get("weights", {})
-    return {ETA80: float(w.get("eta80", 1.0)), ETA120: float(w.get("eta120", 1.0)), RATIO: float(w.get("ratio", 1.0))}
+    return {k: float(w.get(k, 1.0)) for k in objective_coordinates(config)}
+
+
+def objective_halfwidths(config: dict[str, Any]) -> dict[str, float] | None:
+    raw = config.get("objective", {}).get("halfwidth_log10")
+    if raw is None:
+        return None
+    out = {k: float(raw[k]) for k in objective_coordinates(config)}
+    if any(v <= 0 for v in out.values()):
+        raise ValueError("objective halfwidth_log10 values must be positive")
+    return out
 
 
 def log_distance(frame: pd.DataFrame, centers: dict[str, float]) -> pd.DataFrame:
-    """Signed log10 distance of each response from its center."""
-    return pd.DataFrame({k: np.log10(frame[k] / centers[k]) for k in RESPONSES}, index=frame.index)
+    return pd.DataFrame({k: np.log10(frame[k] / centers[k]) for k in centers}, index=frame.index)
 
 
 def property_score(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Series:
-    """Frozen nominal objective: weighted sum of squared log10 distances to the preferred centers.
+    """Frozen nominal objective.
 
-    Identical to the ORACLE V2 `oracle_score` definition.
+    If `objective.halfwidth_log10` is present, each independent coordinate is normalised by
+    the corresponding preferred-window half-width in log10 space. Otherwise this reduces to
+    the historical ORACLE V2 weighted squared-log objective.
     """
     centers = objective_centers(config)
     weights = objective_weights(config)
+    half = objective_halfwidths(config)
     d = log_distance(frame, centers)
-    return sum(weights[k] * d[k] ** 2 for k in RESPONSES)
+    if half is None:
+        return sum(weights[k] * d[k] ** 2 for k in centers)
+    return sum(weights[k] * (d[k] / half[k]) ** 2 for k in centers)
 
 
 def worst_case_property_score(frame: pd.DataFrame, config: dict[str, Any]) -> pd.Series:
-    """FRONTIER V1 robust objective: worst case of the nominal objective over the frozen log10 interval.
+    """Worst case over a common symmetric log10 response radius.
 
-    Each response is known only within log10(y) +/- r. The worst-case squared distance to the
-    center is (|log10(y/c)| + r)^2. This is a deterministic, interval-based robust score; no
-    distributional assumption is made.
+    This remains available for historical/test configurations. The database-synchronised
+    strict robustness definition requires actual per-response lower/upper intervals and is
+    intentionally refused here rather than approximated by a common radius.
     """
+    robust = config.get("robustness") or {}
+    if robust.get("require_actual_response_intervals", False):
+        raise RuntimeError(
+            "This FRONTIER definition requires actual per-response lower/upper intervals; "
+            "a single common uncertainty radius is not an admissible substitute."
+        )
     if UNC_RADIUS not in frame.columns:
         raise KeyError("worst-case objective requires the uncertainty radius column")
     centers = objective_centers(config)
     weights = objective_weights(config)
+    half = objective_halfwidths(config)
     d = log_distance(frame, centers).abs()
     r = frame[UNC_RADIUS].astype(float)
-    return sum(weights[k] * (d[k] + r) ** 2 for k in RESPONSES)
+    if half is None:
+        return sum(weights[k] * (d[k] + r) ** 2 for k in centers)
+    return sum(weights[k] * ((d[k] + r) / half[k]) ** 2 for k in centers)
 
 
 def _between(s: pd.Series, bounds: Iterable[float]) -> pd.Series:
@@ -85,7 +133,6 @@ def _interval_inside(frame: pd.DataFrame, key: str, bounds: Iterable[float]) -> 
 
 
 def nominal_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFrame:
-    """Boolean pass/fail per nominal hard constraint (ORACLE V2 gate set, applied only where configured)."""
     hc = config["hard_constraints"]
     f = table.frame
     checks: dict[str, pd.Series] = {}
@@ -114,14 +161,20 @@ def nominal_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFram
 
 
 def robust_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFrame:
-    """Additional FRONTIER V1 robust feasibility gates.
+    """Additional FRONTIER robust feasibility gates for common-radius configurations.
 
-    - interval_inside_preferred: the whole log10 uncertainty interval of every response lies inside the preferred window.
-    - domain_ratio_max: the domain-distance descriptor does not exceed the frozen maximum.
+    The latest database audit uses actual lower/upper intervals, including a compounded
+    eta80/eta120 interval. Those bounds are not present in the current PUR-Essay candidate
+    schema, so this function refuses to reconstruct them from a common radius.
     """
     r = config.get("robustness") or {}
     if not r.get("enabled", False):
         raise RuntimeError("Robust ranking is not frozen in this config; refuse to invent a robust score.")
+    if r.get("require_actual_response_intervals", False):
+        raise RuntimeError(
+            "Strict robustness requires the original per-response lower/upper interval columns. "
+            "Restore them with the full PUR_SIM_V1 response table before freezing L2."
+        )
     hc = config["hard_constraints"]
     f = table.frame
     checks: dict[str, pd.Series] = {}
@@ -140,7 +193,6 @@ def robust_checks(table: CanonicalTable, config: dict[str, Any]) -> pd.DataFrame
 
 
 def constraint_bounds(config: dict[str, Any]) -> dict[str, Any]:
-    """Human-readable bounds for each nominal check, for audits and Agent tools."""
     hc = config["hard_constraints"]
     out: dict[str, Any] = {}
     if "nco_oh" in hc:
