@@ -4,128 +4,113 @@ Date: 2026-09-09
 
 ## Purpose
 
-This audit records the decision-rule correction made **before** the complete PUR_SIM_V1 response table is restored and before any new FRONTIER L0/L2 gold is generated.
+This file records how the robust rule was fixed **before** the final PUR-FRONTIER V1 gold was generated. It is an audit trail, not the active result specification; the active frozen definition is `configs/frontier_v1.json` and the computed gold is in `results/frontier_v1/`.
 
-The correction is intentionally version-local. Historical PUR-ORACLE V2 files are retained unchanged for provenance.
+Historical PUR-ORACLE V2 remains unchanged for provenance.
 
-## Issue found
+## Problems identified before freeze
 
-An earlier draft of `configs/frontier_v1.json` mixed two different questions:
+The early FRONTIER draft mixed nominal formulation feasibility with uncertainty certification. In particular, it considered using full-interval containment inside preferred windows as an L2 hard gate. That rule was rejected before freeze because preferred windows are optimization targets, not uncertainty-certification envelopes; with the frozen response uncertainty it also yielded zero robust candidates.
 
-1. Is the complete-data candidate nominally acceptable?
-2. Is its uncertainty interval sufficiently narrow to remain entirely inside the target window?
+A second correction was made before freeze to propagate the ratio uncertainty consistently. PUR_SIM_V1 stores a viscosity log10 radius `r`; because `ratio = eta80/eta120`, conservative rectangular propagation gives a ratio radius of `2r`, not `r`.
 
-The draft answered both with hard gates, including:
-
-- full interval inside broad windows at L1;
-- full interval inside preferred windows at L2.
-
-This conflated nominal formulation selection with uncertainty certification.
-
-It also made the robust layer unnecessarily brittle. For a log10 interval radius `r`, even a candidate exactly at a preferred-window centre can fit wholly inside the preferred window only if `r` is no larger than the half-width of that window in log space.
-
-For the three preferred windows:
-
-- eta80: 2.2-5.5 Pa.s -> centred half-width about **0.199 log10 units**;
-- eta120: 0.30-0.60 Pa.s -> about **0.151**;
-- eta80/eta120: 7.0-9.5 -> about **0.066**.
-
-Thus full containment in all preferred windows effectively becomes a narrow-uncertainty certification dominated by the ratio window.
-
-## Corrected FRONTIER rule
+## Final rule fixed before gold computation
 
 ### L0 — property-only
 
-All 928 candidates are ranked using the unchanged nominal objective:
+All 928 candidates are ranked by
 
 ```text
 J = sum_k w_k log10(y_k/c_k)^2
 ```
 
-where `c_k` is the geometric centre of the preferred window.
+using the geometric centers of the preferred windows.
 
 ### L1 — nominal constrained
 
-A candidate must satisfy the complete-data point-response and chemistry/process gates:
+Nominal feasibility uses only complete-data point responses plus chemistry/process gates:
 
-- broad eta80, eta120 and ratio windows;
-- preferred eta80, eta120 and ratio windows;
+- broad and preferred eta80 / eta120 / ratio windows;
 - NCO:OH range;
-- MDI mass-fraction range;
+- MDI fraction range;
 - chemistry-in-domain flag.
 
-Uncertainty-interval containment is **not** a nominal hard gate.
+Uncertainty is not a nominal hard gate.
 
-### L2 — minimax robust
+### L2 — robust
 
-Among L1 candidates with `domain_ratio <= 1.0`, rank by the exact deterministic worst case of the same squared-log objective over the frozen interval:
+Starting from L1 candidates:
 
-```text
-J_robust = sum_k w_k (abs(log10(y_k/c_k)) + r)^2
-```
-
-No uncertainty weight is tuned. No posterior distribution is assumed. No candidate is forced to remain fully within the preferred window over its entire interval.
-
-Interval containment may still be reported as a diagnostic/sensitivity descriptor, but it does not define candidate eligibility.
-
-## Why this is preferable
-
-The rule now preserves a clear hierarchy:
+1. propagate the candidate-specific log10 uncertainty as `(r, r, 2r)` for eta80, eta120 and ratio;
+2. require the full propagated interval to remain inside the **broad functional windows**;
+3. require `domain_ratio <= 1.0`;
+4. rank surviving candidates using the exact worst-case extension of the unchanged nominal objective:
 
 ```text
-complete-data response -> nominal feasibility -> uncertainty propagation -> robust decision
+J_robust = sum_k w_k (abs(log10(y_k/c_k)) + q_k r)^2
+q = (1, 1, 2)
 ```
 
-rather than
+No new uncertainty penalty weight was tuned.
+
+Preferred-window full-interval containment is deliberately not required.
+
+## Pre-result hypotheses
+
+Before the final freeze, existing analysis had suggested:
+
+- L0 hypothesis: `WO_INV_0419`;
+- historical L1 result: `WO_INV_0579`;
+- L2 hypothesis: `WO_INV_0420`;
+- active boundary: 35 wt% MDI floor;
+- continuous NCO:OH boundary approximately 1.772;
+- first reachable grid point 1.8.
+
+The freeze script was designed to report disagreement rather than modify data or definitions to match these expectations.
+
+## Final frozen outcome
+
+After the exact 928-row response snapshot was restored losslessly and SHA256-verified, the fixed rule produced:
 
 ```text
-complete-data response -> uncertainty certification -> another uncertainty certification -> ranking
+928 total candidates
+141 nominally feasible
+117 robust-admissible
+L0 = WO_INV_0419
+L1 = WO_INV_0579
+L2 = WO_INV_0420
 ```
 
-It is also aligned with the paper's core logic: the deterministic complete-data workflow first defines the admissible formulation landscape; uncertainty then changes how candidates are ranked for robustness.
+The pre-result hypotheses therefore agreed with the final computation.
 
-## No winner was selected during this correction
+Global nominal-to-robust propagation over the 117 robust-admissible candidates gave Spearman rho = 0.9851, Kendall tau = 0.8918 and 367/6786 pairwise inversions (5.41%), while the top decision changed from `WO_INV_0579` to `WO_INV_0420`.
 
-The complete 928-row response table is absent from the repository. Therefore this audit does **not** claim a new L0 or L2 winner.
+A fixed 50/50 PPG700/PPG1000 NCO sweep gave Kendall tau = 1.0 and zero inversions, showing that the robust transformation does not mechanically create ranking inversions.
 
-Previously documented IDs are retained only as audit hypotheses:
+## Backward result
 
-- `WO_INV_0419`: prior L0 property-only hypothesis;
-- `WO_INV_0579`: historical frozen PUR-ORACLE V2 constrained winner;
-- `WO_INV_0420`: prior robust hypothesis and independently verified first reachable point on the 50/50 PPG700/PPG1000 backward trajectory.
-
-`WO_INV_0420` is not hard-coded as the FRONTIER V1 robust gold.
-
-## Verified result that does not require response restoration
-
-From `data/pur_sim_v1/design_space_928.csv`, the 50/50 PPG700/PPG1000 trajectory obeys:
+For the L0 50/50 PPG700/PPG1000 trajectory:
 
 ```text
 mdi_parts = 30.3875 * NCO:OH
+NCO:OH* = 1.7719836724
+first reachable grid = 1.8 -> WO_INV_0420
 ```
 
-For an MDI fraction floor of 0.35 on a 100-part polyol basis:
+The backward projection from the property optimum independently lands on the same candidate selected by the L2 robust ranking.
+
+## Reproducibility record
+
+The exact response table is stored as contiguous XZ/base64 shards under `data/pur_sim_v1/` and reconstructed only if the SHA256 equals:
 
 ```text
-NCO:OH* = 1.7720
+d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9
 ```
 
-and the first reachable frozen grid point is 1.8 (`WO_INV_0420`).
-
-## Freeze condition
-
-The exact original response table must be restored as:
-
-```text
-data/pur_sim_v1/candidates_full.csv
-```
-
-Only then should:
+The frozen frontier, input/config hashes, ranking metrics and control are regenerated by:
 
 ```bash
 python scripts/freeze_frontier_v1.py
 ```
 
-be used to compute and hash the new FRONTIER result.
-
-No older model output, guessed reconstruction or synthetic fill-in is an acceptable substitute.
+No older response model, guessed reconstruction or post-result retuning is used.
