@@ -22,17 +22,32 @@ frontier_inputs <- c(
   "results/frontier_v1/manifest.json"
 )
 
-if (all(file.exists(frontier_inputs))) {
+depth_inputs <- c(
+  "results/frontier_depth_v1/summary.json",
+  "results/frontier_depth_v1/mdi_floor_phase_nominal.csv",
+  "results/frontier_depth_v1/mdi_floor_phase_robust.csv",
+  "results/frontier_depth_v1/uncertainty_scale_phase.csv",
+  "results/frontier_depth_v1/uncertainty_scale_sweep.csv",
+  "results/frontier_depth_v1/objective_weight_stability_nominal.csv",
+  "results/frontier_depth_v1/objective_weight_stability_robust.csv",
+  "results/frontier_depth_v1/rheology_state_rank.csv"
+)
+
+if (all(file.exists(frontier_inputs)) && all(file.exists(depth_inputs))) {
   source("figures/R/Figure5.R")
+  source("figures/R/Figure6.R")
   expected <- c(
     expected,
     "figures/final/Figure5_decision_frontier.png",
     "figures/final/Figure5_decision_frontier.pdf",
-    "figures/final/Figure5_decision_frontier.svg"
+    "figures/final/Figure5_decision_frontier.svg",
+    "figures/final/Figure6_uncertainty_objective_geometry.png",
+    "figures/final/Figure6_uncertainty_objective_geometry.pdf",
+    "figures/final/Figure6_uncertainty_objective_geometry.svg"
   )
-  message("Frozen FRONTIER V1 found; rendered Figure 5.")
+  message("Frozen FRONTIER V1 + FRONTIER-DEPTH V1 found; rendered Figures 5-6.")
 } else {
-  message("FRONTIER V1 gold not present; Figure 5 intentionally skipped.")
+  message("Frozen frontier/depth outputs incomplete; Figures 5-6 intentionally skipped.")
 }
 
 missing <- expected[!file.exists(expected)]
