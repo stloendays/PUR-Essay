@@ -15,6 +15,30 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -e '.[agent,dev]'
       - run: pytest
+      # Reconstruct the versioned 928-row response snapshot, freeze FRONTIER V1 and verify its scientific decision chain.
+      - name: Full PUR-FRONTIER V1 reproducibility check
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f data/pur_sim_v1/candidates_full.csv
+          python scripts/freeze_frontier_v1.py --out /tmp/frontier_full
+          python - <<'EOF'
+          import json
+          d = json.load(open('/tmp/frontier_full/frontier_v1_decision.json'))
+          assert d['gold_status'] == 'GOLD'
+          assert d['n_candidates'] == 928
+          assert d['n_feasible_nominal'] == 141
+          assert d['n_feasible_robust'] == 117
+          assert d['property_winner'] == 'WO_INV_0419'
+          assert d['constrained_winner'] == 'WO_INV_0579'
+          assert d['robust_winner'] == 'WO_INV_0420'
+          assert d['active_constraint']['name'] == 'mdi_fraction'
+          assert abs(d['backward_design']['continuous_threshold'] - 1.771983672436162) < 1e-10
+          assert d['backward_design']['nearest_reachable_grid_value'] == 1.8
+          assert d['backward_design']['nearest_reachable_candidate_id'] == 'WO_INV_0420'
+          assert d['backward_design']['reachable'] is True
+          EOF
+          rm -f data/pur_sim_v1/candidates_full.csv
       # Offline end-to-end of the benchmark scripts on the test fixture (no API key, nothing written into the repo)
       - name: Offline benchmark smoke (mock provider)
         shell: bash
