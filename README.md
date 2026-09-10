@@ -119,6 +119,26 @@ The formal repeated API benchmark is the next execution stage. Mock/offline runs
 
 Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-paste local-Claude handoff is stored at `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md`.
 
+## Current prospective wet-lab validation
+
+The current experiment is **not** the historical single-point `WO_INV_0579` plan. The active publication-priority plan is `docs/VALIDATION_EXPERIMENT_V3.md`, corresponding to the laboratory v5 execution sheet.
+
+It is centred on the frozen robust/final decision point `WO_INV_0420` and uses a five-formulation local cross:
+
+| Role | Candidate | PPG700/PPG1000 | NCO:OH | Role in validation |
+|---|---|---:|---:|---|
+| `N-` | `WO_INV_0419` | 50/50 | 1.70 | lower-stoichiometry boundary control |
+| `OPT` | `WO_INV_0420` | 50/50 | 1.80 | robust/final decision point |
+| `N+` | `WO_INV_0421` | 50/50 | 1.90 | higher-stoichiometry neighbour |
+| `C-` | `WO_INV_0404` | 60/40 | 1.80 | PPG700-rich composition neighbour |
+| `C+` | `WO_INV_0436` | 40/60 | 1.80 | PPG1000-rich boundary control |
+
+Each formulation uses **three independent synthesis batches**: `5 x 3 = 15` independent syntheses in the full plan. Every batch also retains a paired pre-MDI blend sample, so both pre-MDI and post-reaction prepolymer are measured at `80/90/100/110/120 °C` and summarized with an Andrade-state analysis (`eta_ref`, `Ea,app`).
+
+The experiment tests physical transferability and local chemistry/stoichiometry response; it is not allowed to tune the frozen Agent benchmark or redefine the winner after data are observed. Recommended add-ons, in priority order, are ATR-FTIR, a limited shear-rate sweep, SEC/GPC if available, and optional adhesion demonstration.
+
+`docs/VALIDATION_EXPERIMENT_V2.md` is retained as historical provenance only and is clearly marked superseded for current execution.
+
 ## Figures
 
 - Figure 2: formulation-specific Andrade temperature response and apparent activation energies.
@@ -127,7 +147,7 @@ Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-p
 - **Figure 5: frozen L0/L1/L2 decision frontier, backward boundary, rank propagation and MDI-floor phase behavior.**
 - **Figure 6: uncertainty phase transition, robustness cliff, objective-weight stability and rheology-state objective geometry.**
 - **Figure 7: formal repeated PUR-RECOVER V1 Agent benchmark — render only from real API run records.**
-- **Figure 8: prospective wet-lab physical validation — insert only after experiments are completed.**
+- **Figure 8: prospective wet-lab physical validation — current design is the five-formulation V3 matrix.**
 
 Formal R sources are in `figures/R/`; PNG/PDF/SVG outputs for completed deterministic figures are in `figures/final/`.
 
@@ -180,6 +200,8 @@ Never commit a real API credential. Failed/invalid/timeout runs are retained as 
 | `data/pur_sim_v1/` | 928-design grid + hash-verified frozen response snapshot |
 | `docs/AGENT_STRATEGY_V1.md`, `docs/AGENT_HANDOFF_CURRENT.md`, `configs/recover_v1.json`, `src/pur_agent/` | current blinded PUR-RECOVER V1 Agent |
 | `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md` | developer handoff prompt for local Claude |
+| `docs/VALIDATION_EXPERIMENT_V3.md` | current five-formulation prospective wet-lab validation plan |
+| `docs/VALIDATION_EXPERIMENT_V2.md` | historical single-point `WO_INV_0579` validation provenance |
 | `src/pur_bridge/agent.py`, `legacy/` | historical E6 / old Agent provenance; not the current benchmark |
 | `benchmark/`, `gold/`, `results/recover_v1/` | blind inputs, evaluator-only gold and Agent outputs |
 | `figures/`, `data/figures/` | manuscript figure sources and render data |
