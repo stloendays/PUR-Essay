@@ -14,6 +14,8 @@ import re
 import sys
 
 import _bootstrap  # noqa: F401
+from pur_agent.env import load_dotenv
+load_dotenv()
 
 from pur_agent.benchmark import run_benchmark
 from pur_agent.conditions import CONDITIONS

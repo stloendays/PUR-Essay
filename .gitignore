@@ -20,3 +20,4 @@ results/recover_v1/runs/
 results/recover_v1/**/runs/
 results/project_state_audit.json
 data/pur_sim_v1/candidates_full.csv
+!results/recover_v1/pilot_*/**

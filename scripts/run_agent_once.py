@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 
 import _bootstrap  # noqa: F401
+from pur_agent.env import load_dotenv
+load_dotenv()
 
 from pur_agent.agent import run_once
 from pur_agent.benchmark import find_gold

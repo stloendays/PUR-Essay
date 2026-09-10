@@ -1,0 +1,140 @@
+{
+  "run_id": "run_0003",
+  "timestamp_utc": "2026-09-10T12:09:15+00:00",
+  "benchmark_id": "PUR_RECOVER_V1",
+  "condition": "direct_llm",
+  "provider": "openai_compatible_chat",
+  "model": "gpt-5.6-luna",
+  "prompt_sha256": "466724c4127079cdb5a70977341cc61ea6f4427516536578afea7853c82cc5b6",
+  "data_sha256": {
+    "candidates.csv": "6ca33d4e69889d9026ee87455629b0bb8bfdcce3bf74b1bf5a652614588b0444",
+    "benchmark_config.json": "366abcd7d68cc51d4fd530c01d4241be3b50198d352634d7259707e4fd553b67",
+    "task.json": "8b41ee7e6c013832f4c3b8e96d8a5adc38be6d508d4c0d0d39502c97196ad1fb"
+  },
+  "config_sha256": "465ebb62d54af0b2ff83201491f8051345ec727663e44cdd339a1dc8d842529c",
+  "anonymization_seed": 20260909,
+  "llm_seed": 2003,
+  "tool_call_count": 0,
+  "tool_trace": [],
+  "final_json": {
+    "property_winner": "Candidate_0162",
+    "constrained_winner": "Candidate_0162",
+    "robust_winner": "Candidate_0162",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction_min",
+      "threshold": 0.35,
+      "candidate_value": 0.37412,
+      "evidence": "Candidate_0162 has 59.774 MDI parts, giving 59.774/(100+59.774)=0.37412, above the 0.35 minimum."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 1.98197,
+      "nearest_reachable_grid_value": 2.0,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "Polyol_C",
+      "composition_direction": "decrease",
+      "notes": "For the Polyol_D:Polyol_C family, eta80 decreases as NCO:OH increases along the same blend. At fixed NCO:OH, increasing the higher-MDI-demand Polyol_C component generally decreases eta80."
+    },
+    "evidence": [
+      "Candidate_0162 has eta80=3.498 Pa s, eta120=0.38552 Pa s, and ratio=9.0735, placing it close to the geometric centers of the preferred windows.",
+      "Candidate_0162 satisfies the nominal viscosity, ratio, NCO:OH, MDI-fraction, chemistry-domain, and domain-ratio requirements.",
+      "Candidate_0162 has domain_ratio=0.41746, uncertainty_radius=0.047359, and chemistry_in_domain=1, satisfying robust feasibility including broad-window interval containment.",
+      "For Candidate_0162's blend, k_blend=59.774/2.2=27.17 and the MDI-fraction threshold requires MDI parts of at least 100(0.35/0.65)=53.84615.",
+      "The backward-design threshold is 53.84615/27.17=1.98197, whose nearest reachable grid value is NCO:OH=2.0.",
+      "Along the Polyol_D:80+Polyol_C:20 family, eta80 decreases from approximately 3.5906 at NCO:OH=2.1 to 3.498 at 2.2 and 3.4077 at 2.3."
+    ],
+    "final_reasoning_summary": "Applying the frozen log-space objective identifies Candidate_0162 as the property winner. It also passes every nominal constraint and remains robust-feasible under the frozen worst-case interval definition, so it is simultaneously the constrained and robust winner. Its MDI fraction is above the 0.35 minimum; solving that constraint backward on the exact blend manifold gives a continuous NCO:OH threshold of 1.98197 and a reachable grid value of 2.0. Local table comparisons indicate decreasing eta80 with both increasing NCO:OH along the same blend and increasing Polyol_C content at fixed NCO:OH.",
+    "confidence": 0.84,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "raw_final_text": "{\n  \"property_winner\": \"Candidate_0162\",\n  \"constrained_winner\": \"Candidate_0162\",\n  \"robust_winner\": \"Candidate_0162\",\n  \"robust_abstention_reason\": null,\n  \"active_constraint\": {\n    \"name\": \"mdi_fraction_min\",\n    \"threshold\": 0.35,\n    \"candidate_value\": 0.37412,\n    \"evidence\": \"Candidate_0162 has 59.774 MDI parts, giving 59.774/(100+59.774)=0.37412, above the 0.35 minimum.\"\n  },\n  \"backward_design\": {\n    \"variable\": \"nco_oh\",\n    \"continuous_threshold\": 1.98197,\n    \"nearest_reachable_grid_value\": 2.0,\n    \"reachable\": true,\n    \"active_constraint\": \"mdi_fraction_min\"\n  },\n  \"local_trends\": {\n    \"nco_direction\": \"decrease\",\n    \"composition_axis\": \"Polyol_C\",\n    \"composition_direction\": \"decrease\",\n    \"notes\": \"For the Polyol_D:Polyol_C family, eta80 decreases as NCO:OH increases along the same blend. At fixed NCO:OH, increasing the higher-MDI-demand Polyol_C component generally decreases eta80.\"\n  },\n  \"evidence\": [\n    \"Candidate_0162 has eta80=3.498 Pa s, eta120=0.38552 Pa s, and ratio=9.0735, placing it close to the geometric centers of the preferred windows.\",\n    \"Candidate_0162 satisfies the nominal viscosity, ratio, NCO:OH, MDI-fraction, chemistry-domain, and domain-ratio requirements.\",\n    \"Candidate_0162 has domain_ratio=0.41746, uncertainty_radius=0.047359, and chemistry_in_domain=1, satisfying robust feasibility including broad-window interval containment.\",\n    \"For Candidate_0162's blend, k_blend=59.774/2.2=27.17 and the MDI-fraction threshold requires MDI parts of at least 100(0.35/0.65)=53.84615.\",\n    \"The backward-design threshold is 53.84615/27.17=1.98197, whose nearest reachable grid value is NCO:OH=2.0.\",\n    \"Along the Polyol_D:80+Polyol_C:20 family, eta80 decreases from approximately 3.5906 at NCO:OH=2.1 to 3.498 at 2.2 and 3.4077 at 2.3.\"\n  ],\n  \"final_reasoning_summary\": \"Applying the frozen log-space objective identifies Candidate_0162 as the property winner. It also passes every nominal constraint and remains robust-feasible under the frozen worst-case interval definition, so it is simultaneously the constrained and robust winner. Its MDI fraction is above the 0.35 minimum; solving that constraint backward on the exact blend manifold gives a continuous NCO:OH threshold of 1.98197 and a reachable grid value of 2.0. Local table comparisons indicate decreasing eta80 with both increasing NCO:OH along the same blend and increasing Polyol_C content at fixed NCO:OH.\",\n  \"confidence\": 0.84,\n  \"abstain\": false,\n  \"abstention_reason\": null\n}",
+  "usage": {
+    "total_tokens": 54571,
+    "prompt_tokens": 49352,
+    "completion_tokens": 5219,
+    "calls": 1
+  },
+  "api_response_ids": [
+    "chatcmpl-7816c950-dc0c-4f68-b137-85259c352c40"
+  ],
+  "latency_s": 96.07256000000052,
+  "strategy_check": null,
+  "error": null,
+  "condition_description": "Baseline 1: compressed complete data in context, no deterministic tools.",
+  "mode": "recover",
+  "fallback_transport_used": true,
+  "llm_rounds": 1,
+  "tools_available": [],
+  "decision_valid": true,
+  "final_json_named": {
+    "property_winner": "WO_INV_0472",
+    "constrained_winner": "WO_INV_0472",
+    "robust_winner": "WO_INV_0472",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction_min",
+      "threshold": 0.35,
+      "candidate_value": 0.37412,
+      "evidence": "Candidate_0162 has 59.774 MDI parts, giving 59.774/(100+59.774)=0.37412, above the 0.35 minimum."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 1.98197,
+      "nearest_reachable_grid_value": 2.0,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "PPG700",
+      "composition_direction": "decrease",
+      "notes": "For the Polyol_D:Polyol_C family, eta80 decreases as NCO:OH increases along the same blend. At fixed NCO:OH, increasing the higher-MDI-demand Polyol_C component generally decreases eta80."
+    },
+    "evidence": [
+      "Candidate_0162 has eta80=3.498 Pa s, eta120=0.38552 Pa s, and ratio=9.0735, placing it close to the geometric centers of the preferred windows.",
+      "Candidate_0162 satisfies the nominal viscosity, ratio, NCO:OH, MDI-fraction, chemistry-domain, and domain-ratio requirements.",
+      "Candidate_0162 has domain_ratio=0.41746, uncertainty_radius=0.047359, and chemistry_in_domain=1, satisfying robust feasibility including broad-window interval containment.",
+      "For Candidate_0162's blend, k_blend=59.774/2.2=27.17 and the MDI-fraction threshold requires MDI parts of at least 100(0.35/0.65)=53.84615.",
+      "The backward-design threshold is 53.84615/27.17=1.98197, whose nearest reachable grid value is NCO:OH=2.0.",
+      "Along the Polyol_D:80+Polyol_C:20 family, eta80 decreases from approximately 3.5906 at NCO:OH=2.1 to 3.498 at 2.2 and 3.4077 at 2.3."
+    ],
+    "final_reasoning_summary": "Applying the frozen log-space objective identifies Candidate_0162 as the property winner. It also passes every nominal constraint and remains robust-feasible under the frozen worst-case interval definition, so it is simultaneously the constrained and robust winner. Its MDI fraction is above the 0.35 minimum; solving that constraint backward on the exact blend manifold gives a continuous NCO:OH threshold of 1.98197 and a reachable grid value of 2.0. Local table comparisons indicate decreasing eta80 with both increasing NCO:OH along the same blend and increasing Polyol_C content at fixed NCO:OH.",
+    "confidence": 0.84,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "evaluation": {
+    "property_winner_recovery": false,
+    "constrained_winner_recovery": false,
+    "robust_winner_recovery": false,
+    "active_constraint_recovery": false,
+    "backward_threshold_recovery": false,
+    "reachable_grid_recovery": false,
+    "reachability_recovery": true,
+    "nco_direction_recovery": true,
+    "composition_direction_recovery": true,
+    "top1_recovery": false,
+    "top3_recovery": false,
+    "top5_recovery": false,
+    "oracle_rank": 16,
+    "objective_regret": 0.008397250142652506,
+    "hard_constraint_violation_rate": 0.0,
+    "backward_threshold_error": 0.20998632756383895,
+    "explanation_fidelity": 0.5,
+    "abstained": false,
+    "complete_decision_recovery": false,
+    "decision_layer_scored": "robust_winner",
+    "invalid_output": false,
+    "tool_call_count": 0,
+    "input_tokens": 49352,
+    "output_tokens": 5219,
+    "api_calls": 1,
+    "latency_s": 96.07256000000052
+  }
+}
