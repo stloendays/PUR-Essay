@@ -1,4 +1,6 @@
-# Prospective validation target v2
+# Prospective validation target v2 — historical single-point plan
+
+> **Historical provenance only.** This document is no longer the current wet-lab execution plan. It records the earlier single-point `WO_INV_0579` validation concept (PPG400/PPG2000 = 40/60, NCO:OH = 1.70). The current publication-priority experiment is `docs/VALIDATION_EXPERIMENT_V3.md`, centred on `WO_INV_0420` with a five-formulation local matrix and paired pre-/post-MDI rheology.
 
 The experiment verifies the pre-frozen oracle optimum. It is not used to choose the formulation.
 
