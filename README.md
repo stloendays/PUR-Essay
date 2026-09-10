@@ -23,7 +23,8 @@ experimental/public evidence
   -> backward active-boundary analysis
   -> decision/uncertainty phase maps + objective geometry
   -> blinded PUR-RECOVER V1 Agent benchmark
-  -> prospective wet-lab validation
+  -> availability-first common-material wet-lab transfer study
+  -> exact frozen-candidate confirmation when materials are available
 ```
 
 The experimental/public science layer and synthetic decision benchmark are kept strictly separate. `PUR_SIM_V1` is not used as empirical evidence for physical polyurethane rheology.
@@ -121,23 +122,35 @@ Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-p
 
 ## Current prospective wet-lab validation
 
-The current experiment is **not** the historical single-point `WO_INV_0579` plan. The active publication-priority plan is `docs/VALIDATION_EXPERIMENT_V3.md`, corresponding to the laboratory v5 execution sheet.
+The current laboratory planning source of truth is `docs/VALIDATION_EXPERIMENT_V4.md`. It incorporates the supervisor requirement to **prioritise common, fast-to-obtain raw materials** before waiting for unusual grades.
 
-It is centred on the frozen robust/final decision point `WO_INV_0420` and uses a five-formulation local cross:
+The common-material list currently includes MDI, PPG2000, multiple polyester polyols (`7360`, `PDP-70`, `HDPOL-320P`, `HDPOL-2000A`, `HDPOL-338A`, `HDPOL-3170`, `HDPOL-2000IPS`), several petroleum resins and `AC1920`. Product names alone are not treated as molecular specifications; final formulation calculations require lot TDS/COA/assay data.
 
-| Role | Candidate | PPG700/PPG1000 | NCO:OH | Role in validation |
-|---|---|---:|---:|---|
-| `N-` | `WO_INV_0419` | 50/50 | 1.70 | lower-stoichiometry boundary control |
-| `OPT` | `WO_INV_0420` | 50/50 | 1.80 | robust/final decision point |
-| `N+` | `WO_INV_0421` | 50/50 | 1.90 | higher-stoichiometry neighbour |
-| `C-` | `WO_INV_0404` | 60/40 | 1.80 | PPG700-rich composition neighbour |
-| `C+` | `WO_INV_0436` | 40/60 | 1.80 | PPG1000-rich boundary control |
+### Priority A — common-material transfer study
 
-Each formulation uses **three independent synthesis batches**: `5 x 3 = 15` independent syntheses in the full plan. Every batch also retains a paired pre-MDI blend sample, so both pre-MDI and post-reaction prepolymer are measured at `80/90/100/110/120 °C` and summarized with an Andrade-state analysis (`eta_ref`, `Ea,app`).
+Start with `MDI + PPG2000 + Polyester-X`, where `Polyester-X` is selected prospectively from the common polyester list using sample availability, documented OH number/functionality, drying/handling suitability and data quality. A one-batch PPG2000/MDI method shakedown can be used before formal replication.
 
-The experiment tests physical transferability and local chemistry/stoichiometry response; it is not allowed to tune the frozen Agent benchmark or redefine the winner after data are observed. Recommended add-ons, in priority order, are ATR-FTIR, a limited shear-rate sweep, SEC/GPC if available, and optional adhesion demonstration.
+The formal availability-first matrix keeps a five-point local-cross design:
 
-`docs/VALIDATION_EXPERIMENT_V2.md` is retained as historical provenance only and is clearly marked superseded for current execution.
+| Role | PPG2000 / Polyester-X | NCO:OH | Purpose |
+|---|---:|---:|---|
+| `N-` | 50/50 | 1.70 | lower-stoichiometry neighbour |
+| `CTR` | 50/50 | 1.80 | centre/reference |
+| `N+` | 50/50 | 1.90 | higher-stoichiometry neighbour |
+| `C-P` | 60/40 | 1.80 | PPG2000-rich neighbour |
+| `C-E` | 40/60 | 1.80 | polyester-rich neighbour |
+
+Each formulation uses **three independent synthesis batches** (`5 x 3 = 15`). Every batch retains paired pre-MDI blend and post-MDI prepolymer samples for `80/90/100/110/120 °C` rheology and Andrade-state analysis. MDI charge is calculated from the actual equivalent OH content and MDI NCO assay rather than copied from the previous PPG700/PPG1000 design.
+
+This Priority A panel is a real-material transfer/interaction study. It does **not** constitute exact experimental validation of `WO_INV_0420`, because the chemistry differs from the frozen synthetic candidate.
+
+### Priority B — exact frozen-candidate confirmation
+
+The previous PPG700/PPG1000 plan is retained as a later strict confirmation when those samples become available. Minimum strict local validation uses `WO_INV_0419 / 0420 / 0421` at PPG700/PPG1000 = 50/50 and NCO:OH = 1.70/1.80/1.90, preferably three independent batches per point. The two composition neighbours from V3 can be restored if resources permit.
+
+Petroleum resins and `AC1920` are kept out of the first reactive-polyol matrix to avoid confounding polyol chemistry, stoichiometry and non-reactive resin loading. A tackifier loading study can be added later as a separate application layer after the core prepolymer experiment is stable.
+
+`docs/VALIDATION_EXPERIMENT_V3.md` is retained as the previous exact-`WO_INV_0420` five-formulation plan; `docs/VALIDATION_EXPERIMENT_V2.md` remains historical single-point `WO_INV_0579` provenance.
 
 ## Figures
 
@@ -147,7 +160,7 @@ The experiment tests physical transferability and local chemistry/stoichiometry 
 - **Figure 5: frozen L0/L1/L2 decision frontier, backward boundary, rank propagation and MDI-floor phase behavior.**
 - **Figure 6: uncertainty phase transition, robustness cliff, objective-weight stability and rheology-state objective geometry.**
 - **Figure 7: formal repeated PUR-RECOVER V1 Agent benchmark — render only from real API run records.**
-- **Figure 8: prospective wet-lab physical validation — current design is the five-formulation V3 matrix.**
+- **Figure 8: prospective wet-lab validation — Priority A common-material transfer plus Priority B exact-candidate confirmation when available.**
 
 Formal R sources are in `figures/R/`; PNG/PDF/SVG outputs for completed deterministic figures are in `figures/final/`.
 
@@ -200,7 +213,8 @@ Never commit a real API credential. Failed/invalid/timeout runs are retained as 
 | `data/pur_sim_v1/` | 928-design grid + hash-verified frozen response snapshot |
 | `docs/AGENT_STRATEGY_V1.md`, `docs/AGENT_HANDOFF_CURRENT.md`, `configs/recover_v1.json`, `src/pur_agent/` | current blinded PUR-RECOVER V1 Agent |
 | `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md` | developer handoff prompt for local Claude |
-| `docs/VALIDATION_EXPERIMENT_V3.md` | current five-formulation prospective wet-lab validation plan |
+| `docs/VALIDATION_EXPERIMENT_V4.md` | current availability-first common-material wet-lab plan |
+| `docs/VALIDATION_EXPERIMENT_V3.md` | previous exact-`WO_INV_0420` five-formulation validation plan |
 | `docs/VALIDATION_EXPERIMENT_V2.md` | historical single-point `WO_INV_0579` validation provenance |
 | `src/pur_bridge/agent.py`, `legacy/` | historical E6 / old Agent provenance; not the current benchmark |
 | `benchmark/`, `gold/`, `results/recover_v1/` | blind inputs, evaluator-only gold and Agent outputs |
@@ -212,4 +226,4 @@ Never commit a real API credential. Failed/invalid/timeout runs are retained as 
 
 Experimental/public evidence supports the physical rheology conclusions: formulation-specific temperature sensitivity, free-NCO trends, temperature-amplified chemistry contrast, temperature-induced rheological rank reversal in published patent points, and composition-context effects within their stated evidence limits.
 
-`PUR_SIM_V1` supports finite-space optimisation, constraint propagation, interval robustness, decision-phase analysis, objective-geometry analysis, backward design and blind Agent recovery only. It does not establish a universal optimum over all polyurethane chemistry. Prospective wet-lab results remain outside the primary blind Agent benchmark.
+`PUR_SIM_V1` supports finite-space optimisation, constraint propagation, interval robustness, decision-phase analysis, objective-geometry analysis, backward design and blind Agent recovery only. It does not establish a universal optimum over all polyurethane chemistry. Priority A common-material experiments support transfer/interaction claims but not exact `WO_INV_0420` identity validation; Priority B is reserved for strict frozen-candidate confirmation. Prospective wet-lab results remain outside the primary blind Agent benchmark.
