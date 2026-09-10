@@ -1,0 +1,8 @@
+{
+  "benchmark_id": "PUR_RECOVER_V1",
+  "built_utc": "2026-09-10T07:25:03+00:00",
+  "seed": 20260909,
+  "blind_candidate_sha256": "6ca33d4e69889d9026ee87455629b0bb8bfdcce3bf74b1bf5a652614588b0444",
+  "config_sha256": "465ebb62d54af0b2ff83201491f8051345ec727663e44cdd339a1dc8d842529c",
+  "n_candidates": 928
+}

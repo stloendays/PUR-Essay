@@ -10,9 +10,17 @@ from .conditions import Condition
 from .data_access import BlindBundle
 
 PROMPT_DIR = Path(__file__).resolve().parents[2] / "prompts"
+# Only these files may ever enter the model-under-test context. Anything else placed in
+# prompts/ (handoff notes, drafts) is not loadable, even by name.
+ALLOWED_PROMPTS = frozenset({
+    "recover_v1_system.txt", "recover_v1_task.txt", "direct_llm_system.txt", "tool_llm_system.txt",
+    "audit_v1_system.txt", "audit_v1_task.txt",
+})
 
 
 def load_prompt(name: str, prompt_dir: str | Path | None = None) -> str:
+    if Path(name).name != name or name not in ALLOWED_PROMPTS:
+        raise PermissionError(f"Prompt {name!r} is not an approved Agent prompt file")
     path = Path(prompt_dir or PROMPT_DIR) / name
     if not path.is_file():
         raise FileNotFoundError(f"Prompt file not found: {path}")
@@ -35,7 +43,7 @@ def compress_table(df: pd.DataFrame, config: dict[str, Any], *, sig: int = 5) ->
 def build_task_text(bundle: BlindBundle, condition: Condition, *, prompt_dir: str | Path | None = None) -> str:
     """Task prompt shared by every LLM condition; only optional blocks differ."""
     cfg = bundle.config
-    template = load_prompt("recover_v1_task.txt", prompt_dir)
+    template = load_prompt(condition.task_prompt, prompt_dir)
     public = {
         "benchmark_id": cfg.get("benchmark_id"),
         "polyol_basis_parts": cfg.get("polyol_basis_parts"),

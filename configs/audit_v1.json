@@ -1,0 +1,30 @@
+{
+  "benchmark_id": "PUR_AUDIT_V1",
+  "mode": "audit",
+  "science_definition_from": "configs/frontier_v1.json",
+  "note": "Secondary decision-audit mode. Scientific contract (objective, constraints, uncertainty rule, layers, gold) is inherited unchanged from configs/frontier_v1.json; the Agent is scored on recovering counterfactual decision geometry, not on winner IDs alone.",
+  "anonymization": {
+    "component_columns": ["PPG400", "PPG700", "PPG1000", "PPG2000"],
+    "material_prefix": "Polyol",
+    "seed": 20260909
+  },
+  "blind": {
+    "drop_columns": ["oracle_score", "oracle_rank", "oracle_is_best", "gold_candidate_id", "oracle_feasible", "oracle_interval_inside_broad", "broad_margin"]
+  },
+  "required_outputs": [
+    "layer_divergence", "constraint_counterfactual", "uncertainty_counterfactual", "reachability",
+    "objective_structure", "pareto_alternatives", "stability", "hypothesis_to_test", "contradictions"
+  ],
+  "audit": {
+    "weight_samples": 50000,
+    "weight_seed": 20260909
+  },
+  "evaluation": {
+    "backward_threshold_tolerance_nco_oh": 0.03,
+    "floor_tolerance": 0.002,
+    "scale_tolerance": 0.02,
+    "fraction_tolerance": 0.05,
+    "pareto_min_jaccard": 0.6,
+    "primary_metric": "audit_completeness"
+  }
+}

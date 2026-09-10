@@ -118,7 +118,11 @@ The formal repeated API benchmark is the next execution stage. Mock/offline runs
 
 **Historical code:** `src/pur_bridge/agent.py` contains the old E6 / information-gain / experiment-selection pathway. It is retained for provenance and legacy compatibility but must not be used as the current paper Agent implementation.
 
-Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-paste local-Claude handoff is stored at `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md`.
+Read `docs/AGENT_HANDOFF_CURRENT.md` before editing/running Agent code. A copy-paste local-Claude handoff is stored at `docs/CLAUDE_PUR_RECOVER_V1_HANDOFF.md`.
+
+## Secondary mode: PUR-AUDIT V1 (`pur_audit`)
+
+Same blind bundle and frozen contract, different question: explain why L0/L1/L2 differ, quantify how far the MDI floor or the uncertainty scale can move before the robust winner changes, report reachability, objective double-counting, Pareto alternatives, weight stability and contradictions, and propose the hypothesis most worth a wet-lab test. Tools are wrappers over `src/pur_science/depth.py`; the scorer compares against `gold_audit.json` computed by the same functions. See `docs/PUR_AUDIT_V1.md`. Pilot instructions: `docs/PILOT_RUNBOOK.md`.
 
 ## Current prospective wet-lab validation
 
@@ -212,7 +216,7 @@ Never commit a real API credential. Failed/invalid/timeout runs are retained as 
 | `results/frontier_v1/` | frozen decision, scores, ranking metrics and preservation control |
 | `data/pur_sim_v1/` | 928-design grid + hash-verified frozen response snapshot |
 | `docs/AGENT_STRATEGY_V1.md`, `docs/AGENT_HANDOFF_CURRENT.md`, `configs/recover_v1.json`, `src/pur_agent/` | current blinded PUR-RECOVER V1 Agent |
-| `prompts/CLAUDE_PUR_RECOVER_V1_HANDOFF.md` | developer handoff prompt for local Claude |
+| `docs/CLAUDE_PUR_RECOVER_V1_HANDOFF.md` | developer handoff prompt for local Claude |
 | `docs/VALIDATION_EXPERIMENT_V4.md` | current availability-first common-material wet-lab plan |
 | `docs/VALIDATION_EXPERIMENT_V3.md` | previous exact-`WO_INV_0420` five-formulation validation plan |
 | `docs/VALIDATION_EXPERIMENT_V2.md` | historical single-point `WO_INV_0579` validation provenance |

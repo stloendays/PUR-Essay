@@ -49,7 +49,7 @@ def main() -> int:
     if not args.no_eval:
         gold_path, mapping_path = find_gold(args.blind_dir, args.gold, args.mapping)
         if gold_path:
-            gold = load_gold(gold_path)
+            gold = load_gold(gold_path, mode=cond.mode)
             mapping = json.loads(Path(mapping_path).read_text(encoding="utf-8")) if mapping_path else None
             evaluate_run_record(rec, gold, mapping)
         else:

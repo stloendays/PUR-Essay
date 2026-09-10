@@ -136,3 +136,22 @@ OPENAI_PROVIDER  # optional
 ```
 
 `--provider auto` uses the Responses API where supported and can fall back to a compatible endpoint transport without changing the scientific task, tools or evaluator.
+
+## Staged strategy (current)
+
+```text
+inspect -> property rank -> constraint audit -> robust rank -> backward -> reachability
+        -> local trends -> evidence reconciliation -> self-check -> final
+```
+
+`evidence reconciliation` (added 2026-09-10) is a prompt-level stage: the model must line up
+the constraint-audit failure, the backward threshold, the reachable candidate and the decision
+point against each other before the self-check, and must report tool contradictions in
+`final_reasoning_summary` instead of forcing an answer. `StrategyStage.EVIDENCE_RECONCILIATION`
+records the stage; it requires no additional tool family.
+
+## Secondary mode
+
+`pur_audit` (PUR-AUDIT V1, `docs/PUR_AUDIT_V1.md`) reuses the same bundle and contract with a
+decision-audit task, audit tools over `pur_science.depth`, `AuditStrategy` gating and a separate
+evaluator gold (`gold_audit.json`). It never replaces the primary complete-decision-recovery result.

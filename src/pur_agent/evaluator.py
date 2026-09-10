@@ -71,8 +71,26 @@ def remap_decision(decision: dict[str, Any], mapping: dict[str, Any]) -> dict[st
 
 
 def evaluate_run_record(record: dict[str, Any], gold: dict[str, Any], mapping: dict[str, Any] | None, *, backward_tolerance: float = 0.03, top_k: tuple[int, ...] = (1, 3, 5)) -> dict[str, Any]:
-    """Score one run record in place and return the metrics."""
+    """Score one run record in place and return the metrics. Audit-mode records need the audit gold."""
     final = record.get("final_json")
+    if record.get("mode") == "audit":
+        from .audit import remap_audit_report, score_audit
+        if gold.get("mode") != "PUR_AUDIT_V1":
+            raise ValueError("audit-mode run must be scored against gold_audit.json")
+        if not record.get("decision_valid") or not isinstance(final, dict):
+            metrics = score_audit({"abstain": True}, gold); metrics["invalid_output"] = True
+        else:
+            report = remap_audit_report(final, mapping) if mapping else final
+            metrics = score_audit(report, gold); metrics["invalid_output"] = False
+            record["final_json_named"] = report
+        metrics["tool_call_count"] = record.get("tool_call_count", 0)
+        usage = record.get("usage") or {}
+        metrics["input_tokens"] = usage.get("input_tokens", usage.get("prompt_tokens"))
+        metrics["output_tokens"] = usage.get("output_tokens", usage.get("completion_tokens"))
+        metrics["api_calls"] = usage.get("calls")
+        metrics["latency_s"] = record.get("latency_s")
+        record["evaluation"] = metrics
+        return metrics
     if not record.get("decision_valid") or not isinstance(final, dict):
         metrics = score_decision({"abstain": True}, gold, backward_tolerance=backward_tolerance, top_k=top_k)
         metrics["invalid_output"] = True
@@ -91,7 +109,11 @@ def evaluate_run_record(record: dict[str, Any], gold: dict[str, Any], mapping: d
     return metrics
 
 
-def load_gold(gold_path: str | Path) -> dict[str, Any]:
+def load_gold(gold_path: str | Path, *, mode: str = "recover") -> dict[str, Any]:
+    """Load the evaluator gold for a mode. For audit mode, `gold_audit.json` next to the given file is used."""
+    gold_path = Path(gold_path)
+    if mode == "audit" and gold_path.name != "gold_audit.json":
+        gold_path = gold_path.with_name("gold_audit.json")
     gold = json.loads(Path(gold_path).read_text(encoding="utf-8"))
     if gold.get("gold_status") not in (None, "GOLD"):
         raise RuntimeError(f"Refusing to evaluate against a non-gold decision file (gold_status={gold.get('gold_status')!r})")

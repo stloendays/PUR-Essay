@@ -1,0 +1,4 @@
+{
+  "source_table_sha256": "d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9",
+  "note": "hash of the un-anonymized frozen source table; the table itself is evaluator-side"
+}

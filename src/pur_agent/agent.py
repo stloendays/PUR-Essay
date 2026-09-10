@@ -12,8 +12,10 @@ from .data_access import BlindBundle
 from .llm_client import LLMClient, LLMResult
 from .logging_utils import build_run_record, new_run_id, sha256_json, sha256_text
 from .prompts import build_task_text, load_prompt
+from .audit_tools import AuditToolbox
 from .runtime import ToolboxExecutor
-from .schemas import DecisionSchemaError, parse_decision
+from .schemas import DecisionSchemaError, parse_audit_report, parse_decision
+from .strategy import AuditStrategy
 from .tools import DecisionToolbox
 
 
@@ -92,9 +94,13 @@ def run_once(
     task = build_task_text(bundle, cond, prompt_dir=prompt_dir)
     prompt_hash = sha256_text(instructions + "\n---\n" + task)
     executor: ToolboxExecutor | None = None
-    if cond.use_tools:
+    robust_required = bool((cfg.get("robustness") or {}).get("enabled", False))
+    if cond.use_tools and cond.mode == "audit":
+        executor = ToolboxExecutor(AuditToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
+                                   robust_required=robust_required, strategy=AuditStrategy(), include_audit_tools=True)
+    elif cond.use_tools:
         executor = ToolboxExecutor(DecisionToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
-                                   robust_required=bool((cfg.get("robustness") or {}).get("enabled", False)))
+                                   robust_required=robust_required)
     error = None
     result: LLMResult | None = None
     final: dict[str, Any] | None = None
@@ -102,7 +108,10 @@ def run_once(
     try:
         result = client.run(instructions=instructions, task=task, executor=executor, seed=seed)
         final = extract_json(result.text)
-        parse_decision(final)
+        if cond.mode == "audit":
+            parse_audit_report(final)
+        else:
+            parse_decision(final)
         valid = True
     except (json.JSONDecodeError, DecisionSchemaError) as exc:
         error = f"{type(exc).__name__}: {exc}"
@@ -116,7 +125,7 @@ def run_once(
         llm_seed=seed, tool_trace=executor.trace if executor else [], final_json=final, raw_final_text=(result.text if result else ""),
         usage=(result.usage if result else None), response_ids=(result.response_ids if result else []), latency_s=latency,
         strategy_check=(executor.strategy_check().__dict__ if executor else None), error=error,
-        extra={"condition_description": cond.description, "fallback_transport_used": bool(result.fallback_used) if result else None,
+        extra={"condition_description": cond.description, "mode": cond.mode, "fallback_transport_used": bool(result.fallback_used) if result else None,
                "llm_rounds": result.rounds if result else 0, "tools_available": sorted(executor.available_tool_names) if executor else []},
     )
     rec["decision_valid"] = valid

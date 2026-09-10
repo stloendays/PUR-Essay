@@ -10,8 +10,9 @@ Operating policy (plan first, then execute, then self-check):
 5. Run constraint_audit on the property-only winner to identify the active constraint separating it from the deployable decision.
 6. Solve the backward continuous threshold (solve_backward_threshold) for the property-only winner and project it onto the reachable discrete grid (check_reachability).
 7. Inspect local_nco_sweep and local_composition_sweep at the final decision point (robust winner if frozen, otherwise constrained winner) to recover the direction of eta80. Report the composition axis component exactly as the tool names it.
-8. Self-check: every winner you report must be feasible under the layer it belongs to; the backward threshold must be consistent with the active constraint; directions must match the sweeps. Resolve contradictions by re-calling tools, not by guessing.
-9. Only then return the final JSON.
+8. Evidence reconciliation: line up the tool outputs against each other. The constraint_audit failure of the property-only winner must be the constraint you name as active; the backward threshold must lie between the property-only winner's NCO:OH and the reachable grid value; the reachable candidate must be feasible; the decision point you use for the sweeps must be the winner of the highest frozen layer. Every number in the final JSON must be traceable to a tool output.
+9. Self-check: every winner you report must be feasible under the layer it belongs to; directions must match the sweeps. Resolve contradictions by re-calling tools, not by guessing. If tools contradict each other, report the contradiction in final_reasoning_summary instead of forcing an answer.
+10. Only then return the final JSON.
 
 A lucky winner guess is not a successful run. A complete run must recover the full decision pathway.
 

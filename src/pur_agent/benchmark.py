@@ -18,9 +18,13 @@ BOOL_METRICS = (
     "active_constraint_recovery", "backward_threshold_recovery", "reachable_grid_recovery", "reachability_recovery",
     "nco_direction_recovery", "composition_direction_recovery", "top1_recovery", "top3_recovery", "top5_recovery",
     "abstained", "invalid_output",
+    # PUR-AUDIT V1
+    "audit_completeness", "layer_divergence_l0_l1", "layer_divergence_l1_l2", "uncertainty_bottleneck", "constraint_counterfactual_up",
+    "constraint_counterfactual_down", "uncertainty_crossover", "reachability", "objective_double_counting", "principal_weight_ratio",
+    "pareto_alternatives", "stability_nominal", "stability_robust", "hypothesis_present",
 )
 NUM_METRICS = ("oracle_rank", "objective_regret", "hard_constraint_violation_rate", "backward_threshold_error",
-               "explanation_fidelity", "tool_call_count", "input_tokens", "output_tokens", "api_calls", "latency_s")
+               "explanation_fidelity", "audit_field_recovery", "pareto_jaccard", "tool_call_count", "input_tokens", "output_tokens", "api_calls", "latency_s")
 
 
 def find_gold(blind_dir: str | Path, gold: str | None, mapping: str | None) -> tuple[Path | None, Path | None]:
@@ -50,7 +54,7 @@ def run_benchmark(
     cond = get_condition(condition)
     client = make_client(provider, model, max_rounds=max_rounds) if cond.uses_llm else None
     gold_path, mapping_path = find_gold(blind_dir, gold, mapping)
-    gold_obj = load_gold(gold_path) if gold_path else None
+    gold_obj = load_gold(gold_path, mode=cond.mode) if gold_path else None
     mapping_obj = json.loads(Path(mapping_path).read_text(encoding="utf-8")) if mapping_path else None
     tol = float((bundle.config.get("evaluation") or {}).get("backward_threshold_tolerance_nco_oh", 0.03))
     top_k = tuple(int(k) for k in (bundle.config.get("evaluation") or {}).get("top_k", [1, 3, 5]))

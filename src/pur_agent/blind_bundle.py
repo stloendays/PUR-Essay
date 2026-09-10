@@ -118,6 +118,12 @@ def build_blind_bundle(
         blind_gold = _gold_to_blind(gold, anon.candidate_forward, anon.material_forward)
         (evaluator_dir / "gold_decision_blind.json").write_text(json.dumps(blind_gold, indent=2), encoding="utf-8")
         manifest["gold_sha256"] = sha256_json(gold)
+        if named.get("robust_layer_frozen"):
+            from .audit import audit_gold  # evaluator-side only
+            agold = audit_gold(table, config)
+            agold.update({"source_table_sha256": src_hash, "config_sha256": sha256_json(pub), "frozen_utc": utc_now()})
+            (evaluator_dir / "gold_audit.json").write_text(json.dumps(agold, indent=2), encoding="utf-8")
+            manifest["gold_audit_sha256"] = sha256_json(agold)
     return manifest
 
 

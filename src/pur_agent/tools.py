@@ -11,7 +11,7 @@ from pur_science.canonical import BLEND, CID, ETA120, ETA80, MDI_FRACTION, MDI_P
 from pur_science.frontier import (
     active_constraint_for, composition_family, compute_frontier, local_composition_trend, local_nco_trend,
 )
-from pur_science.objective import constraint_bounds, nominal_checks, robust_checks
+from pur_science.objective import constraint_bounds, mdi_fraction, nominal_checks, robust_checks
 from pur_science.reachability import check_reachability
 
 _RECORD_COLS = [CID, BLEND, NCO, MDI_PARTS, MDI_FRACTION, ETA80, ETA120, RATIO, "property_score", "feasible_nominal"]
@@ -136,7 +136,7 @@ class DecisionToolbox:
 
     def calculate_mdi_fraction(self, mdi_parts: float) -> dict[str, Any]:
         basis = self.table.polyol_basis_parts
-        return {"mdi_parts": float(mdi_parts), "polyol_basis_parts": basis, "mdi_fraction": float(mdi_parts) / (basis + float(mdi_parts))}
+        return {"mdi_parts": float(mdi_parts), "polyol_basis_parts": basis, "mdi_fraction": mdi_fraction(float(mdi_parts), basis)}
 
     def calculate_objective(self, candidate_id: str) -> dict[str, Any]:
         row = self._row(candidate_id)

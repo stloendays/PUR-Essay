@@ -138,3 +138,27 @@ def parse_decision(raw: dict[str, Any]) -> AgentDecision:
         abstention_reason=_opt_str(raw.get("abstention_reason"), "abstention_reason"),
         robust_abstention_reason=_opt_str(raw.get("robust_abstention_reason"), "robust_abstention_reason"),
     )
+
+
+AUDIT_REQUIRED_BLOCKS = ("layer_divergence", "constraint_counterfactual", "uncertainty_counterfactual", "reachability",
+                         "objective_structure", "pareto_alternatives", "stability", "hypothesis_to_test", "contradictions")
+
+
+def parse_audit_report(raw: dict[str, Any]) -> dict[str, Any]:
+    """Structural validation of a PUR-AUDIT V1 report. Missing blocks are allowed (scored as not
+    recovered) but present blocks must have the right container type."""
+    if not isinstance(raw, dict):
+        raise DecisionSchemaError("audit report must be a JSON object")
+    for key in ("layer_divergence", "constraint_counterfactual", "uncertainty_counterfactual", "reachability", "objective_structure", "stability", "hypothesis_to_test"):
+        if key in raw and raw[key] is not None and not isinstance(raw[key], dict):
+            raise DecisionSchemaError(f"{key} must be an object")
+    for key in ("pareto_alternatives", "contradictions", "evidence"):
+        if key in raw and raw[key] is not None and not isinstance(raw[key], list):
+            raise DecisionSchemaError(f"{key} must be a list")
+    if "abstain" in raw and not isinstance(raw["abstain"], bool):
+        raise DecisionSchemaError("abstain must be boolean")
+    ld = raw.get("layer_divergence") or {}
+    mech = ld.get("l1_l2_mechanism")
+    if mech is not None and mech not in ("worst_case_objective", "robust_admissibility_gate", "identical", "not_frozen"):
+        raise DecisionSchemaError(f"unknown l1_l2_mechanism {mech!r}")
+    return raw

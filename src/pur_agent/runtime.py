@@ -37,6 +37,18 @@ ALL_TOOL_DEFINITIONS: list[dict[str, Any]] = [
 ]
 ALL_TOOL_NAMES = tuple(d["name"] for d in ALL_TOOL_DEFINITIONS)
 
+_LAYER = {"layer": {"type": "string", "enum": ["nominal", "robust"]}}
+AUDIT_TOOL_DEFINITIONS: list[dict[str, Any]] = [
+    _fn("constraint_counterfactual", "Phase map of the winner versus the MDI-fraction floor: how far the frozen floor can move before the winner changes, and to whom.", _LAYER, ["layer"]),
+    _fn("uncertainty_counterfactual", "Why L1 and L2 differ (worst-case objective vs admissibility gate), the uncertainty scale at which they cross, and the scale range over which the robust winner is stable.", {}),
+    _fn("score_crossover", "Uncertainty scales at which two candidates' robust scores are equal, with their broad-window bottlenecks.", {"candidate_a": {"type": "string"}, "candidate_b": {"type": "string"}}, ["candidate_a", "candidate_b"]),
+    _fn("weight_stability", "Fraction of random objective-weight vectors under which each candidate wins (frozen seed and sample count).", _LAYER, ["layer"]),
+    _fn("pareto_alternatives", "Non-dominated robust-admissible candidates on |log distance| per response, uncertainty radius and domain ratio.", {}),
+    _fn("objective_structure_audit", "Whether the frozen objective double-counts (eta80 = eta120 * ratio) and the induced principal weight ratio.", {}),
+    _fn("consistency_report", "Internal consistency checks of the deterministic decision chain; lists contradictions.", {}),
+]
+AUDIT_TOOL_NAMES = tuple(d["name"] for d in AUDIT_TOOL_DEFINITIONS)
+
 
 @dataclass
 class ToolboxExecutor:
@@ -46,14 +58,17 @@ class ToolboxExecutor:
     allowed_tools: tuple[str, ...] | None = None
     enforce_strategy: bool = True
     robust_required: bool = True
+    strategy: RecoveryStrategy = field(default_factory=RecoveryStrategy)
+    include_audit_tools: bool = False
     called_tools: list[str] = field(default_factory=list)
     trace: list[dict[str, Any]] = field(default_factory=list)
 
     def tool_definitions(self) -> list[dict[str, Any]]:
+        defs = list(ALL_TOOL_DEFINITIONS) + (list(AUDIT_TOOL_DEFINITIONS) if self.include_audit_tools else [])
         if self.allowed_tools is None:
-            return list(ALL_TOOL_DEFINITIONS)
+            return defs
         allowed = set(self.allowed_tools)
-        return [d for d in ALL_TOOL_DEFINITIONS if d["name"] in allowed]
+        return [d for d in defs if d["name"] in allowed]
 
     @property
     def available_tool_names(self) -> set[str]:
@@ -73,13 +88,13 @@ class ToolboxExecutor:
         return payload
 
     def strategy_check(self):
-        return RecoveryStrategy().check_trace(self.called_tools, robust_required=self.robust_required, available_tools=self.available_tool_names)
+        return self.strategy.check_trace(self.called_tools, robust_required=self.robust_required, available_tools=self.available_tool_names)
 
     def finalization_guard(self) -> tuple[bool, str]:
         if not self.enforce_strategy:
             return True, ""
         check = self.strategy_check()
-        return check.can_finalize, RecoveryStrategy().corrective_message(check)
+        return check.can_finalize, self.strategy.corrective_message(check)
 
 
 # Backwards-compatible alias used by the cloud runner.

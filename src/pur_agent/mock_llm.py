@@ -27,6 +27,8 @@ def scripted_mock_run(executor: Any | None) -> tuple[str, int]:
         }), 1
 
     available = {d["name"] for d in executor.tool_definitions()}
+    if "consistency_report" in available:
+        return _scripted_audit_run(executor, available)
     rounds = 0
 
     def call(name: str, **args: Any) -> Any:
@@ -88,5 +90,64 @@ def scripted_mock_run(executor: Any | None) -> tuple[str, int]:
         "confidence": 1.0 if all([property_winner, constrained_winner, active, bw]) else 0.5,
         "abstain": False,
         "abstention_reason": None,
+    }
+    return json.dumps(final), rounds + 1
+
+
+def _scripted_audit_run(executor: Any, available: set[str]) -> tuple[str, int]:
+    """Deterministic tool follower for PUR-AUDIT V1 (mock provider)."""
+    rounds = 0
+
+    def call(name: str, **args: Any) -> Any:
+        nonlocal rounds
+        if name not in available:
+            return None
+        rounds += 1
+        return _ok(executor.execute(name, args))
+
+    call("dataset_summary")
+    prop = call("rank_property", top_k=3)
+    call("rank_constrained", top_k=3)
+    call("rank_robust", top_k=3)
+    pw = None
+    try:
+        pw = str(prop["ranking"][0]["cid"])
+    except (TypeError, KeyError, IndexError):
+        pass
+    audit = call("constraint_audit", candidate_id=pw) if pw else None
+    call("solve_backward_threshold", candidate_id=pw) if pw else None
+    reach = call("check_reachability", candidate_id=pw) if pw else None
+    cc = call("constraint_counterfactual", layer="robust")
+    uc = call("uncertainty_counterfactual")
+    obj = call("objective_structure_audit")
+    par = call("pareto_alternatives")
+    wn = call("weight_stability", layer="nominal")
+    wr = call("weight_stability", layer="robust")
+    rep = call("consistency_report")
+    chain = (rep or {}).get("decision_chain", {})
+
+    def frac(ws: Any, cid: Any) -> float | None:
+        if not ws or cid is None:
+            return None
+        return next((x["fraction"] for x in ws.get("winner_fractions", []) if x["winner"] == cid), 0.0)
+
+    cross = ((uc or {}).get("crossover") or {}).get("crossover_scales") or []
+    bott = ((uc or {}).get("crossover") or {}).get("bottleneck_b")
+    final = {
+        "layer_divergence": {"l0_l1_reason": ((audit or {}).get("active_constraint") or {}).get("name"),
+                             "l1_l2_mechanism": (uc or {}).get("mechanism"), "uncertainty_bottleneck_response": bott},
+        "constraint_counterfactual": {k: (cc or {}).get(k) for k in ("floor_increase_to_change_winner", "floor_decrease_to_change_winner", "winner_if_floor_raised", "winner_if_floor_lowered")},
+        "uncertainty_counterfactual": {"l1_l2_crossover_scale": cross[0] if cross else None, "robust_winner_stable_scale_range": (uc or {}).get("robust_winner_stable_for_scale_in")},
+        "reachability": {"target_reachable": (reach or {}).get("reachable"), "nearest_reachable_grid_value": (reach or {}).get("nearest_reachable_grid_value")},
+        "objective_structure": {"double_counting": (obj or {}).get("double_counting"), "principal_weight_ratio": (obj or {}).get("principal_weight_ratio")},
+        "pareto_alternatives": (par or {}).get("pareto_ids", []),
+        "stability": {"nominal_winner_weight_fraction": frac(wn, chain.get("constrained_winner")), "robust_winner_weight_fraction": frac(wr, chain.get("robust_winner")),
+                      "verdict": "fragile" if (frac(wr, chain.get("robust_winner")) or 0) < 0.5 else "stable"},
+        "hypothesis_to_test": {"statement": "mock: the robust winner's advantage over the constrained winner depends on the frozen uncertainty scale; measure the response uncertainty near the decision point",
+                               "evidence_sources": ["tool:uncertainty_counterfactual", "tool:score_crossover"]},
+        "contradictions": (rep or {}).get("contradictions", []),
+        "evidence": [f"tools used: {sorted(available)}"],
+        "final_reasoning_summary": "mock scripted audit: every field copied from deterministic tool outputs",
+        "abstain": False, "abstention_reason": None,
     }
     return json.dumps(final), rounds + 1

@@ -12,6 +12,7 @@ class StrategyStage(str, Enum):
     ROBUST_RANKING = "robust_ranking"
     BACKWARD = "backward"
     LOCAL_TRENDS = "local_trends"
+    EVIDENCE_RECONCILIATION = "evidence_reconciliation"
     SELF_CHECK = "self_check"
     FINAL = "final"
     ABSTAIN = "abstain"
@@ -53,13 +54,14 @@ class RecoveryStrategy:
         StrategyStage.ROBUST_RANKING,
         StrategyStage.BACKWARD,
         StrategyStage.LOCAL_TRENDS,
+        StrategyStage.EVIDENCE_RECONCILIATION,
         StrategyStage.SELF_CHECK,
         StrategyStage.FINAL,
     )
 
     def check_trace(self, tool_names: Iterable[str], *, robust_required: bool = True, available_tools: Iterable[str] | None = None) -> StrategyCheck:
         called = set(tool_names)
-        required = dict(REQUIRED_TOOL_FAMILIES)
+        required = self.required_families()
         if not robust_required:
             required.pop(StrategyStage.ROBUST_RANKING, None)
         available = set(available_tools) if available_tools is not None else None
@@ -88,6 +90,9 @@ class RecoveryStrategy:
             reason=reason,
         )
 
+    def required_families(self) -> dict[StrategyStage, set[str]]:
+        return dict(REQUIRED_TOOL_FAMILIES)
+
     def corrective_message(self, check: StrategyCheck) -> str:
         if check.can_finalize:
             return "The decision trace is complete. Perform a final consistency check and return JSON only."
@@ -96,3 +101,32 @@ class RecoveryStrategy:
             "You attempted to finalize before completing the blinded scientific decision chain. "
             f"Call the missing deterministic tools first: {missing}. Do not guess the final answer."
         )
+
+
+class AuditStage(str, Enum):
+    COUNTERFACTUAL_CONSTRAINT = "counterfactual_constraint"
+    COUNTERFACTUAL_UNCERTAINTY = "counterfactual_uncertainty"
+    OBJECTIVE_STRUCTURE = "objective_structure"
+    PARETO = "pareto"
+    STABILITY = "stability"
+    CONSISTENCY = "consistency"
+
+
+AUDIT_TOOL_FAMILIES = {
+    AuditStage.COUNTERFACTUAL_CONSTRAINT: {"constraint_counterfactual"},
+    AuditStage.COUNTERFACTUAL_UNCERTAINTY: {"uncertainty_counterfactual"},
+    AuditStage.OBJECTIVE_STRUCTURE: {"objective_structure_audit"},
+    AuditStage.PARETO: {"pareto_alternatives"},
+    AuditStage.STABILITY: {"weight_stability"},
+    AuditStage.CONSISTENCY: {"consistency_report"},
+}
+
+
+class AuditStrategy(RecoveryStrategy):
+    """PUR-AUDIT V1: the recovery chain plus every counterfactual family must be inspected
+    before the auditor may finalize. Local sweeps are not required in audit mode."""
+
+    def required_families(self) -> dict:
+        base = {k: v for k, v in REQUIRED_TOOL_FAMILIES.items() if k is not StrategyStage.LOCAL_TRENDS}
+        base.update(AUDIT_TOOL_FAMILIES)
+        return base

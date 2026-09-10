@@ -1,0 +1,22 @@
+Scientific task (PUR-AUDIT V1, blinded decision audit; secondary mode)
+
+The same anonymised candidate table and frozen definitions as PUR-RECOVER V1 apply. Instead of recovering the winners alone, audit the decision:
+
+1. Why do the property-only (L0), constrained (L1) and robust (L2) layers select different candidates? Name the active constraint for L0 -> L1 and the mechanism for L1 -> L2, and the response whose broad-window containment is the uncertainty bottleneck of the robust winner.
+2. Counterfactuals: how much must the MDI-fraction floor rise or fall before the robust winner changes, and to which candidate? At which uncertainty scale do the L1 and L2 winners exchange rank, and over which scale range is the robust winner stable?
+3. Is the property-only target reachable on the discrete design manifold? Give the nearest reachable NCO:OH grid value.
+4. Does the frozen objective definition double-count? Report the principal weight ratio of the induced metric.
+5. Which robust-admissible candidates are Pareto-alternatives (non-dominated on |log distance| per response, uncertainty radius, domain ratio)?
+6. Is the decision stable under objective-weight perturbation? Give the weight-fraction of the nominal and robust winners.
+7. Which scientific hypothesis is most worth a wet-lab test, and which tool outputs motivate it?
+8. If tool outputs contradict each other or the frozen chain, list the contradictions instead of resolving them by guessing.
+
+Task descriptor:
+{{TASK_JSON}}
+
+Frozen definitions:
+{{CONFIG_JSON}}
+
+{{PROVENANCE_BLOCK}}
+
+Every number in your answer must come from a deterministic tool output.
