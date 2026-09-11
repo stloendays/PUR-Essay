@@ -1,0 +1,22 @@
+{
+  "benchmark_id": "PUR_RECOVER_V2",
+  "primary_mode": "anonymous",
+  "instructions": "Recover the complete scientific decision chain using the frozen definitions. Do not guess.",
+  "required_outputs": [
+    "property_winner",
+    "constrained_winner",
+    "robust_winner_or_explicit_abstention",
+    "active_constraint",
+    "backward_design",
+    "local_trends",
+    "evidence_plan",
+    "cross_path_verification",
+    "decision_status"
+  ],
+  "provenance": {
+    "candidate_space": "synthetic finite design grid (algorithm benchmark, not experimental evidence)",
+    "response_origin": "deterministic simulated responses with a frozen log10 uncertainty interval per candidate",
+    "constraints_origin": "literature-derived preferred/broad viscosity windows and chemistry/process bounds, frozen before this benchmark",
+    "evidence_boundary": "no wet-lab result is included; identities are anonymized"
+  }
+}

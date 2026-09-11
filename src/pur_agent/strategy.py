@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Iterable
+from typing import Any, Iterable
 
 
 class StrategyStage(str, Enum):
@@ -101,6 +102,135 @@ class RecoveryStrategy:
             "You attempted to finalize before completing the blinded scientific decision chain. "
             f"Call the missing deterministic tools first: {missing}. Do not guess the final answer."
         )
+
+
+class StrategyStageV2(str, Enum):
+    """PLAN -> SOLVE -> CHALLENGE -> CERTIFY -> EXPLAIN."""
+
+    PLAN = "plan"
+    SOLVE = "solve"
+    CHALLENGE = "challenge"
+    CERTIFY = "certify"
+    EXPLAIN = "explain"
+    CONFLICT = "conflict"
+    ABSTAIN = "abstain"
+
+
+@dataclass(frozen=True)
+class V2Check:
+    """Trace-state view with the same surface as `StrategyCheck`, plus the full V2 gate."""
+
+    complete: bool
+    missing_stages: tuple[str, ...]
+    missing_tool_families: tuple[str, ...]
+    can_finalize: bool
+    reason: str
+    gate: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class V2Policy:
+    """Which parts of the V2 contract gate finalisation for this condition.
+
+    `enforce=False` switches the machine gate off entirely: the run finalises on its first
+    answer and the certificate is recorded post hoc only. That is the `no_certificate`
+    ablation, in which the model's self-reported `confidence` is again the only trust signal.
+
+    The gate is deliberately procedural. Its corrective message names missing evidence,
+    unfinished stages, schema errors and non-canonical vocabulary — never which candidate is
+    right — because that message is fed back into the model context and would otherwise be a
+    gold side-channel.
+    """
+
+    config: dict[str, Any]
+    enforce: bool = True
+    require_evidence_plan: bool = True
+    require_challenge: bool = True
+    require_cross_path: bool = True
+    cross_path_tolerance: float | None = None
+
+    def evaluate(
+        self,
+        *,
+        called_tools: Iterable[str],
+        available_tools: Iterable[str] | None,
+        trace: list[dict[str, Any]],
+        final_text: str | None = None,
+    ) -> V2Check:
+        from .certificate import ontology_check, procedural_gate
+
+        called = list(called_tools)
+        gate = procedural_gate(
+            called_tools=called, available_tools=available_tools, trace=trace, config=self.config,
+            require_evidence_plan=self.require_evidence_plan, require_challenge=self.require_challenge,
+            require_cross_path=self.require_cross_path, cross_path_tolerance=self.cross_path_tolerance,
+        )
+        reasons = list(gate["reasons"])
+        gate["schema_valid"] = None
+        if final_text is not None:
+            decision, schema_error = parse_final_text(final_text)
+            gate["schema_valid"] = schema_error is None
+            if schema_error:
+                reasons.append(f"The final JSON does not satisfy the V2 output schema: {schema_error}.")
+            else:
+                onto = ontology_check(decision)
+                gate["ontology"] = onto
+                if not onto["pass"]:
+                    reasons.append("The canonical constraint ontology is violated: " + "; ".join(onto["violations"]) + ".")
+        gate["reasons"] = reasons
+        gate["can_finalize"] = not reasons
+        missing = list(_missing_evidence_tools(gate))
+        missing += [t for t in sorted(set(gate["challenge_tools_available"]) - set(called)) if t not in missing]
+        return V2Check(
+            complete=not reasons,
+            missing_stages=tuple(gate["evidence_coverage"].get("missing_claims", ())),
+            missing_tool_families=tuple(missing),
+            can_finalize=(not reasons) if self.enforce else True,
+            reason=("V2 evidence contract satisfied" if not reasons else " ".join(reasons)),
+            gate=gate,
+        )
+
+    def message(self, check: V2Check) -> str:
+        from .certificate import corrective_message
+
+        return corrective_message(check.gate)
+
+
+def _missing_evidence_tools(gate: dict[str, Any]) -> tuple[str, ...]:
+    out: list[str] = []
+    for claim in gate["evidence_coverage"].get("claims", []):
+        if claim.get("admissible") and not claim.get("satisfied"):
+            for tool in claim.get("missing_tools", []):
+                if tool not in out:
+                    out.append(tool)
+    return tuple(out)
+
+
+def parse_final_text(final_text: str) -> tuple[dict[str, Any] | None, str | None]:
+    """Best-effort parse of the model's final answer, for the live V2 gate."""
+    from .schemas import DecisionSchemaError, parse_decision_v2
+
+    text = (final_text or "").strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+    raw: Any
+    try:
+        raw = json.loads(text)
+    except json.JSONDecodeError:
+        a, b = text.find("{"), text.rfind("}")
+        if a < 0 or b <= a:
+            return None, "the output is not JSON"
+        try:
+            raw = json.loads(text[a:b + 1])
+        except json.JSONDecodeError as exc:
+            return None, str(exc)
+    try:
+        parse_decision_v2(raw)
+    except DecisionSchemaError as exc:
+        return (raw if isinstance(raw, dict) else None), str(exc)
+    return raw, None
 
 
 class AuditStage(str, Enum):

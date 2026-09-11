@@ -29,6 +29,9 @@ def scripted_mock_run(executor: Any | None) -> tuple[str, int]:
     available = {d["name"] for d in executor.tool_definitions()}
     if "consistency_report" in available:
         return _scripted_audit_run(executor, available)
+    if getattr(executor, "v2_policy", None) is not None:
+        from .mock_llm_v2 import scripted_v2_run
+        return scripted_v2_run(executor, available)
     rounds = 0
 
     def call(name: str, **args: Any) -> Any:

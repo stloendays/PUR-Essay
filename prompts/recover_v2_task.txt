@@ -1,0 +1,31 @@
+Scientific task (PUR-RECOVER V2, blinded decision recovery with evidence certification)
+
+You are given a finite candidate space of polyurethane prepolymer formulations. Every candidate is a two-component polyol blend (100 parts polyol basis) reacted with a diisocyanate at a stoichiometric ratio NCO:OH. For every candidate the table gives the nominal melt viscosity at 80 C and 120 C, their ratio, a chemistry-domain distance descriptor, a log10 uncertainty interval radius and an in-domain flag.
+
+The deterministic scientific workflow has already frozen (a) the property objective, (b) the nominal hard constraints, (c) the robust decision definition and (d) the backward-design and local-trend definitions. They are reproduced verbatim below. You must not change or reinterpret them. V2 changes how the decision is reached, challenged and certified; it does not change the frozen science.
+
+Recover the complete decision chain:
+1. property-only winner (objective only, no constraints);
+2. constrained winner (objective among candidates passing every nominal hard constraint);
+3. robust winner (robust objective among robust-feasible candidates) — or an explicit abstention if the robust layer is not frozen;
+4. the active constraint that separates the property-only winner from the deployable decision, as a canonical {quantity, operator, threshold} object together with the candidate's value;
+5. the backward design: the continuous minimum NCO:OH at which the property-only winner's blend satisfies the active constraint, the nearest reachable NCO:OH grid value on the discrete design manifold, and whether it is reachable;
+6. local trends at the final decision point: the direction of eta80 as NCO:OH increases along the same blend, and the direction of eta80 as the parts of the data-defined composition axis component increase at fixed NCO:OH (name the axis component you used).
+
+In addition, the V2 contract requires:
+7. an evidence plan stating which deterministic derivation supports each claim;
+8. a completed counterfactual challenge of your own recommendation;
+9. dual-path verification of the continuous backward threshold, with both values, their absolute difference and the tolerance;
+10. an explicit decision_status: "final", or "conflict" with the disagreement recorded, or "abstain" with the reason.
+
+You may not finalise until every required claim has sufficient evidence, the challenge stage has run, the cross-path comparison has been made or its conflict surfaced, your output validates against the schema and every constraint is named in the canonical vocabulary. If these conditions are not met your answer will be returned to you with the missing item named; obtain the evidence rather than restating the answer.
+
+Task descriptor:
+{{TASK_JSON}}
+
+Frozen definitions:
+{{CONFIG_JSON}}
+
+{{PROVENANCE_BLOCK}}
+
+Do not request or infer hidden source identifiers, oracle ranks, scores, gold files, mapping files or wet-lab results. Every number in your answer must come from the frozen definitions applied to the table.

@@ -15,6 +15,7 @@ PROMPT_DIR = Path(__file__).resolve().parents[2] / "prompts"
 ALLOWED_PROMPTS = frozenset({
     "recover_v1_system.txt", "recover_v1_task.txt", "direct_llm_system.txt", "tool_llm_system.txt",
     "audit_v1_system.txt", "audit_v1_task.txt",
+    "recover_v2_system.txt", "recover_v2_task.txt",
 })
 
 

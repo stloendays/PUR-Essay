@@ -92,9 +92,11 @@ def parse_decision(raw: dict[str, Any]) -> AgentDecision:
         raise DecisionSchemaError("decision must be a JSON object")
     ac_raw = raw.get("active_constraint")
     ac = None
-    if isinstance(ac_raw, dict) and ac_raw.get("name"):
+    # V2 answers name the constraint with the canonical `quantity`; V1 answers use `name`.
+    # Either populates `name`, so one evaluator scores both versions.
+    if isinstance(ac_raw, dict) and (ac_raw.get("name") or ac_raw.get("quantity")):
         ac = ActiveConstraint(
-            name=str(ac_raw["name"]),
+            name=str(ac_raw.get("name") or ac_raw.get("quantity")),
             threshold=_opt_float(ac_raw.get("threshold"), "active_constraint.threshold"),
             candidate_value=_opt_float(ac_raw.get("candidate_value"), "active_constraint.candidate_value"),
             evidence=str(ac_raw.get("evidence", "")),
@@ -137,6 +139,96 @@ def parse_decision(raw: dict[str, Any]) -> AgentDecision:
         abstain=bool(raw.get("abstain", False)),
         abstention_reason=_opt_str(raw.get("abstention_reason"), "abstention_reason"),
         robust_abstention_reason=_opt_str(raw.get("robust_abstention_reason"), "robust_abstention_reason"),
+    )
+
+
+# ------------------------------------------------------------------ PUR-RECOVER V2 schema
+DECISION_STATUSES = ("final", "conflict", "abstain")
+CONFLICT_KINDS = ("cross_path_disagreement", "tool_contradiction", "insufficient_evidence", "other")
+
+
+@dataclass(frozen=True)
+class AgentDecisionV2:
+    """V2 final output: the V1 decision plus the machine-checkable V2 blocks.
+
+    Every V1 field keeps its V1 meaning, so the same evaluator and the same primary metric
+    apply to both versions. `active_constraint` additionally carries the canonical ontology
+    fields `quantity` and `operator`; a legacy `name` spelling is still parsed and is scored
+    as a schema defect rather than a scientific one.
+    """
+
+    decision: AgentDecision
+    decision_status: str = "final"
+    evidence_plan: tuple[dict[str, Any], ...] = ()
+    cross_path_verification: dict[str, Any] | None = None
+    challenge: dict[str, Any] | None = None
+    conflicts: tuple[dict[str, Any], ...] = ()
+    certificate_claimed: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        out = self.decision.to_dict()
+        out.update({
+            "decision_status": self.decision_status,
+            "evidence_plan": list(self.evidence_plan),
+            "cross_path_verification": self.cross_path_verification,
+            "challenge": self.challenge,
+            "conflicts": list(self.conflicts),
+            "certificate_claimed": self.certificate_claimed,
+        })
+        return out
+
+
+def parse_decision_v2(raw: dict[str, Any]) -> AgentDecisionV2:
+    """Validate a V2 answer. Superset of `parse_decision`; unknown keys are still ignored."""
+    base = parse_decision(raw)
+    status = raw.get("decision_status") or "final"
+    if status not in DECISION_STATUSES:
+        raise DecisionSchemaError(f"decision_status must be one of {DECISION_STATUSES}, got {status!r}")
+
+    ac_raw = raw.get("active_constraint")
+    if isinstance(ac_raw, dict) and (ac_raw.get("quantity") or ac_raw.get("name")):
+        if not ac_raw.get("quantity"):
+            raise DecisionSchemaError("active_constraint must carry the canonical 'quantity' field in V2")
+        if not ac_raw.get("operator"):
+            raise DecisionSchemaError("active_constraint must carry the canonical 'operator' field in V2")
+
+    plan = raw.get("evidence_plan") or []
+    if not isinstance(plan, list):
+        raise DecisionSchemaError("evidence_plan must be a list of {claim, evidence} objects")
+    for item in plan:
+        if not isinstance(item, dict) or not item.get("claim"):
+            raise DecisionSchemaError("each evidence_plan entry must be an object with a 'claim'")
+
+    cpv = raw.get("cross_path_verification")
+    if cpv is not None and not isinstance(cpv, dict):
+        raise DecisionSchemaError("cross_path_verification must be an object or null")
+    challenge = raw.get("challenge")
+    if challenge is not None and not isinstance(challenge, dict):
+        raise DecisionSchemaError("challenge must be an object or null")
+
+    conflicts = raw.get("conflicts") or []
+    if not isinstance(conflicts, list):
+        raise DecisionSchemaError("conflicts must be a list")
+    for c in conflicts:
+        if not isinstance(c, dict) or not c.get("kind"):
+            raise DecisionSchemaError("each conflict must be an object with a 'kind'")
+        if c["kind"] not in CONFLICT_KINDS:
+            raise DecisionSchemaError(f"unknown conflict kind {c['kind']!r}; use one of {CONFLICT_KINDS}")
+    if status == "conflict" and not conflicts:
+        raise DecisionSchemaError("decision_status 'conflict' requires at least one entry in conflicts")
+
+    cert = raw.get("certificate_claimed")
+    if cert is not None and not isinstance(cert, dict):
+        raise DecisionSchemaError("certificate_claimed must be an object or null")
+
+    return AgentDecisionV2(
+        decision=base,
+        decision_status=str(status),
+        evidence_plan=tuple(plan),
+        cross_path_verification=cpv,
+        challenge=challenge,
+        conflicts=tuple(conflicts),
+        certificate_claimed=cert,
     )
 
 

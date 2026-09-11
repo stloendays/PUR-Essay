@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .strategy import RecoveryStrategy
+from .strategy import RecoveryStrategy, V2Policy
 from .tools import DecisionToolbox
 
 
@@ -49,6 +49,37 @@ AUDIT_TOOL_DEFINITIONS: list[dict[str, Any]] = [
 ]
 AUDIT_TOOL_NAMES = tuple(d["name"] for d in AUDIT_TOOL_DEFINITIONS)
 
+# ------------------------------------------------------------------- PUR-RECOVER V2 stage C
+# Read-only counterfactual challenges. Each takes the Agent's own claims and returns a verdict
+# on them; none of them returns the deterministic decision chain.
+CHALLENGE_TOOL_DEFINITIONS: list[dict[str, Any]] = [
+    _fn("challenge_constraint_relaxation",
+        "Challenge 1: why does your claimed property-only winner stop winning once nominal constraints apply? Returns its canonical active constraint, the signed margin to the binding bound, and how far the MDI floor must move before the nominal winner changes.",
+        {"claimed_property_winner": {"type": "string"}, "claimed_constrained_winner": {"type": "string"}},
+        ["claimed_property_winner", "claimed_constrained_winner"]),
+    _fn("challenge_uncertainty",
+        "Challenge 2: why does your claimed constrained winner stop winning under the frozen robust rule? Returns the divergence mechanism, the uncertainty scale at which the two cross, and the scale range over which your claimed robust winner is stable.",
+        {"claimed_constrained_winner": {"type": "string"}, "claimed_robust_winner": {"type": "string"}},
+        ["claimed_constrained_winner", "claimed_robust_winner"]),
+    _fn("challenge_boundary",
+        "Challenge 3: is your claimed robust winner near a decision boundary or an objective crossover? Returns the objective margin to the nearest competitor, the MDI-floor margin and the uncertainty-scale stability interval.",
+        {"claimed_robust_winner": {"type": "string"}}, ["claimed_robust_winner"]),
+    _fn("challenge_consistency",
+        "Challenge 4: do the decision fields you are about to submit contradict each other under the frozen definitions? Pass your own claims; returns per-check verdicts and the contradiction list.",
+        {"claimed_property_winner": {"type": "string"},
+         "claimed_constrained_winner": {"type": "string"},
+         "claimed_robust_winner": {"type": "string"},
+         "active_constraint_quantity": {"type": "string"},
+         "continuous_threshold": {"type": "number"},
+         "nearest_reachable_grid_value": {"type": "number"},
+         "nearest_reachable_candidate_id": {"type": "string"}},
+        ["claimed_property_winner", "claimed_constrained_winner", "claimed_robust_winner",
+         "active_constraint_quantity", "continuous_threshold", "nearest_reachable_grid_value",
+         "nearest_reachable_candidate_id"]),
+]
+CHALLENGE_TOOL_NAMES = tuple(d["name"] for d in CHALLENGE_TOOL_DEFINITIONS)
+V2_TOOL_NAMES = ALL_TOOL_NAMES + CHALLENGE_TOOL_NAMES
+
 
 @dataclass
 class ToolboxExecutor:
@@ -60,11 +91,18 @@ class ToolboxExecutor:
     robust_required: bool = True
     strategy: RecoveryStrategy = field(default_factory=RecoveryStrategy)
     include_audit_tools: bool = False
+    include_challenge_tools: bool = False
+    v2_policy: V2Policy | None = None
     called_tools: list[str] = field(default_factory=list)
     trace: list[dict[str, Any]] = field(default_factory=list)
+    gate_attempts: list[dict[str, Any]] = field(default_factory=list)
 
     def tool_definitions(self) -> list[dict[str, Any]]:
-        defs = list(ALL_TOOL_DEFINITIONS) + (list(AUDIT_TOOL_DEFINITIONS) if self.include_audit_tools else [])
+        defs = list(ALL_TOOL_DEFINITIONS)
+        if self.include_audit_tools:
+            defs += list(AUDIT_TOOL_DEFINITIONS)
+        if self.include_challenge_tools:
+            defs += list(CHALLENGE_TOOL_DEFINITIONS)
         if self.allowed_tools is None:
             return defs
         allowed = set(self.allowed_tools)
@@ -87,10 +125,39 @@ class ToolboxExecutor:
         self.trace.append({"tool": name, "arguments": arguments, "output": payload})
         return payload
 
-    def strategy_check(self):
+    def strategy_check(self, final_text: str | None = None):
+        if self.v2_policy is not None:
+            return self.v2_policy.evaluate(called_tools=self.called_tools, available_tools=self.available_tool_names,
+                                           trace=self.trace, final_text=final_text)
         return self.strategy.check_trace(self.called_tools, robust_required=self.robust_required, available_tools=self.available_tool_names)
 
-    def finalization_guard(self) -> tuple[bool, str]:
+    def finalization_guard(self, final_text: str | None = None) -> tuple[bool, str]:
+        """Called when the model stops requesting tools.
+
+        V2 also inspects the candidate final answer, so schema validity and canonical
+        vocabulary are part of the gate rather than a post-hoc complaint. Every attempt is
+        recorded, which is what makes "was the FIRST answer already schema-clean?" measurable
+        instead of being hidden by the retry.
+        """
+        if self.v2_policy is not None:
+            check = self.v2_policy.evaluate(called_tools=self.called_tools, available_tools=self.available_tool_names,
+                                            trace=self.trace, final_text=final_text)
+            gate = check.gate
+            self.gate_attempts.append({
+                "attempt": len(self.gate_attempts) + 1,
+                "can_finalize": gate.get("can_finalize"),
+                "reasons": gate.get("reasons", []),
+                "schema_valid": gate.get("schema_valid"),
+                "ontology_pass": (gate.get("ontology") or {}).get("pass"),
+                "ontology_violations": (gate.get("ontology") or {}).get("violations", []),
+                "evidence_satisfied": gate["evidence_coverage"].get("satisfied"),
+                "evidence_required": gate["evidence_coverage"].get("required"),
+                "challenge_completed": gate.get("challenge_completed"),
+                "cross_path_status": (gate.get("cross_path") or {}).get("status"),
+            })
+            if not self.v2_policy.enforce:
+                return True, ""
+            return check.can_finalize, self.v2_policy.message(check)
         if not self.enforce_strategy:
             return True, ""
         check = self.strategy_check()

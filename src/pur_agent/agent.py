@@ -7,16 +7,19 @@ from typing import Any
 
 from pur_science import canonicalize, frontier_decision
 
+from .certificate import build_certificate
 from .conditions import Condition, get_condition
 from .data_access import BlindBundle
+from .evidence import EvidencePlanner
 from .llm_client import LLMClient, LLMResult
 from .logging_utils import build_run_record, new_run_id, sha256_json, sha256_text
 from .prompts import build_task_text, load_prompt
 from .audit_tools import AuditToolbox
 from .runtime import ToolboxExecutor
-from .schemas import DecisionSchemaError, parse_audit_report, parse_decision
-from .strategy import AuditStrategy
+from .schemas import DecisionSchemaError, parse_audit_report, parse_decision, parse_decision_v2
+from .strategy import AuditStrategy, V2Policy
 from .tools import DecisionToolbox
+from .tools_v2 import V2Toolbox
 
 
 def extract_json(text: str) -> dict[str, Any]:
@@ -95,9 +98,19 @@ def run_once(
     prompt_hash = sha256_text(instructions + "\n---\n" + task)
     executor: ToolboxExecutor | None = None
     robust_required = bool((cfg.get("robustness") or {}).get("enabled", False))
+    is_v2 = cond.schema_version == "v2"
+    cross_tol = (cfg.get("evaluation") or {}).get("cross_path_tolerance_nco_oh")
     if cond.use_tools and cond.mode == "audit":
         executor = ToolboxExecutor(AuditToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
                                    robust_required=robust_required, strategy=AuditStrategy(), include_audit_tools=True)
+    elif cond.use_tools and is_v2:
+        policy = V2Policy(
+            config=cfg, enforce=bool(cond.enforce_certificate and cond.enforce_strategy),
+            require_evidence_plan=cond.require_evidence_plan, require_challenge=cond.require_challenge,
+            require_cross_path=cond.require_cross_path, cross_path_tolerance=cross_tol,
+        )
+        executor = ToolboxExecutor(V2Toolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
+                                   robust_required=robust_required, include_challenge_tools=True, v2_policy=policy)
     elif cond.use_tools:
         executor = ToolboxExecutor(DecisionToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
                                    robust_required=robust_required)
@@ -110,6 +123,8 @@ def run_once(
         final = extract_json(result.text)
         if cond.mode == "audit":
             parse_audit_report(final)
+        elif is_v2:
+            parse_decision_v2(final)
         else:
             parse_decision(final)
         valid = True
@@ -118,6 +133,21 @@ def run_once(
     except Exception as exc:  # API/transport failure: record it, never crash a benchmark loop
         error = f"{type(exc).__name__}: {exc}"
     latency = time.perf_counter() - t0
+    v2_blocks: dict[str, Any] = {}
+    if is_v2 and executor is not None:
+        planner = EvidencePlanner()
+        v2_blocks = {
+            "schema_version": "v2",
+            "evidence_plan": planner.plan(executor.available_tool_names),
+            "decision_certificate": build_certificate(
+                decision=final, trace=executor.trace, called_tools=executor.called_tools,
+                available_tools=executor.available_tool_names, config=cfg, toolbox=executor.toolbox,
+                schema_valid=valid, require_evidence_plan=cond.require_evidence_plan,
+                require_challenge=cond.require_challenge, require_cross_path=cond.require_cross_path,
+                cross_path_tolerance=cross_tol,
+            ),
+            "gate_attempts": executor.gate_attempts,
+        }
     rec = build_run_record(
         run_id=run_id, benchmark_id=cfg.get("benchmark_id", ""), condition=cond.name,
         provider=(result.provider if result else getattr(client, "provider", "unknown")), model=getattr(client, "model", ""),
@@ -126,7 +156,8 @@ def run_once(
         usage=(result.usage if result else None), response_ids=(result.response_ids if result else []), latency_s=latency,
         strategy_check=(executor.strategy_check().__dict__ if executor else None), error=error,
         extra={"condition_description": cond.description, "mode": cond.mode, "fallback_transport_used": bool(result.fallback_used) if result else None,
-               "llm_rounds": result.rounds if result else 0, "tools_available": sorted(executor.available_tool_names) if executor else []},
+               "llm_rounds": result.rounds if result else 0, "tools_available": sorted(executor.available_tool_names) if executor else [],
+               **v2_blocks},
     )
     rec["decision_valid"] = valid
     return rec

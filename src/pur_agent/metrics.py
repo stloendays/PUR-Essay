@@ -83,12 +83,17 @@ def score_decision(agent: dict[str, Any], gold: dict[str, Any], *, backward_tole
     lt_a = agent.get("local_trends") or {}
     lt_g = gold.get("local_trends") or {}
 
+    # V1 answers name the active constraint in `name`, V2 answers in the canonical `quantity`.
+    # This reads the same field under either key; it does NOT alias the gold's value, so a
+    # legacy spelling such as `mdi_fraction_min` still fails this strict check.
+    agent_constraint_name = ac_a.get("name") or ac_a.get("quantity")
+
     parts = {
         "property_winner_recovery": _same(agent.get("property_winner"), gold.get("property_winner")),
         "constrained_winner_recovery": _same(agent.get("constrained_winner"), gold.get("constrained_winner")),
         "robust_winner_recovery": (_same(agent.get("robust_winner"), gold.get("robust_winner")) if robust_frozen
                                     else agent.get("robust_winner") is None),
-        "active_constraint_recovery": _same(ac_a.get("name"), ac_g.get("name")),
+        "active_constraint_recovery": _same(agent_constraint_name, ac_g.get("name")),
         "backward_threshold_recovery": _within(bw_a.get("continuous_threshold"), bw_g.get("continuous_threshold"), backward_tolerance),
         "reachable_grid_recovery": _within(bw_a.get("nearest_reachable_grid_value"), bw_g.get("nearest_reachable_grid_value"), 1e-9),
         "reachability_recovery": bw_a.get("reachable") is not None and bw_a.get("reachable") is bw_g.get("reachable"),
@@ -116,3 +121,113 @@ def score_decision(agent: dict[str, Any], gold: dict[str, Any], *, backward_tole
         "complete_decision_recovery": complete,
         "decision_layer_scored": decision_key,
     }
+
+
+# ------------------------------------------------------------------ PUR-RECOVER V2 metrics
+# The primary metric above is unchanged and is applied identically to V1 and V2 runs. What
+# follows is additive. `scientific_correctness` and `schema_correctness` split what the V1
+# pilot conflated: a run that named the active constraint `mdi_fraction_min` was
+# scientifically right and schema-wrong, and the two are counted separately here rather than
+# the frozen gold being aliased after the fact.
+
+SCIENTIFIC_ITEMS = ("property_winner_recovery", "constrained_winner_recovery", "robust_winner_recovery",
+                    "active_constraint_science", "backward_threshold_recovery", "reachable_grid_recovery",
+                    "reachability_recovery", "nco_direction_recovery", "composition_direction_recovery")
+
+
+def score_decision_v2(
+    agent: dict[str, Any],
+    gold: dict[str, Any],
+    *,
+    certificate: dict[str, Any] | None = None,
+    backward_tolerance: float = 0.03,
+    top_k: tuple[int, ...] = (1, 3, 5),
+    pricing: dict[str, Any] | None = None,
+    usage: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """V1 metrics plus the V2 diagnostics. `agent` must already be in gold (source) ID space."""
+    from .ontology import is_canonical_spelling, same_constraint
+
+    m = score_decision(agent, gold, backward_tolerance=backward_tolerance, top_k=top_k)
+    ac_a = agent.get("active_constraint") or {}
+    ac_g = gold.get("active_constraint") or {}
+    agent_name = ac_a.get("quantity") or ac_a.get("name")
+
+    # Same constraint by meaning (a registered alias counts) vs. same constraint by spelling.
+    m["active_constraint_science"] = bool(same_constraint(agent_name, ac_g.get("name")))
+    m["active_constraint_schema"] = bool(agent_name is not None and is_canonical_spelling(agent_name))
+    m["scientific_correctness"] = bool(all(m[k] for k in SCIENTIFIC_ITEMS) and not agent.get("abstain", False))
+    m["ontology_alias_used"] = bool(m["active_constraint_science"] and not m["active_constraint_schema"])
+
+    cert = certificate or {}
+    cov = cert.get("evidence_coverage") or {}
+    required, satisfied = cov.get("required"), cov.get("satisfied")
+    m["evidence_coverage_satisfied"] = satisfied
+    m["evidence_coverage_required"] = required
+    m["evidence_coverage_ratio"] = (satisfied / required) if (required and satisfied is not None) else None
+    m["evidence_coverage_complete"] = bool(cov.get("complete")) if cov else None
+
+    cross = cert.get("cross_path") or {}
+    m["cross_path_status"] = cross.get("status")
+    m["cross_path_agreement"] = bool(cert.get("cross_path_agreement")) if cert else None
+    m["cross_path_failure"] = bool(cross.get("conflict")) if cross else None
+    m["cross_path_absolute_difference"] = cross.get("absolute_difference")
+    m["cross_path_reported_matches_trace"] = cert.get("cross_path_reported_matches_trace")
+
+    m["challenge_completed"] = cert.get("challenge_completed")
+    m["tool_contradictions"] = cert.get("tool_contradictions")
+    m["certificate_pass"] = cert.get("certificate_pass")
+    m["constraint_audit_pass"] = cert.get("constraint_audit_pass")
+    m["robustness_audit_pass"] = cert.get("robustness_audit_pass")
+    m["ontology_consistency_pass"] = cert.get("ontology_consistency_pass")
+    m["active_constraint_margin"] = cert.get("active_constraint_margin")
+    m["objective_margin"] = cert.get("objective_margin")
+
+    status = str(agent.get("decision_status") or ("abstain" if agent.get("abstain") else "final"))
+    m["decision_status"] = status
+    m["abstention_or_conflict"] = status in ("abstain", "conflict")
+    m["conflict_surfaced"] = cert.get("conflict_surfaced")
+    m["unsurfaced_cross_path_conflict"] = cert.get("unsurfaced_cross_path_conflict")
+    m["contradiction_detection"] = _contradiction_detection(agent, cert)
+
+    usage_stats = cert.get("tool_usage") or {}
+    m["unnecessary_tool_calls"] = usage_stats.get("unnecessary_calls_excluding_challenge", usage_stats.get("unnecessary_calls"))
+    m["redundant_repeat_calls"] = usage_stats.get("redundant_repeat_calls")
+    m["evidence_bearing_calls"] = usage_stats.get("evidence_bearing_calls")
+
+    m["schema_correctness"] = bool(
+        m["active_constraint_schema"]
+        and bool(cert.get("ontology_consistency_pass", False))
+        and bool(cert.get("schema_consistency_pass", False))
+    )
+    m["cost_usd"] = estimate_cost(usage, pricing)
+    return m
+
+
+def _contradiction_detection(agent: dict[str, Any], certificate: dict[str, Any]) -> bool | None:
+    """Did the Agent report contradictions if and only if the deterministic check found them?
+
+    None when the challenge tool that produces the deterministic count was never run.
+    """
+    if not certificate or certificate.get("challenge_completed") is None:
+        return None
+    actual = certificate.get("tool_contradictions")
+    if actual is None:
+        return None
+    challenge = agent.get("challenge") or {}
+    reported = list(agent.get("conflicts") or []) + list(challenge.get("contradictions_found") or [])
+    return bool(bool(reported) == bool(actual))
+
+
+def estimate_cost(usage: dict[str, Any] | None, pricing: dict[str, Any] | None) -> float | None:
+    """USD cost when the benchmark config declares per-1k-token prices; None otherwise."""
+    if not usage or not pricing:
+        return None
+    try:
+        price_in = float(pricing["input"])
+        price_out = float(pricing["output"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    tokens_in = usage.get("input_tokens", usage.get("prompt_tokens")) or 0
+    tokens_out = usage.get("output_tokens", usage.get("completion_tokens")) or 0
+    return (float(tokens_in) / 1000.0) * price_in + (float(tokens_out) / 1000.0) * price_out

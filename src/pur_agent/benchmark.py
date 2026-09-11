@@ -22,9 +22,21 @@ BOOL_METRICS = (
     "audit_completeness", "layer_divergence_l0_l1", "layer_divergence_l1_l2", "uncertainty_bottleneck", "constraint_counterfactual_up",
     "constraint_counterfactual_down", "uncertainty_crossover", "reachability", "objective_double_counting", "principal_weight_ratio",
     "pareto_alternatives", "stability_nominal", "stability_robust", "hypothesis_present",
+    # PUR-RECOVER V2
+    "scientific_correctness", "schema_correctness", "active_constraint_science", "active_constraint_schema",
+    "ontology_alias_used", "evidence_coverage_complete", "cross_path_agreement", "cross_path_failure",
+    "cross_path_reported_matches_trace", "challenge_completed", "certificate_pass", "constraint_audit_pass",
+    "robustness_audit_pass", "ontology_consistency_pass", "abstention_or_conflict", "conflict_surfaced",
+    "unsurfaced_cross_path_conflict", "contradiction_detection",
 )
 NUM_METRICS = ("oracle_rank", "objective_regret", "hard_constraint_violation_rate", "backward_threshold_error",
-               "explanation_fidelity", "audit_field_recovery", "pareto_jaccard", "tool_call_count", "input_tokens", "output_tokens", "api_calls", "latency_s")
+               "explanation_fidelity", "audit_field_recovery", "pareto_jaccard", "tool_call_count", "input_tokens",
+               "output_tokens", "api_calls", "latency_s",
+               # PUR-RECOVER V2
+               "evidence_coverage_ratio", "evidence_coverage_satisfied", "evidence_coverage_required",
+               "cross_path_absolute_difference", "tool_contradictions", "unnecessary_tool_calls",
+               "redundant_repeat_calls", "evidence_bearing_calls", "active_constraint_margin", "objective_margin",
+               "cost_usd")
 
 
 def find_gold(blind_dir: str | Path, gold: str | None, mapping: str | None) -> tuple[Path | None, Path | None]:
@@ -56,15 +68,17 @@ def run_benchmark(
     gold_path, mapping_path = find_gold(blind_dir, gold, mapping)
     gold_obj = load_gold(gold_path, mode=cond.mode) if gold_path else None
     mapping_obj = json.loads(Path(mapping_path).read_text(encoding="utf-8")) if mapping_path else None
-    tol = float((bundle.config.get("evaluation") or {}).get("backward_threshold_tolerance_nco_oh", 0.03))
-    top_k = tuple(int(k) for k in (bundle.config.get("evaluation") or {}).get("top_k", [1, 3, 5]))
+    evaluation = bundle.config.get("evaluation") or {}
+    tol = float(evaluation.get("backward_threshold_tolerance_nco_oh", 0.03))
+    top_k = tuple(int(k) for k in evaluation.get("top_k", [1, 3, 5]))
+    pricing = evaluation.get("pricing_usd_per_1k_tokens")
     out = Path(out_dir); runs_dir = out / "runs"; runs_dir.mkdir(parents=True, exist_ok=True)
     records: list[dict[str, Any]] = []
     for i in range(1, runs + 1):
         seed = (seed_base + i) if seed_base is not None else None
         rec = run_once(bundle, cond, client, run_id=f"run_{i:04d}", seed=seed, prompt_dir=prompt_dir)
         if gold_obj is not None:
-            evaluate_run_record(rec, gold_obj, mapping_obj, backward_tolerance=tol, top_k=top_k)
+            evaluate_run_record(rec, gold_obj, mapping_obj, backward_tolerance=tol, top_k=top_k, pricing=pricing)
         write_run_record(runs_dir / f"run_{i:04d}.json", rec)
         records.append(rec)
         if progress:
@@ -84,14 +98,26 @@ def summarize_records(records: Iterable[dict[str, Any]], *, label: dict[str, Any
                                "n_valid_output": sum(bool(r.get("decision_valid")) for r in recs),
                                "n_errors": sum(bool(r.get("error")) for r in recs)}
     for m in BOOL_METRICS:
-        vals = [bool(e.get(m)) for e in evals if m in e]
+        # None means "not applicable in this condition" (e.g. the challenge stage when its
+        # tools are ablated). Averaging that in as False would report a stage as failed when
+        # it was never required, so applicable runs only are counted.
+        vals = [bool(e[m]) for e in evals if e.get(m) is not None]
         summary[f"{m}_rate"] = (sum(vals) / len(vals)) if vals else None
+        summary[f"{m}_n_applicable"] = len(vals) if len(vals) != len(evals) else None
     for m in NUM_METRICS:
         vals = [float(e[m]) for e in evals if e.get(m) is not None]
         summary[f"{m}_mean"] = statistics.fmean(vals) if vals else None
         summary[f"{m}_median"] = statistics.median(vals) if vals else None
     if not evals:  # tool/usage stats still available without gold
         summary["tool_call_count_mean"] = statistics.fmean([float(r.get("tool_call_count", 0)) for r in recs]) if recs else None
+    # Record-level (not evaluation-level) counters used by the V2 comparison.
+    rounds = [float(r["llm_rounds"]) for r in recs if isinstance(r.get("llm_rounds"), (int, float))]
+    summary["llm_rounds_mean"] = statistics.fmean(rounds) if rounds else None
+    gate_retries = [float(max(len(r.get("gate_attempts") or []) - 1, 0)) for r in recs if r.get("schema_version") == "v2"]
+    summary["gate_retries_mean"] = statistics.fmean(gate_retries) if gate_retries else None
+    first_attempt_clean = [bool((r.get("gate_attempts") or [{}])[0].get("can_finalize")) for r in recs
+                           if r.get("schema_version") == "v2" and r.get("gate_attempts")]
+    summary["first_answer_gate_clean_rate"] = (sum(first_attempt_clean) / len(first_attempt_clean)) if first_attempt_clean else None
     return summary
 
 

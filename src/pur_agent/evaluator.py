@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from .metrics import score_decision
+from .metrics import score_decision, score_decision_v2
 
 
 def _same(a: Any, b: Any) -> bool:
@@ -28,7 +28,7 @@ def evaluate_decision(agent: dict[str, Any], gold: dict[str, Any], *, backward_t
     constrained_ok = _same(agent.get("constrained_winner"), gold.get("constrained_winner"))
     robust_ok = _same(agent.get("robust_winner"), gold.get("robust_winner"))
     ac_a = agent.get("active_constraint") or {}; ac_g = gold.get("active_constraint") or {}
-    constraint_ok = _same(ac_a.get("name"), ac_g.get("name"))
+    constraint_ok = _same(ac_a.get("name") or ac_a.get("quantity"), ac_g.get("name"))
     bw_a = agent.get("backward_design") or {}; bw_g = gold.get("backward_design") or {}
     threshold_ok = _within(bw_a.get("continuous_threshold"), bw_g.get("continuous_threshold"), backward_tolerance)
     grid_ok = _within(bw_a.get("nearest_reachable_grid_value"), bw_g.get("nearest_reachable_grid_value"), 1e-9)
@@ -70,7 +70,15 @@ def remap_decision(decision: dict[str, Any], mapping: dict[str, Any]) -> dict[st
     return out
 
 
-def evaluate_run_record(record: dict[str, Any], gold: dict[str, Any], mapping: dict[str, Any] | None, *, backward_tolerance: float = 0.03, top_k: tuple[int, ...] = (1, 3, 5)) -> dict[str, Any]:
+def evaluate_run_record(
+    record: dict[str, Any],
+    gold: dict[str, Any],
+    mapping: dict[str, Any] | None,
+    *,
+    backward_tolerance: float = 0.03,
+    top_k: tuple[int, ...] = (1, 3, 5),
+    pricing: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Score one run record in place and return the metrics. Audit-mode records need the audit gold."""
     final = record.get("final_json")
     if record.get("mode") == "audit":
@@ -91,12 +99,24 @@ def evaluate_run_record(record: dict[str, Any], gold: dict[str, Any], mapping: d
         metrics["latency_s"] = record.get("latency_s")
         record["evaluation"] = metrics
         return metrics
+    # V2 records carry a harness-computed decision certificate. They are scored by the same
+    # primary metric as V1, plus the additive V2 diagnostics.
+    is_v2 = record.get("schema_version") == "v2"
+    certificate = record.get("decision_certificate") if is_v2 else None
+    run_usage = record.get("usage") or {}
+
+    def _score(decision: dict[str, Any]) -> dict[str, Any]:
+        if is_v2:
+            return score_decision_v2(decision, gold, certificate=certificate, backward_tolerance=backward_tolerance,
+                                     top_k=top_k, pricing=pricing, usage=run_usage)
+        return score_decision(decision, gold, backward_tolerance=backward_tolerance, top_k=top_k)
+
     if not record.get("decision_valid") or not isinstance(final, dict):
-        metrics = score_decision({"abstain": True}, gold, backward_tolerance=backward_tolerance, top_k=top_k)
+        metrics = _score({"abstain": True})
         metrics["invalid_output"] = True
     else:
         decision = remap_decision(final, mapping) if mapping else final
-        metrics = score_decision(decision, gold, backward_tolerance=backward_tolerance, top_k=top_k)
+        metrics = _score(decision)
         metrics["invalid_output"] = False
         record["final_json_named"] = decision
     metrics["tool_call_count"] = record.get("tool_call_count", 0)

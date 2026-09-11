@@ -1,0 +1,50 @@
+{
+  "benchmark_id": "PUR_RECOVER_V2",
+  "science_definition_from": "configs/frontier_v1.json",
+  "note": "PUR-RECOVER V2 is an orchestration version, not a science version. Every scoring rule (columns, hard_constraints, objective, robustness, backward, local_trends) is still inherited verbatim from configs/frontier_v1.json at load time, the anonymization seed is unchanged, and the evaluator gold is identical to V1. Only the Agent contract changes: claim-level evidence planning, counterfactual challenge, dual-path verification, canonical constraint ontology and a machine-computed decision certificate.",
+  "anonymization": {
+    "component_columns": ["PPG400", "PPG700", "PPG1000", "PPG2000"],
+    "material_prefix": "Polyol",
+    "seed": 20260909
+  },
+  "blind": {
+    "drop_columns": ["oracle_score", "oracle_rank", "oracle_is_best", "gold_candidate_id", "oracle_feasible", "oracle_interval_inside_broad", "broad_margin"]
+  },
+  "required_outputs": [
+    "property_winner",
+    "constrained_winner",
+    "robust_winner_or_explicit_abstention",
+    "active_constraint",
+    "backward_design",
+    "local_trends",
+    "evidence_plan",
+    "cross_path_verification",
+    "decision_status"
+  ],
+  "ontology": {
+    "version": "PUR_ONTOLOGY_V2",
+    "constraint_form": {"quantity": "string", "operator": ">=|<=|==|in|is_true", "threshold": "number or null"},
+    "note": "Frozen before the V2 formal matrix and applied identically to every V2 condition. It renames no pur_science field and is never applied retroactively to V1 records."
+  },
+  "evaluation": {
+    "backward_threshold_tolerance_nco_oh": 0.03,
+    "cross_path_tolerance_nco_oh": 1e-06,
+    "cross_path_tolerance_rationale": "Both admissible derivations are exact on the frozen linear MDI-demand manifold, so the agreement tolerance is numerical, not scientific. It is deliberately far tighter than the 0.03 gold-recovery tolerance and is not a second chance to be scored correct.",
+    "top_k": [1, 3, 5],
+    "primary_metric": "complete_decision_recovery",
+    "secondary_metrics": [
+      "scientific_correctness",
+      "schema_correctness",
+      "evidence_coverage_ratio",
+      "cross_path_agreement",
+      "contradiction_detection",
+      "certificate_pass",
+      "unnecessary_tool_calls",
+      "abstention_or_conflict"
+    ],
+    "pricing_usd_per_1k_tokens": null
+  },
+  "secondary_benchmarks": {
+    "named_chemistry": "build with --no-anonymize to test performance with domain priors; never the primary result"
+  }
+}

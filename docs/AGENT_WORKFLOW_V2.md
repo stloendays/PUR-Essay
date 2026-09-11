@@ -1,6 +1,6 @@
 # PUR-RECOVER Agent Workflow V2 — post-pilot design note
 
-**Status:** design specification after the real-API pilot. Implementation and formal benchmark reruns are still pending.
+**Status (2026-09-11):** implemented and green under mock; the real-API V2 pilot and the formal matrix are still pending. Section 16 records where each part of this specification now lives in code, and what it does *not* yet establish.
 
 ## 1. Why V2 exists
 
@@ -291,3 +291,42 @@ The upgraded paper framing should be:
 > Even when the underlying numerical operations are individually straightforward, a language model does not reliably preserve a multi-stage scientific decision chain. The proposed workflow combines claim-level evidence planning, deterministic scientific tools, active counterfactual challenge, independent cross-path verification, and machine-auditable decision certification to make the recovered decision reproducible and inspectable.
 
 This framing is intentionally narrower and more defensible than claiming that the PUR optimization itself is computationally difficult.
+
+## 16. Implementation record (2026-09-11)
+
+Implemented additively. V1 conditions, prompts, tool outputs, blind bundle and pilot records are byte-unchanged; `pytest -q` is 129 passed.
+
+| Spec section | Implementation | Notes |
+|---|---|---|
+| 4 — evidence planning | `src/pur_agent/evidence.py` | 9 claims, each with one or more admissible paths; ablated paths become `unsatisfiable` rather than failed |
+| 5 — deterministic solve | unchanged `pur_science` via `src/pur_agent/tools.py` | no numerical logic moved into the LLM |
+| 6 — challenge | `src/pur_agent/challenge_tools.py` | thin wrappers over the frozen `pur_science.depth` primitives already used by PUR-AUDIT V1 |
+| 7 — dual-path verification | `src/pur_agent/crosspath.py` | both values reconstructed **from the recorded trace**, not from the model's prose |
+| 8 — canonical ontology | `src/pur_agent/ontology.py`, `src/pur_agent/tools_v2.py` | the V2 tool outputs stop emitting `mdi_fraction_min` |
+| 9 — decision certificate | `src/pur_agent/certificate.py` | deterministic; never returned to the model |
+| 10 — finalisation gate | `V2Policy` in `src/pur_agent/strategy.py` | procedural only, see below |
+| 12 — conditions | `src/pur_agent/conditions.py` | `pur_agent_v2` plus four ablations |
+| 12 — metrics | `score_decision_v2` in `src/pur_agent/metrics.py` | primary metric unchanged |
+| 11 — wet-lab separation | `docs/PROSPECTIVE_PREDICTION_TEMPLATE.md`, `configs/prospective_adjudication_schema.json` | template only; no prediction frozen |
+
+### The challenge tools are claim-driven, not chain-returning
+
+`audit_tools.py` (PUR-AUDIT V1) returns the deterministic decision chain, which is correct for an audit task whose job is not to find the winners. In recover mode that would be a shortcut to the answer the challenge is supposed to interrogate. The V2 wrappers therefore take the Agent's **own asserted claims** as arguments and return a verdict on them: `challenge_consistency` runs the frozen consistency checks against the chain the Agent is about to submit, and `challenge_constraint_relaxation` reports whether the *claimed* constrained winner is the winner at the frozen floor instead of naming the actual one. `consistency_report`'s detail string, which names the true global property minimiser, is redacted in the V2 wrapper.
+
+### The gate is procedural, and that is a hard constraint
+
+The finalisation gate's corrective message is fed back into the model's context. Anything in it that depends on the answer being right would be a gold side-channel. The live gate therefore checks only: evidence coverage, challenge completion, cross-path surfacing, output schema, canonical vocabulary. Feasibility of the claimed winners, the active-constraint margin and the objective margin are computed in the certificate **after** the run and are never sent back. `tests/test_agent_v2.py::test_gate_feedback_carries_no_correctness_information` asserts this on the recorded gate attempts.
+
+The certificate also deliberately does not check rank optimality. "Is this the best candidate?" is evaluator territory; a certificate that encoded it would be a disguised oracle.
+
+### Known confounds for the V2 comparison
+
+These must be stated in the paper rather than argued away:
+
+1. **Gate feedback inflates schema correctness.** The V2 gate returns a non-canonical spelling to the model for correction, so V2's schema-correctness advantage over `tool_llm` is partly produced by the gate itself. `first_answer_gate_clean_rate` and `gate_retries_mean` are recorded per run so the pre-correction figure is reported alongside the post-correction one.
+2. **The challenge tools add ways to see the winners.** They are deterministic functions of the same blind table, and every V2 condition already has `rank_property` / `rank_constrained` / `rank_robust`, which return the winners directly — so the marginal information is a smaller call count, not new knowledge. It is still an asymmetry against `tool_llm` and should be reported as one.
+3. **Mock results prove plumbing, not science.** The mock is a perfect tool-follower, so every V2 condition scores 1.0 under it. Gating ablations can only show an effect against a real model.
+
+### What V2 does not yet establish
+
+Nothing about whether planning and gating beat plain tool access. That needs the real-API pilot and then the formal matrix at a predeclared run count. If `tool_llm` and `pur_agent_v2` remain indistinguishable, section 13 applies: report it.

@@ -1,6 +1,6 @@
 # Current Agent handoff — PUR-RECOVER V1 / V2 design transition
 
-**Status:** real-API pilot completed; frozen science remains V1, Agent orchestration is being upgraded under `docs/AGENT_WORKFLOW_V2.md`.
+**Status (2026-09-11):** the V1 real-API pilot is complete and preserved. V2 orchestration is now **implemented** (see `docs/AGENT_WORKFLOW_V2.md` §16) and green under mock: `pytest -q` 129 passed, both blind bundles rebuilt, both leakage scans PASS. The real-API V2 pilot has **not** run — the configured endpoint `http://127.0.0.1:8788/v1` refuses connections — so there is no V2 API evidence yet and no claim of V2 superiority. Frozen science is unchanged.
 
 ## Read this before touching Agent code
 
@@ -127,7 +127,7 @@ Existing pilot conditions remain immutable evidence:
 - `pur_agent_no_provenance`;
 - `pur_agent_single_pass`.
 
-For the V2 formal matrix, add separately versioned conditions such as:
+For the V2 formal matrix, these separately versioned conditions are now registered:
 
 - `pur_agent_v2`;
 - `pur_agent_v2_no_evidence_planner`;
@@ -182,15 +182,25 @@ Do not change:
 
 If a scientific-contract bug is independently demonstrated, version the benchmark and rerun all affected conditions rather than silently patching the current task.
 
+## V2 artefacts
+
+The V2 benchmark is versioned separately and shares the blind candidate table byte-for-byte with V1 (`blind_candidate_sha256 = 6ca33d4e…`), so the two are directly comparable:
+
+- config: `configs/recover_v2.json` (science still inherited from `configs/frontier_v1.json`);
+- bundle: `benchmark/recover_v2/blind/`, gold: `benchmark/recover_v2/evaluator_only/` and `gold/recover_v2/`;
+- prompts: `prompts/recover_v2_system.txt`, `prompts/recover_v2_task.txt`;
+- code: `ontology.py`, `evidence.py`, `challenge_tools.py`, `crosspath.py`, `certificate.py`, `tools_v2.py`, `mock_llm_v2.py`;
+- tests: `tests/test_agent_v2.py`;
+- manifest freezer: `scripts/freeze_run_manifest.py`.
+
+The V2 gold's scientific fields are identical to V1's; only `benchmark_id`, `config_sha256` and `frozen_utc` differ.
+
 ## Immediate next steps
 
-1. Read `docs/AGENT_WORKFLOW_V2.md` and inspect the current `src/pur_agent/strategy.py`, `runtime.py`, `tools.py`, `audit_tools.py`, `schemas.py`, and evaluator code.
-2. Implement V2 as an additive/versioned path; keep existing V1/pilot paths runnable.
-3. Normalize the `mdi_fraction` / `mdi_fraction_min` naming inconsistency through one canonical constraint object before formal V2 runs, and apply it consistently to all V2 conditions.
-4. Add deterministic decision-certificate generation and dual-path threshold verification.
-5. Add V2 unit/integration/leakage tests.
-6. Run mock smoke tests first, then a small real-API pilot.
-7. Freeze a new V2 run manifest before the 30–50-run formal matrix.
-8. Preserve all negative and transport/schema failure records.
+1. Start the local model endpoint (`http://127.0.0.1:8788/v1`) and confirm it answers before spending runs.
+2. Run the small real-API V2 pilot (commands in `docs/PILOT_RUNBOOK.md`), keeping every failed, invalid and transport-error record.
+3. Compare `tool_llm` against `pur_agent_v2` on the primary metric **and** on the V2 diagnostics, reporting `first_answer_gate_clean_rate` alongside `schema_correctness_rate` so the gate's own contribution is visible.
+4. Freeze the run manifest with `scripts/freeze_run_manifest.py` on a clean worktree before the 30–50-run formal matrix.
+5. If `tool_llm` and `pur_agent_v2` stay indistinguishable, report that negative result rather than retuning anything.
 
 Do not modify the wet-lab plan or frozen science merely to improve Agent benchmark performance.

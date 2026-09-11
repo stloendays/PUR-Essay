@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pur-essay/prospective_adjudication_schema.json",
+  "title": "Prospective prediction / adjudication record",
+  "description": "Machine schema for docs/PROSPECTIVE_PREDICTION_TEMPLATE.md. This file is a schema, not a frozen prediction. A record may call itself prospective only when result_inspection_status is 'no_results_inspected'; any other value makes it a post hoc analysis. Wet-lab observations remain excluded from the primary PUR-RECOVER benchmark input.",
+  "type": "object",
+  "required": ["record_status", "result_inspection_status", "inspection_statement", "experiment", "provenance", "predictions"],
+  "additionalProperties": false,
+  "properties": {
+    "record_status": {"enum": ["DRAFT", "FROZEN"]},
+    "result_inspection_status": {
+      "enum": ["no_results_inspected", "some_results_inspected", "unknown"],
+      "description": "Answer before writing anything else. Only 'no_results_inspected' permits calling the record prospective."
+    },
+    "inspection_statement": {"type": "string", "minLength": 1},
+    "frozen_utc": {"type": ["string", "null"]},
+    "experiment": {
+      "type": "object",
+      "required": ["design_document", "design_changed_by_this_record"],
+      "properties": {
+        "design_document": {"type": "string"},
+        "materials": {"type": "array", "items": {"type": "string"}},
+        "n_formulations": {"type": "integer", "minimum": 1},
+        "n_independent_batches": {"type": "integer", "minimum": 1},
+        "design_changed_by_this_record": {
+          "const": false,
+          "description": "The running experiment is never redesigned to fit the Agent."
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "git_commit": {"type": "string"},
+        "config_sha256": {"type": "string"},
+        "prompt_sha256": {"type": "string"},
+        "pur_sim_v1_snapshot_sha256": {"type": "string"},
+        "generated_by": {"enum": ["deterministic", "agent", "human"]}
+      }
+    },
+    "predictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "falsification_criterion", "domain_of_validity", "adjudication"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "claim": {"type": "string"},
+          "quantity": {"type": "string"},
+          "direction_or_ordering": {"type": "string"},
+          "domain_of_validity": {"type": "string"},
+          "falsification_criterion": {"type": "string", "minLength": 1},
+          "measurement_procedure": {"type": "string"},
+          "adjudication": {"enum": ["pending", "supported", "partially_supported", "falsified", "out_of_domain"]},
+          "adjudication_note": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -61,11 +61,19 @@ def _add_usage(total: dict[str, Any], usage: Any) -> None:
     total["calls"] = total.get("calls", 0) + 1
 
 
-def _guard(executor: ToolExecutor | None) -> tuple[bool, str]:
+def _guard(executor: ToolExecutor | None, final_text: str | None = None) -> tuple[bool, str]:
+    """Ask the executor whether this candidate answer may be accepted.
+
+    V2 executors also inspect the answer text (output schema and canonical vocabulary); V1
+    executors look at the trace only and ignore the argument.
+    """
     guard = getattr(executor, "finalization_guard", None) if executor is not None else None
-    if callable(guard):
+    if not callable(guard):
+        return True, ""
+    try:
+        return guard(final_text)
+    except TypeError:
         return guard()
-    return True, ""
 
 
 def _json_payload(result: Any) -> str:
@@ -99,7 +107,7 @@ class OpenAIResponsesClient:
         for round_no in range(1, self.max_rounds + 1):
             calls = [item for item in response.output if getattr(item, "type", None) == "function_call"]
             if not calls:
-                can_finalize, corrective = _guard(executor)
+                can_finalize, corrective = _guard(executor, response.output_text)
                 if not can_finalize and guard_retries < 3:
                     guard_retries += 1
                     response = self._create(previous_response_id=response.id, input=corrective, **common)
@@ -160,7 +168,7 @@ class OpenAICompatibleClient:
             calls = list(getattr(msg, "tool_calls", None) or [])
             if not calls:
                 text = msg.content or ""
-                can_finalize, corrective = _guard(executor)
+                can_finalize, corrective = _guard(executor, text)
                 if not can_finalize and guard_retries < 3:
                     guard_retries += 1
                     messages.append({"role": "assistant", "content": text})
@@ -218,6 +226,10 @@ class MockLLMClient:
     def run(self, *, instructions: str, task: str, executor: ToolExecutor | None, seed: int | None = None) -> LLMResult:
         t0 = time.perf_counter()
         text, rounds = scripted_mock_run(executor)
+        # Submit the answer to the finalization guard exactly as a real transport would, so
+        # dry runs exercise the gate instead of bypassing it. The mock is deterministic, so it
+        # does not retry; a refusal is recorded and reported rather than silently retried away.
+        _guard(executor, text)
         _ = t0
         return LLMResult(text, self.provider, self.model, [f"mock-{i}" for i in range(rounds)], {"input_tokens": 0, "output_tokens": 0, "calls": rounds}, rounds, False, seed)
 
