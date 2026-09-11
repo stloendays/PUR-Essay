@@ -133,3 +133,91 @@ python scripts/run_agent_benchmark.py --condition tool_llm_v2_ontology --model g
 ```bash
 python scripts/summarize_benchmark.py results/recover_v2/formal_v2_<date>
 ```
+
+---
+
+# Q1 result — does the canonical ontology remove the failure mode?
+
+Executed 2026-09-11 against the frozen manifest
+(`results/recover_v2/formal_v2_20260911/run_manifest.json`, commit `986b9637`, clean worktree).
+Paired by seed, 5001-5020, same bundle, same prompt, same tool policy, no gate in either arm.
+The two conditions differ in exactly one respect: the constraint vocabulary their tools emit.
+
+| model | condition | complete | scientifically correct | canonical spelling |
+|---|---|---|---|---|
+| `gpt-5.6-luna` | `tool_llm` | 15/20 | 20/20 | 15/20 |
+| `gpt-5.6-luna` | `tool_llm_v2_ontology` | **20/20** | 20/20 | 20/20 |
+| `gpt-5.5` | `tool_llm` | 10/20 | 19/20 | 10/20 |
+| `gpt-5.5` | `tool_llm_v2_ontology` | **20/20** | 20/20 | 20/20 |
+
+McNemar, exact, two-sided, predeclared alpha 0.05:
+
+| model | both | neither | ontology wins | `tool_llm` wins | p |
+|---|---|---|---|---|---|
+| `gpt-5.6-luna` | 15 | 0 | 5 | **0** | 0.0625 — **does not reach alpha** |
+| `gpt-5.5` | 10 | 0 | 10 | **0** | **0.00195 — reaches alpha** |
+
+Zero reversals in 40 paired runs across both models.
+
+## The luna arm was underpowered, and that is my estimation error
+
+The design sized Q1 at n=20 from the probe's `tool_llm` rate of 0.4 on `gpt-5.6-luna`,
+predicting ~12 discordant pairs. On seeds 5001-5020 that condition ran at 0.75, producing only
+5. With 5 discordant pairs all in one direction the exact two-sided p is 2/2^5 = 0.0625, which
+is the *smallest value the test can return* at that count — n=20 could not have reached 0.05
+for this effect no matter how clean the direction was.
+
+No repair was applied. The test was not switched to one-sided, alpha was not moved, and the
+probe runs were not pooled in after the fact. The `gpt-5.5` arm that does reach alpha was part
+of the frozen design before any Q1 run, not added in response to the luna p-value. No pooling
+rule across models was predeclared, so the two arms are reported separately and no combined
+statistic is computed.
+
+## What every failure was
+
+All 15 `tool_llm` failures across both models are the constraint name. Not one is a winner, a
+threshold, a grid point, a reachability verdict or a trend.
+
+```text
+mdi_fraction_min                      x 4   (gpt-5.6-luna; copied from the V1 tool's own output)
+mdi_fraction_of_polyol_plus_mdi       x 10  (1 luna, 9 gpt-5.5; copied from the raw config key)
+mdi_fraction_of_polyol_plus_mdi_min   x 1   (gpt-5.5 seed 5008)
+```
+
+In every one of those 15 cases the paired `tool_llm_v2_ontology` run, same seed, recovered the
+complete chain.
+
+## One unregistered spelling, deliberately left unregistered
+
+`gpt-5.5` seed 5008 wrote `mdi_fraction_of_polyol_plus_mdi_min` — a fourth spelling of the same
+constraint, and the only one not in the alias table. `same_constraint` therefore returns False
+and the run is scored `scientific_correctness = False`, which is why that arm reads 19/20 rather
+than 20/20. Its own evidence string says "all nominal hard constraints passed except
+mdi_fraction", so this is transparently the same constraint.
+
+**The alias table was not extended.** Registering a spelling after seeing it fail is exactly the
+retroactive aliasing that §8 of `AGENT_WORKFLOW_V2.md` forbids — an ontology change must be made
+before a matrix and applied to every condition, not patched in once results are visible. It
+would also have moved a *baseline* number, which is no more legitimate than moving an Agent one.
+The 19/20 stands as measured. If the ontology is versioned later, the change belongs in a new
+ontology version applied to all conditions and rerun, and this run is the evidence motivating it.
+
+Note that the primary metric is unaffected either way: that run fails
+`active_constraint_recovery` against the frozen gold under any alias policy.
+
+## Reading
+
+Q1 is answered on `gpt-5.5` and directionally consistent but underpowered on `gpt-5.6-luna`.
+The canonical ontology removes the failure mode: 40/40 across both models, against 25/40 for the
+identical setup differing only in vocabulary.
+
+This is an interface result, not a reasoning result, and should be stated that way. With
+deterministic tools this model recovers the science essentially always; what it does not do
+reliably is name the constraint the way the frozen contract names it, and it fails that most
+often by copying a string the tool itself handed it.
+
+## Status of the rest of the matrix
+
+Q2 (`pur_agent_v2`, n=20) and Q3 (the four gate ablations, n=10) are declared in the same frozen
+manifest and have **not** been executed. The manifest records all nine conditions; only the two
+Q1 conditions have run. Any later execution uses the same manifest and the same seeds.
