@@ -19,11 +19,20 @@ class Condition:
     inline_data: bool = False                      # embed the compressed table in the task text
     mode: str = "recover"                          # "recover" (primary) or "audit" (secondary PUR-AUDIT V1)
     # ------------------------------------------------------------------ PUR-RECOVER V2 only
+    # Toolbox and output schema are chosen independently so the canonical ontology can be
+    # tested on its own: `tool_llm_v2_ontology` takes the V2 toolbox with the V1 prompt,
+    # V1 output schema and no machine gate.
+    toolbox_version: str = "v1"                    # "v2" serves canonical constraint objects
     schema_version: str = "v1"                     # "v2" enables the claim-evidence contract
     require_evidence_plan: bool = False            # gate on minimum-sufficient evidence per claim
     require_challenge: bool = False                # gate on the counterfactual challenge stage
     require_cross_path: bool = False               # gate on dual-path threshold verification
     enforce_certificate: bool = False              # certificate gates finalisation (else logged only)
+    include_challenge_tools: bool = False          # expose the stage-C counterfactual tools
+
+    @property
+    def uses_v2_toolbox(self) -> bool:
+        return self.toolbox_version == "v2" or self.schema_version == "v2"
 
 
 _NO_BACKWARD = tuple(t for t in ALL_TOOL_NAMES if t not in ("solve_backward_threshold", "check_reachability"))
@@ -34,7 +43,8 @@ _V2_NO_CHALLENGE = tuple(t for t in V2_TOOL_NAMES if t not in CHALLENGE_TOOL_NAM
 def _v2(name: str, description: str, **overrides: object) -> Condition:
     """A PUR-RECOVER V2 condition. Defaults are the full contract; each ablation drops one part."""
     base: dict[str, object] = dict(
-        system_prompt="recover_v2_system.txt", task_prompt="recover_v2_task.txt", schema_version="v2",
+        system_prompt="recover_v2_system.txt", task_prompt="recover_v2_task.txt",
+        toolbox_version="v2", schema_version="v2", include_challenge_tools=True,
         require_evidence_plan=True, require_challenge=True, require_cross_path=True, enforce_certificate=True,
     )
     base.update(overrides)
@@ -59,7 +69,15 @@ CONDITIONS: dict[str, Condition] = {
                                             require_evidence_plan=False),
     "pur_agent_v2_no_challenge": _v2("pur_agent_v2_no_challenge",
                                      "V2 ablation: counterfactual challenge tools removed and not required.",
-                                     tools=_V2_NO_CHALLENGE, require_challenge=False),
+                                     tools=_V2_NO_CHALLENGE, include_challenge_tools=False, require_challenge=False),
+    # Isolates the canonical ontology. Identical to tool_llm in prompt, gating and tool policy;
+    # the only difference is that its tools speak the canonical vocabulary. Without this
+    # condition the 2026-09-11 pilot cannot separate the ontology fix from the V2 prompt and
+    # the V2 gate, because every other V2 condition changes all three at once.
+    "tool_llm_v2_ontology": Condition(
+        "tool_llm_v2_ontology",
+        "Baseline 2b: tool_llm served by the V2 toolbox. Same V1 task prompt, same V1 output schema, no strategy enforcement, no challenge tools, no machine gate; only the constraint vocabulary changes.",
+        enforce_strategy=False, system_prompt="tool_llm_system.txt", toolbox_version="v2"),
     "pur_agent_v2_no_cross_path": _v2("pur_agent_v2_no_cross_path",
                                       "V2 ablation: dual-path threshold verification recorded but not required.",
                                       require_cross_path=False),

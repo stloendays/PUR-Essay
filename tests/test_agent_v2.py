@@ -421,6 +421,58 @@ def test_v2_benchmark_loop_writes_records_and_summary(v2_bench, tmp_path):
     assert summary["first_answer_gate_clean_rate"] == 1.0
 
 
+# -------------------------------------------------- 11b. the ontology-isolating baseline
+def test_ontology_baseline_differs_from_tool_llm_only_in_vocabulary():
+    """The 2026-09-11 pilot could not separate the ontology fix from the V2 prompt and gate.
+
+    This condition changes exactly one thing relative to tool_llm, so the next matrix can.
+    """
+    base, iso = get_condition("tool_llm"), get_condition("tool_llm_v2_ontology")
+    assert iso.system_prompt == base.system_prompt == "tool_llm_system.txt"
+    assert iso.task_prompt == base.task_prompt
+    assert iso.tools == base.tools and iso.mode == base.mode
+    assert iso.enforce_strategy is False and base.enforce_strategy is False
+    assert iso.include_challenge_tools is False
+    assert not any([iso.require_evidence_plan, iso.require_challenge, iso.require_cross_path,
+                    iso.enforce_certificate])
+    # the only differences
+    assert (base.toolbox_version, base.schema_version) == ("v1", "v1")
+    assert (iso.toolbox_version, iso.schema_version) == ("v2", "v1")
+
+
+def test_ontology_baseline_serves_canonical_tools_without_a_gate(v2_bench):
+    rec_v1, _ = _run(v2_bench, "tool_llm")
+    rec_iso, metrics = _run(v2_bench, "tool_llm_v2_ontology")
+
+    def emitted_constraint(rec):
+        hit = [t for t in rec["tool_trace"] if t["tool"] == "solve_backward_threshold"]
+        return hit[0]["output"]["result"]["constraint"] if hit else None
+
+    assert emitted_constraint(rec_v1) == "mdi_fraction_min"     # V1 tools are untouched
+    assert emitted_constraint(rec_iso) == "mdi_fraction"        # the trap is gone
+    assert [t["tool"] for t in rec_iso["tool_trace"]] == [t["tool"] for t in rec_v1["tool_trace"]]
+    assert not any(t["tool"] in CHALLENGE_TOOL_NAMES for t in rec_iso["tool_trace"])
+    assert rec_iso["gate_attempts"] == []                       # no machine gate
+    assert rec_iso["schema_version"] == "v1" and rec_iso["toolbox_version"] == "v2"
+
+
+def test_ontology_baseline_gets_v2_diagnostics_under_the_v1_output_schema(v2_bench):
+    """It uses the V1 answer shape, so it must not be marked non-canonical for having no operator."""
+    rec, metrics = _run(v2_bench, "tool_llm_v2_ontology")
+    assert rec["metrics_version"] == "v2"
+    assert "operator" not in (rec["final_json"]["active_constraint"] or {})
+    assert rec["decision_certificate"]["ontology_consistency_pass"] is True
+    assert metrics["scientific_correctness"] is True and metrics["schema_correctness"] is True
+
+
+def test_v1_output_schema_does_not_demand_the_operator_field():
+    legacy_shape = {"active_constraint": {"name": "mdi_fraction"}}
+    assert ontology_check(legacy_shape, require_operator=False)["pass"] is True
+    assert ontology_check(legacy_shape, require_operator=True)["pass"] is False
+    # a non-canonical spelling still fails either way
+    assert ontology_check({"active_constraint": {"name": "mdi_fraction_min"}}, require_operator=False)["pass"] is False
+
+
 # ------------------------------------- 12. scientific correctness vs schema correctness split
 def _gold_for_split():
     return {"property_winner": "A", "constrained_winner": "B", "robust_winner": "C",

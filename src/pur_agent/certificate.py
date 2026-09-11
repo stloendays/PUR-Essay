@@ -34,11 +34,15 @@ from .ontology import canonical_from_active_constraint, is_canonical_spelling, n
 CERTIFICATE_VERSION = "PUR_CERTIFICATE_V2"
 
 
-def ontology_check(decision: dict[str, Any] | None) -> dict[str, Any]:
+def ontology_check(decision: dict[str, Any] | None, *, require_operator: bool = True) -> dict[str, Any]:
     """Are the decision's constraint references spelled in the canonical vocabulary?
 
     A recognised alias (`mdi_fraction_min`) is scientifically right and schema-wrong; an
     unrecognised name is both.
+
+    `require_operator` is a property of the *output schema*, not of the ontology: the V1 answer
+    shape has no `operator` field, so an isolating V1-schema baseline must not be marked
+    non-canonical for omitting one.
     """
     violations: list[str] = []
     recognised = True
@@ -53,7 +57,7 @@ def ontology_check(decision: dict[str, Any] | None) -> dict[str, Any]:
             violations.append(f"active_constraint names an unregistered quantity {name!r}")
         elif not is_canonical_spelling(name):
             violations.append(f"active_constraint uses the non-canonical spelling {name!r}; canonical is {quantity!r}")
-    if ac and "operator" not in ac:
+    if require_operator and ac and "operator" not in ac:
         violations.append("active_constraint omits the canonical 'operator' field")
     bw = decision.get("backward_design") or {}
     bw_name = bw.get("quantity") or bw.get("active_constraint")
@@ -155,6 +159,7 @@ def build_certificate(
     require_challenge: bool = True,
     require_cross_path: bool = True,
     cross_path_tolerance: float | None = None,
+    require_operator: bool = True,
 ) -> dict[str, Any]:
     """Full post-hoc certificate. Computed from the trace and the blind table; never from gold."""
     called = list(called_tools)
@@ -171,7 +176,7 @@ def build_certificate(
     )
     coverage = EvidencePlanner().coverage(called, available_tools)
     cross = gate["cross_path"]
-    onto = ontology_check(decision)
+    onto = ontology_check(decision, require_operator=require_operator)
 
     constraint_audit_pass: bool | None = None
     robustness_audit_pass: bool | None = None

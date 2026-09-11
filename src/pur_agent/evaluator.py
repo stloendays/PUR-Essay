@@ -99,9 +99,10 @@ def evaluate_run_record(
         metrics["latency_s"] = record.get("latency_s")
         record["evaluation"] = metrics
         return metrics
-    # V2 records carry a harness-computed decision certificate. They are scored by the same
-    # primary metric as V1, plus the additive V2 diagnostics.
-    is_v2 = record.get("schema_version") == "v2"
+    # Any record carrying a harness-computed certificate gets the V2 diagnostics on top of the
+    # unchanged primary metric. That includes `tool_llm_v2_ontology`, which uses the V1 output
+    # schema but the V2 toolbox, and is the condition that isolates the ontology.
+    is_v2 = record.get("metrics_version") == "v2" or record.get("schema_version") == "v2"
     certificate = record.get("decision_certificate") if is_v2 else None
     run_usage = record.get("usage") or {}
 

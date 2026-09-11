@@ -99,18 +99,22 @@ def run_once(
     executor: ToolboxExecutor | None = None
     robust_required = bool((cfg.get("robustness") or {}).get("enabled", False))
     is_v2 = cond.schema_version == "v2"
+    v2_toolbox = cond.uses_v2_toolbox
     cross_tol = (cfg.get("evaluation") or {}).get("cross_path_tolerance_nco_oh")
     if cond.use_tools and cond.mode == "audit":
         executor = ToolboxExecutor(AuditToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
                                    robust_required=robust_required, strategy=AuditStrategy(), include_audit_tools=True)
-    elif cond.use_tools and is_v2:
+    elif cond.use_tools and v2_toolbox:
+        # The V2 gate only exists for V2-schema conditions; a V2-toolbox baseline gets the
+        # canonical vocabulary and nothing else, which is what makes it an isolating control.
         policy = V2Policy(
             config=cfg, enforce=bool(cond.enforce_certificate and cond.enforce_strategy),
             require_evidence_plan=cond.require_evidence_plan, require_challenge=cond.require_challenge,
             require_cross_path=cond.require_cross_path, cross_path_tolerance=cross_tol,
-        )
+        ) if is_v2 else None
         executor = ToolboxExecutor(V2Toolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
-                                   robust_required=robust_required, include_challenge_tools=True, v2_policy=policy)
+                                   robust_required=robust_required, include_challenge_tools=cond.include_challenge_tools,
+                                   v2_policy=policy)
     elif cond.use_tools:
         executor = ToolboxExecutor(DecisionToolbox(bundle.candidates, cfg), allowed_tools=cond.tools, enforce_strategy=cond.enforce_strategy,
                                    robust_required=robust_required)
@@ -133,18 +137,22 @@ def run_once(
     except Exception as exc:  # API/transport failure: record it, never crash a benchmark loop
         error = f"{type(exc).__name__}: {exc}"
     latency = time.perf_counter() - t0
+    # The certificate is harness-side, so it is computed for any V2-toolbox condition, including
+    # the V1-schema isolating baseline. `metrics_version` is what selects the V2 scorer.
     v2_blocks: dict[str, Any] = {}
-    if is_v2 and executor is not None:
+    if v2_toolbox and executor is not None:
         planner = EvidencePlanner()
         v2_blocks = {
-            "schema_version": "v2",
+            "schema_version": cond.schema_version,
+            "toolbox_version": "v2",
+            "metrics_version": "v2",
             "evidence_plan": planner.plan(executor.available_tool_names),
             "decision_certificate": build_certificate(
                 decision=final, trace=executor.trace, called_tools=executor.called_tools,
                 available_tools=executor.available_tool_names, config=cfg, toolbox=executor.toolbox,
                 schema_valid=valid, require_evidence_plan=cond.require_evidence_plan,
                 require_challenge=cond.require_challenge, require_cross_path=cond.require_cross_path,
-                cross_path_tolerance=cross_tol,
+                cross_path_tolerance=cross_tol, require_operator=is_v2,
             ),
             "gate_attempts": executor.gate_attempts,
         }
