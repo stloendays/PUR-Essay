@@ -330,3 +330,74 @@ These must be stated in the paper rather than argued away:
 ### What V2 does not yet establish
 
 Nothing about whether planning and gating beat plain tool access. That needs the real-API pilot and then the formal matrix at a predeclared run count. If `tool_llm` and `pur_agent_v2` remain indistinguishable, section 13 applies: report it.
+
+*Partly answered by §17. The pilot has since run: the gates showed nothing measurable, the ontology showed something. Section 13 is being applied to the gating layer.*
+
+## 17. Real-API V2 pilot result (2026-09-11)
+
+Model `gpt-5.6-luna` via a local OpenAI-compatible proxy (Chat Completions; the endpoint does
+not serve the Responses API). 3 runs per condition, seeds 3001-3003, commit `beb5927`, manifest
+`results/recover_v2/pilot_v2_20260911/run_manifest.json` (`baf31dac…`), frozen on a clean
+worktree **before** the runs. All 24 runs are preserved. **This is a pilot: n=3 per condition,
+no statistical claim is made, and nothing was tuned on it.**
+
+| condition | complete | certificate | coverage | cross-path | challenge | tools | API | input tok | latency | gate retries |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `direct_llm` | **0/3** | – | – | – | – | 0 | 1 | 49 388 | 98.9 s | – |
+| `tool_llm` | **2/3** | – | – | – | – | 9 | 10 | 52 538 | 37.2 s | – |
+| `pur_agent` | 3/3 | – | – | – | – | 9 | 10 | 54 070 | 36.8 s | – |
+| `pur_agent_v2` | 3/3 | 3/3 | 1.00 | 3/3 | 3/3 | 14.7 | 15.7 | 155 044 | 77.2 s | **0** |
+| `..._no_evidence_planner` | 3/3 | 3/3 | 1.00 | 3/3 | 3/3 | 14.3 | 15.3 | 151 887 | 81.0 s | 0 |
+| `..._no_challenge` | 3/3 | 3/3 | 1.00 | 3/3 | n/a | 10.7 | 11.7 | 106 108 | 65.1 s | 0 |
+| `..._no_cross_path` | 3/3 | 3/3 | 1.00 | 3/3 | 3/3 | 15.0 | 16.0 | 178 045 | 78.2 s | 0 |
+| `..._no_certificate` | 3/3 | 3/3 | 1.00 | 3/3 | 3/3 | 14.7 | 15.7 | 166 454 | 80.7 s | 0 |
+
+0 transport/API errors, 0 invalid outputs, 0 abstentions or conflicts. Cross-path absolute
+difference was exactly `0.0` in all 15 V2 runs; both derivations returned `1.771983672436161`.
+
+### What the pilot does support
+
+**The canonical ontology earned its place.** `tool_llm` run 2 recovered every winner, the
+threshold, the grid point, reachability and both trends correctly, then failed the primary
+metric on one field: it wrote `active_constraint.name = "mdi_fraction_min"`, copied from the V1
+tool's own `solve_backward_threshold.constraint` output. Splitting the metric makes this legible:
+
+| condition | scientifically correct | canonical spelling |
+|---|---|---|
+| `tool_llm` | 3/3 | **2/3** |
+| `pur_agent` | 3/3 | 3/3 |
+| `pur_agent_v2` (all five variants) | 3/3 | 3/3 |
+
+This is the same defect the V1 pilot saw in `pur_agent_no_constraint_checker`, now reproduced in
+a *baseline* rather than an ablation. V2 removes it at source: the V2 toolbox no longer emits
+`mdi_fraction_min`, so there is nothing to miscopy. The fix is in the tool interface, not in the
+evaluator — the strict primary metric still fails on a legacy spelling, by design.
+
+### What the pilot does not support
+
+**The gating layer demonstrated nothing measurable.** `gate_retries = 0` in all 15 V2 runs and
+`first_answer_gate_clean_rate = 1.0`: the model satisfied the evidence contract, ran the
+challenge and produced canonical, schema-valid JSON on its first answer every time. A gate that
+never fires cannot show an effect, which is exactly why all four gate ablations also scored 3/3.
+`no_evidence_planner`, `no_cross_path` and `no_certificate` are, at this sample size and with
+this model, indistinguishable from the full contract.
+
+That is a real negative result for the planning/gating layer and is reported as one. It also
+means the V2 schema advantage in this pilot came from the **ontology**, not from gate feedback —
+a cleaner attribution than the confound anticipated in §16, and one that should be re-checked
+with a weaker model, where the gate is more likely to bind.
+
+### Confounds that remain
+
+1. **No condition isolates the ontology.** Every V2 condition uses the V2 toolbox, so all five
+   inherit the fix. The closest available contrast is `no_certificate` (V2 toolbox, no machine
+   gate at all: 3/3) against `tool_llm` (V1 toolbox, no gate: 2/3) — but those also differ in
+   prompt. A `tool_llm_v2_ontology` condition (V2 toolbox, V1-style prompt, no gate) would
+   isolate it and is the single most informative condition to add before the formal matrix.
+2. **Cost.** V2 spends ~3x the input tokens and ~2x the latency of `tool_llm` for the same
+   primary-metric outcome. Whatever V2 is worth, it is not free, and the trade should be stated
+   in those terms.
+3. **The challenge tools still widen the information surface**, as noted in §16.
+4. **Ceiling effect.** `gpt-5.6-luna` is at or near ceiling on this task with tools. Separating
+   `tool_llm` from `pur_agent_v2` may require a weaker model, a harder variant, or a run count
+   large enough to resolve a low failure rate.

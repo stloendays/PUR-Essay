@@ -1,0 +1,1171 @@
+{
+  "run_id": "run_0003",
+  "timestamp_utc": "2026-09-11T05:37:27+00:00",
+  "benchmark_id": "PUR_RECOVER_V2",
+  "condition": "tool_llm",
+  "provider": "openai_compatible_chat",
+  "model": "gpt-5.6-luna",
+  "prompt_sha256": "bf787f72e456bc0ce1497785a9b53c8dd5226a846c6f947e0ff05bb4d80edebb",
+  "data_sha256": {
+    "candidates.csv": "6ca33d4e69889d9026ee87455629b0bb8bfdcce3bf74b1bf5a652614588b0444",
+    "benchmark_config.json": "73efc4370a9fd23e07a44ff1cde5b17c920bb401cb590c1ded6a571c706dfd79",
+    "task.json": "868342f51e4ca6794ac1e5c026fdfbef73a3433c88a13a2168992c6164658d80"
+  },
+  "config_sha256": "97673937992af4a95810f6d5a73ab143465dd6f9b05a408c0f86d7e4c5d65f82",
+  "anonymization_seed": 20260909,
+  "llm_seed": 3003,
+  "tool_call_count": 9,
+  "tool_trace": [
+    {
+      "tool": "dataset_summary",
+      "arguments": {},
+      "output": {
+        "ok": true,
+        "result": {
+          "n_candidates": 928,
+          "candidate_id_column": "candidate_id",
+          "components": [
+            "Polyol_A",
+            "Polyol_B",
+            "Polyol_C",
+            "Polyol_D"
+          ],
+          "n_blends": 58,
+          "nco_oh_grid": [
+            1.5,
+            1.6,
+            1.7,
+            1.8,
+            1.9,
+            2.0,
+            2.1,
+            2.2,
+            2.3,
+            2.4,
+            2.5,
+            2.6,
+            2.7,
+            2.8,
+            2.9,
+            3.0
+          ],
+          "mdi_fraction_range": [
+            0.15802767984002528,
+            0.6524006082989354
+          ],
+          "response_columns": {
+            "eta80": "simulated_eta_80c_pa_s",
+            "eta120": "simulated_eta_120c_pa_s",
+            "ratio": "simulated_ratio_80c_120c"
+          },
+          "uncertainty_column_present": true,
+          "domain_ratio_column_present": true,
+          "hard_constraints": {
+            "nco_oh": [
+              1.3,
+              3.0
+            ],
+            "mdi_fraction": [
+              0.35,
+              0.49
+            ],
+            "eta80_broad": [
+              0.85,
+              10.0
+            ],
+            "eta120_broad": [
+              0.16,
+              0.8
+            ],
+            "ratio_broad": [
+              6.0,
+              13.0
+            ],
+            "eta80_preferred": [
+              2.2,
+              5.5
+            ],
+            "eta120_preferred": [
+              0.3,
+              0.6
+            ],
+            "ratio_preferred": [
+              7.0,
+              9.5
+            ]
+          },
+          "objective": {
+            "space": "log10",
+            "center": "geometric_midpoint_of_preferred_window",
+            "weights": {
+              "eta80": 1.0,
+              "eta120": 1.0,
+              "ratio": 1.0
+            },
+            "tie_break": [
+              "higher_broad_margin",
+              "lower_domain_ratio",
+              "candidate_id_lexicographic"
+            ]
+          },
+          "robust_layer_frozen": true,
+          "robustness_definition": {
+            "enabled": true,
+            "method": "worst_case_interval",
+            "definition": "robust_score = sum_k w_k * (abs(log10(y_k/c_k)) + q_k*r)^2, with q_eta80=q_eta120=1 and q_ratio=2; this is the exact worst case of the nominal objective over the frozen rectangular log-space interval",
+            "require_interval_inside_broad": true,
+            "require_interval_inside_preferred": false,
+            "domain_ratio_max": 1.0,
+            "rationale": "Preferred windows define the optimization target, not a certification envelope. Full preferred-window containment gives zero robust candidates in this frozen space and is therefore not used. Broad windows are retained as the functional admissibility envelope under uncertainty; within that admissible set, robustness is ranked by the parameter-free worst-case extension of the nominal objective. No uncertainty weight is tuned and the nominal property weights are inherited unchanged."
+          },
+          "n_feasible_nominal": 141,
+          "n_feasible_robust": 117
+        }
+      }
+    },
+    {
+      "tool": "rank_property",
+      "arguments": {
+        "top_k": 3
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "ranking": [
+            {
+              "cid": "Candidate_0893",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.7,
+              "mdi_parts": 51.65875,
+              "mdi_fraction": 0.34062492272948314,
+              "eta80": 3.4259836391,
+              "eta120": 0.4199751814,
+              "ratio": 8.1575859501,
+              "property_score": 6.31517628986877e-05,
+              "feasible_nominal": false,
+              "robust_score": 0.017854754394503375,
+              "feasible_robust": false,
+              "property_rank": 1.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 60.57499999945398
+            },
+            {
+              "cid": "Candidate_0875",
+              "blend": "Polyol_A:20+Polyol_C:80",
+              "nco_oh": 1.7,
+              "mdi_parts": 52.87425,
+              "mdi_fraction": 0.3458676003316451,
+              "eta80": 3.490716528,
+              "eta120": 0.4197754422,
+              "ratio": 8.3156758989,
+              "property_score": 9.567802556700525e-05,
+              "feasible_nominal": false,
+              "robust_score": 0.021047206551416255,
+              "feasible_robust": false,
+              "property_rank": 2.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 61.12893610432842
+            },
+            {
+              "cid": "Candidate_0880",
+              "blend": "Polyol_A:60+Polyol_B:40",
+              "nco_oh": 1.6,
+              "mdi_parts": 52.05200000000001,
+              "mdi_fraction": 0.3423302554389288,
+              "eta80": 3.5338730109,
+              "eta120": 0.4264878977,
+              "ratio": 8.2859866122,
+              "property_score": 0.00010026273289189955,
+              "feasible_nominal": false,
+              "robust_score": 0.02309437411488604,
+              "feasible_robust": false,
+              "property_rank": 3.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 61.02571456590101
+            }
+          ],
+          "n_ranked": 928,
+          "definition": "weighted squared log10 distance to preferred-window centers; no constraints"
+        }
+      }
+    },
+    {
+      "tool": "rank_constrained",
+      "arguments": {
+        "top_k": 3
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "ranking": [
+            {
+              "cid": "Candidate_0724",
+              "blend": "Polyol_A:60+Polyol_B:40",
+              "nco_oh": 1.7,
+              "mdi_parts": 55.30525,
+              "mdi_fraction": 0.35610676393747154,
+              "eta80": 3.4426950235,
+              "eta120": 0.4097650681,
+              "ratio": 8.4016313049,
+              "property_score": 0.00041602203507206195,
+              "feasible_nominal": true,
+              "robust_score": 0.024936145769100942,
+              "feasible_robust": true,
+              "property_rank": 8.0,
+              "nominal_rank": 1.0,
+              "robust_rank": 6.0,
+              "ea_two_point_kj_mol": 61.42571456093799
+            },
+            {
+              "cid": "Candidate_0426",
+              "blend": "Polyol_D:90+Polyol_B:10",
+              "nco_oh": 1.9,
+              "mdi_parts": 54.679625,
+              "mdi_fraction": 0.3535024409323465,
+              "eta80": 3.5061183527,
+              "eta120": 0.4101864425,
+              "ratio": 8.5476212509,
+              "property_score": 0.0006441258000832023,
+              "feasible_nominal": true,
+              "robust_score": 0.022538253179174357,
+              "feasible_robust": true,
+              "property_rank": 12.0,
+              "nominal_rank": 2.0,
+              "robust_rank": 2.0,
+              "ea_two_point_kj_mol": 61.92288445155481
+            },
+            {
+              "cid": "Candidate_0863",
+              "blend": "Polyol_A:20+Polyol_C:80",
+              "nco_oh": 1.8,
+              "mdi_parts": 55.9845,
+              "mdi_fraction": 0.35891066099516294,
+              "eta80": 3.4006520275,
+              "eta120": 0.4033158117,
+              "ratio": 8.4317349549,
+              "property_score": 0.0007906704211501736,
+              "feasible_nominal": true,
+              "robust_score": 0.024830163597989632,
+              "feasible_robust": true,
+              "property_rank": 15.0,
+              "nominal_rank": 3.0,
+              "robust_rank": 5.0,
+              "ea_two_point_kj_mol": 61.52893610262059
+            }
+          ],
+          "n_feasible": 141,
+          "n_total": 928,
+          "definition": "property objective restricted to candidates passing every nominal hard constraint"
+        }
+      }
+    },
+    {
+      "tool": "rank_robust",
+      "arguments": {
+        "top_k": 3
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "ranking": [
+            {
+              "cid": "Candidate_0525",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.8,
+              "mdi_parts": 54.697500000000005,
+              "mdi_fraction": 0.3535771424877584,
+              "eta80": 3.3375893216,
+              "eta120": 0.403507719,
+              "ratio": 8.2714385985,
+              "property_score": 0.0008351860112308892,
+              "feasible_nominal": true,
+              "robust_score": 0.021897294012576327,
+              "feasible_robust": true,
+              "property_rank": 16.0,
+              "nominal_rank": 4.0,
+              "robust_rank": 1.0,
+              "ea_two_point_kj_mol": 60.97499999898737
+            },
+            {
+              "cid": "Candidate_0426",
+              "blend": "Polyol_D:90+Polyol_B:10",
+              "nco_oh": 1.9,
+              "mdi_parts": 54.679625,
+              "mdi_fraction": 0.3535024409323465,
+              "eta80": 3.5061183527,
+              "eta120": 0.4101864425,
+              "ratio": 8.5476212509,
+              "property_score": 0.0006441258000832023,
+              "feasible_nominal": true,
+              "robust_score": 0.022538253179174357,
+              "feasible_robust": true,
+              "property_rank": 12.0,
+              "nominal_rank": 2.0,
+              "robust_rank": 2.0,
+              "ea_two_point_kj_mol": 61.92288445155481
+            },
+            {
+              "cid": "Candidate_0543",
+              "blend": "Polyol_D:60+Polyol_C:40",
+              "nco_oh": 1.9,
+              "mdi_parts": 55.69849999999999,
+              "mdi_fraction": 0.35773305458947896,
+              "eta80": 3.4185155367,
+              "eta120": 0.4024606876,
+              "ratio": 8.4940359199,
+              "property_score": 0.0008954815747787429,
+              "feasible_nominal": true,
+              "robust_score": 0.022750587261818143,
+              "feasible_robust": true,
+              "property_rank": 18.0,
+              "nominal_rank": 5.0,
+              "robust_rank": 3.0,
+              "ea_two_point_kj_mol": 61.74139256864481
+            }
+          ],
+          "n_feasible_robust": 117,
+          "robustness_definition": {
+            "enabled": true,
+            "method": "worst_case_interval",
+            "definition": "robust_score = sum_k w_k * (abs(log10(y_k/c_k)) + q_k*r)^2, with q_eta80=q_eta120=1 and q_ratio=2; this is the exact worst case of the nominal objective over the frozen rectangular log-space interval",
+            "require_interval_inside_broad": true,
+            "require_interval_inside_preferred": false,
+            "domain_ratio_max": 1.0,
+            "rationale": "Preferred windows define the optimization target, not a certification envelope. Full preferred-window containment gives zero robust candidates in this frozen space and is therefore not used. Broad windows are retained as the functional admissibility envelope under uncertainty; within that admissible set, robustness is ranked by the parameter-free worst-case extension of the nominal objective. No uncertainty weight is tuned and the nominal property weights are inherited unchanged."
+          }
+        }
+      }
+    },
+    {
+      "tool": "constraint_audit",
+      "arguments": {
+        "candidate_id": "Candidate_0893"
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "candidate_id": "Candidate_0893",
+          "checks": {
+            "nco_oh": {
+              "pass": true,
+              "value": 1.7,
+              "bounds": [
+                1.3,
+                3.0
+              ]
+            },
+            "mdi_fraction": {
+              "pass": false,
+              "value": 0.34062492272948314,
+              "bounds": [
+                0.35,
+                0.49
+              ]
+            },
+            "eta80_broad": {
+              "pass": true,
+              "value": 3.4259836391,
+              "bounds": [
+                0.85,
+                10.0
+              ]
+            },
+            "eta120_broad": {
+              "pass": true,
+              "value": 0.4199751814,
+              "bounds": [
+                0.16,
+                0.8
+              ]
+            },
+            "ratio_broad": {
+              "pass": true,
+              "value": 8.1575859501,
+              "bounds": [
+                6.0,
+                13.0
+              ]
+            },
+            "eta80_preferred": {
+              "pass": true,
+              "value": 3.4259836391,
+              "bounds": [
+                2.2,
+                5.5
+              ]
+            },
+            "eta120_preferred": {
+              "pass": true,
+              "value": 0.4199751814,
+              "bounds": [
+                0.3,
+                0.6
+              ]
+            },
+            "ratio_preferred": {
+              "pass": true,
+              "value": 8.1575859501,
+              "bounds": [
+                7.0,
+                9.5
+              ]
+            },
+            "chemistry_in_domain": {
+              "pass": true
+            }
+          },
+          "failures": [
+            "mdi_fraction"
+          ],
+          "feasible": false,
+          "active_constraint": {
+            "name": "mdi_fraction",
+            "threshold": 0.35,
+            "candidate_value": 0.34062492272948314,
+            "all_failures": [
+              "mdi_fraction"
+            ]
+          },
+          "robust_checks": {
+            "interval_inside_broad": true,
+            "domain_ratio_max": true
+          },
+          "feasible_robust": false
+        }
+      }
+    },
+    {
+      "tool": "solve_backward_threshold",
+      "arguments": {
+        "candidate_id": "Candidate_0893"
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "constraint": "mdi_fraction_min",
+          "variable": "nco_oh",
+          "blend": "Polyol_D:50+Polyol_C:50",
+          "threshold": 0.35,
+          "candidate_value": 0.34062492272948314,
+          "continuous_threshold": 1.771983672436161,
+          "manifold_slope_mdi_parts_per_nco": 30.3875,
+          "manifold_is_linear": true,
+          "reason": "exact solution on the linear MDI-demand manifold mdi_parts = k * nco_oh"
+        }
+      }
+    },
+    {
+      "tool": "check_reachability",
+      "arguments": {
+        "candidate_id": "Candidate_0893"
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "blend": "Polyol_D:50+Polyol_C:50",
+          "continuous_threshold": 1.771983672436161,
+          "grid_values": [
+            1.5,
+            1.6,
+            1.7,
+            1.8,
+            1.9,
+            2.0,
+            2.1,
+            2.2,
+            2.3,
+            2.4,
+            2.5,
+            2.6,
+            2.7,
+            2.8,
+            2.9,
+            3.0
+          ],
+          "nearest_reachable_grid_value": 1.8,
+          "nearest_reachable_candidate_id": "Candidate_0525",
+          "reachable": true,
+          "reason": "first discrete NCO:OH grid point at or above the continuous threshold"
+        }
+      }
+    },
+    {
+      "tool": "local_nco_sweep",
+      "arguments": {
+        "candidate_id": "Candidate_0525"
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "blend": "Polyol_D:50+Polyol_C:50",
+          "rows": [
+            {
+              "cid": "Candidate_0492",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.5,
+              "mdi_parts": 45.58125,
+              "mdi_fraction": 0.313098355729189,
+              "eta80": 3.6098575089,
+              "eta120": 0.4549536827,
+              "ratio": 7.9345604746,
+              "property_score": 0.0013204142230948462,
+              "feasible_nominal": false,
+              "robust_score": 0.027513999893566735,
+              "feasible_robust": false,
+              "property_rank": 23.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 59.77500000309828
+            },
+            {
+              "cid": "Candidate_0546",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.6,
+              "mdi_parts": 48.62,
+              "mdi_fraction": 0.32714304938770017,
+              "eta80": 3.5167190341,
+              "eta120": 0.4371146937,
+              "ratio": 8.0453004324,
+              "property_score": 0.00022489450130321962,
+              "feasible_nominal": false,
+              "robust_score": 0.020900549762860425,
+              "feasible_robust": false,
+              "property_rank": 5.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 60.1749999989668
+            },
+            {
+              "cid": "Candidate_0893",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.7,
+              "mdi_parts": 51.65875,
+              "mdi_fraction": 0.34062492272948314,
+              "eta80": 3.4259836391,
+              "eta120": 0.4199751814,
+              "ratio": 8.1575859501,
+              "property_score": 6.31517628986877e-05,
+              "feasible_nominal": false,
+              "robust_score": 0.017854754394503375,
+              "feasible_robust": false,
+              "property_rank": 1.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 60.57499999945398
+            },
+            {
+              "cid": "Candidate_0525",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.8,
+              "mdi_parts": 54.697500000000005,
+              "mdi_fraction": 0.3535771424877584,
+              "eta80": 3.3375893216,
+              "eta120": 0.403507719,
+              "ratio": 8.2714385985,
+              "property_score": 0.0008351860112308892,
+              "feasible_nominal": true,
+              "robust_score": 0.021897294012576327,
+              "feasible_robust": true,
+              "property_rank": 16.0,
+              "nominal_rank": 4.0,
+              "robust_rank": 1.0,
+              "ea_two_point_kj_mol": 60.97499999898737
+            },
+            {
+              "cid": "Candidate_0311",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.9,
+              "mdi_parts": 57.73625,
+              "mdi_fraction": 0.3660303195999652,
+              "eta80": 3.2514756792,
+              "eta120": 0.387685955,
+              "ratio": 8.3868802495,
+              "property_score": 0.0025409972487003764,
+              "feasible_nominal": true,
+              "robust_score": 0.026668858100256994,
+              "feasible_robust": true,
+              "property_rank": 38.0,
+              "nominal_rank": 13.0,
+              "robust_rank": 8.0,
+              "ea_two_point_kj_mol": 61.37500000176981
+            },
+            {
+              "cid": "Candidate_0461",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.0,
+              "mdi_parts": 60.775,
+              "mdi_fraction": 0.37801275073860985,
+              "eta80": 3.1675838677,
+              "eta120": 0.3724845713,
+              "ratio": 8.5039330803,
+              "property_score": 0.0051805854683917045,
+              "feasible_nominal": true,
+              "robust_score": 0.03216944664223154,
+              "feasible_robust": true,
+              "property_rank": 64.0,
+              "nominal_rank": 30.0,
+              "robust_rank": 22.0,
+              "ea_two_point_kj_mol": 61.77499999912605
+            },
+            {
+              "cid": "Candidate_0384",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.1,
+              "mdi_parts": 63.81375,
+              "mdi_fraction": 0.38955063295968745,
+              "eta80": 3.0858565615,
+              "eta120": 0.3578792423,
+              "ratio": 8.6226195777,
+              "property_score": 0.008753950685966719,
+              "feasible_nominal": true,
+              "robust_score": 0.03839905966870999,
+              "feasible_robust": true,
+              "property_rank": 101.0,
+              "nominal_rank": 51.0,
+              "robust_rank": 40.0,
+              "ea_two_point_kj_mol": 62.175000003760914
+            },
+            {
+              "cid": "Candidate_0280",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.2,
+              "mdi_parts": 66.8525,
+              "mdi_fraction": 0.40066825489579116,
+              "eta80": 3.0062379137,
+              "eta120": 0.3438465965,
+              "ratio": 8.742962542,
+              "property_score": 0.01326109288256663,
+              "feasible_nominal": true,
+              "robust_score": 0.04535769714487605,
+              "feasible_robust": true,
+              "property_rank": 136.0,
+              "nominal_rank": 66.0,
+              "robust_rank": 55.0,
+              "ea_two_point_kj_mol": 62.57500000290107
+            },
+            {
+              "cid": "Candidate_0101",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.3,
+              "mdi_parts": 69.89124999999999,
+              "mdi_fraction": 0.4113881674306357,
+              "eta80": 2.9286735186,
+              "eta120": 0.3303641786,
+              "ratio": 8.8649850921,
+              "property_score": 0.018702012068359725,
+              "feasible_nominal": true,
+              "robust_score": 0.05601055573299259,
+              "feasible_robust": true,
+              "property_rank": 172.0,
+              "nominal_rank": 84.0,
+              "robust_rank": 74.0,
+              "ea_two_point_kj_mol": 62.975000003373246
+            },
+            {
+              "cid": "Candidate_0163",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.4,
+              "mdi_parts": 72.92999999999999,
+              "mdi_fraction": 0.42173133637888155,
+              "eta80": 2.8531103741,
+              "eta120": 0.3174104139,
+              "ratio": 8.9887106694,
+              "property_score": 0.02507670823006985,
+              "feasible_nominal": true,
+              "robust_score": 0.06784898381532617,
+              "feasible_robust": true,
+              "property_rank": 219.0,
+              "nominal_rank": 101.0,
+              "robust_rank": 92.0,
+              "ea_two_point_kj_mol": 63.37500000104433
+            },
+            {
+              "cid": "Candidate_0056",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.5,
+              "mdi_parts": 75.96875,
+              "mdi_fraction": 0.43171727934647486,
+              "eta80": 2.7794968456,
+              "eta120": 0.3049645736,
+              "ratio": 9.1141630424,
+              "property_score": 0.032385181367332774,
+              "feasible_nominal": true,
+              "robust_score": 0.08087298139225303,
+              "feasible_robust": true,
+              "property_rank": 267.0,
+              "nominal_rank": 117.0,
+              "robust_rank": 110.0,
+              "ea_two_point_kj_mol": 63.77499999642722
+            },
+            {
+              "cid": "Candidate_0733",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.6,
+              "mdi_parts": 79.00750000000001,
+              "mdi_fraction": 0.44136418865131355,
+              "eta80": 2.7077826308,
+              "eta120": 0.2930067416,
+              "ratio": 9.2413663114,
+              "property_score": 0.040627431522409364,
+              "feasible_nominal": false,
+              "robust_score": 0.09508254852005832,
+              "feasible_robust": false,
+              "property_rank": 305.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 64.1749999995058
+            },
+            {
+              "cid": "Candidate_0690",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.7,
+              "mdi_parts": 82.04625000000001,
+              "mdi_fraction": 0.4506890419330253,
+              "eta80": 2.6379187252,
+              "eta120": 0.2815177829,
+              "ratio": 9.3703449132,
+              "property_score": 0.049803458668385786,
+              "feasible_nominal": false,
+              "robust_score": 0.11047768516263312,
+              "feasible_robust": false,
+              "property_rank": 343.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 64.57500000255204
+            },
+            {
+              "cid": "Candidate_0427",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.8,
+              "mdi_parts": 85.085,
+              "mdi_fraction": 0.4597077018667099,
+              "eta80": 2.5698573887,
+              "eta120": 0.2704793128,
+              "ratio": 9.5011236253,
+              "property_score": 0.059913262750644646,
+              "feasible_nominal": false,
+              "robust_score": 0.12705839124846552,
+              "feasible_robust": false,
+              "property_rank": 380.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 64.97499999654164
+            },
+            {
+              "cid": "Candidate_0922",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 2.9,
+              "mdi_parts": 88.12375,
+              "mdi_fraction": 0.46843500621266587,
+              "eta80": 2.503552113,
+              "eta120": 0.2598736672,
+              "ratio": 9.6337275714,
+              "property_score": 0.07095684388322177,
+              "feasible_nominal": false,
+              "robust_score": 0.1448246669248882,
+              "feasible_robust": false,
+              "property_rank": 415.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 65.37500000239828
+            },
+            {
+              "cid": "Candidate_0808",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 3.0,
+              "mdi_parts": 91.1625,
+              "mdi_fraction": 0.4768848492774472,
+              "eta80": 2.4389575896,
+              "eta120": 0.249683875,
+              "ratio": 9.7681822256,
+              "property_score": 0.0829342019418771,
+              "feasible_nominal": false,
+              "robust_score": 0.1637765120343161,
+              "feasible_robust": false,
+              "property_rank": 448.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 65.77499999763508
+            }
+          ],
+          "eta80_direction_with_increasing_nco": "decrease"
+        }
+      }
+    },
+    {
+      "tool": "local_composition_sweep",
+      "arguments": {
+        "candidate_id": "Candidate_0525"
+      },
+      "output": {
+        "ok": true,
+        "result": {
+          "components": [
+            "Polyol_C",
+            "Polyol_D"
+          ],
+          "nco_oh": 1.8,
+          "axis_component": "Polyol_C",
+          "axis_definition": "component whose parts increase mdi_parts at fixed NCO:OH (higher hydroxyl demand)",
+          "other_component": "Polyol_D",
+          "eta80_direction_with_increasing_axis_parts": "decrease",
+          "rows": [
+            {
+              "cid": "Candidate_0737",
+              "blend": "Polyol_D:100",
+              "nco_oh": 1.8,
+              "mdi_parts": 45.04500000000001,
+              "mdi_fraction": 0.3105587920990038,
+              "eta80": 4.2866619823,
+              "eta120": 0.4892186041,
+              "ratio": 8.762262813,
+              "property_score": 0.013032577888279953,
+              "feasible_nominal": false,
+              "robust_score": 0.05324504721529025,
+              "feasible_robust": false,
+              "property_rank": 132.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 62.63863815269997
+            },
+            {
+              "cid": "Candidate_0851",
+              "blend": "Polyol_D:90+Polyol_C:10",
+              "nco_oh": 1.8,
+              "mdi_parts": 46.9755,
+              "mdi_fraction": 0.3196144935720579,
+              "eta80": 4.0859260926,
+              "eta120": 0.4706069404,
+              "ratio": 8.6822478418,
+              "property_score": 0.007653694955449772,
+              "feasible_nominal": false,
+              "robust_score": 0.04303905173662151,
+              "feasible_robust": false,
+              "property_rank": 90.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 62.37388740837677
+            },
+            {
+              "cid": "Candidate_0434",
+              "blend": "Polyol_D:80+Polyol_C:20",
+              "nco_oh": 1.8,
+              "mdi_parts": 48.906,
+              "mdi_fraction": 0.32843538876875344,
+              "eta80": 3.8835126346,
+              "eta120": 0.452406504,
+              "ratio": 8.5841220245,
+              "property_score": 0.0035625241137296993,
+              "feasible_nominal": false,
+              "robust_score": 0.03313170552690477,
+              "feasible_robust": false,
+              "property_rank": 49.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 62.045861152686676
+            },
+            {
+              "cid": "Candidate_0418",
+              "blend": "Polyol_D:70+Polyol_C:30",
+              "nco_oh": 1.8,
+              "mdi_parts": 50.8365,
+              "mdi_fraction": 0.3370304932824615,
+              "eta80": 3.690891134,
+              "eta120": 0.4351643233,
+              "ratio": 8.4816032393,
+              "property_score": 0.0010751348579282642,
+              "feasible_nominal": false,
+              "robust_score": 0.024940767815107436,
+              "feasible_robust": false,
+              "property_rank": 19.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 61.69911982860432
+            },
+            {
+              "cid": "Candidate_0558",
+              "blend": "Polyol_D:60+Polyol_C:40",
+              "nco_oh": 1.8,
+              "mdi_parts": 52.767,
+              "mdi_fraction": 0.3454083669902532,
+              "eta80": 3.5090531429,
+              "eta120": 0.4188854198,
+              "ratio": 8.3771193191,
+              "property_score": 0.000181634981755995,
+              "feasible_nominal": false,
+              "robust_score": 0.019645168923641904,
+              "feasible_robust": false,
+              "property_rank": 4.0,
+              "nominal_rank": null,
+              "robust_rank": null,
+              "ea_two_point_kj_mol": 61.34139257154692
+            },
+            {
+              "cid": "Candidate_0525",
+              "blend": "Polyol_D:50+Polyol_C:50",
+              "nco_oh": 1.8,
+              "mdi_parts": 54.697500000000005,
+              "mdi_fraction": 0.3535771424877584,
+              "eta80": 3.3375893216,
+              "eta120": 0.403507719,
+              "ratio": 8.2714385985,
+              "property_score": 0.0008351860112308892,
+              "feasible_nominal": true,
+              "robust_score": 0.021897294012576327,
+              "feasible_robust": true,
+              "property_rank": 16.0,
+              "nominal_rank": 4.0,
+              "robust_rank": 1.0,
+              "ea_two_point_kj_mol": 60.97499999898737
+            },
+            {
+              "cid": "Candidate_0216",
+              "blend": "Polyol_D:40+Polyol_C:60",
+              "nco_oh": 1.8,
+              "mdi_parts": 56.62800000000001,
+              "mdi_fraction": 0.36154455142120184,
+              "eta80": 3.1756268913,
+              "eta120": 0.3889492903,
+              "ratio": 8.1646296079,
+              "property_score": 0.0029900786128438258,
+              "feasible_nominal": true,
+              "robust_score": 0.027164678252094985,
+              "feasible_robust": true,
+              "property_rank": 43.0,
+              "nominal_rank": 16.0,
+              "robust_rank": 10.0,
+              "ea_two_point_kj_mol": 60.599908111905705
+            },
+            {
+              "cid": "Candidate_0497",
+              "blend": "Polyol_D:30+Polyol_C:70",
+              "nco_oh": 1.8,
+              "mdi_parts": 58.5585,
+              "mdi_fraction": 0.3693179488958334,
+              "eta80": 3.0220517721,
+              "eta120": 0.3751183131,
+              "ratio": 8.0562629625,
+              "property_score": 0.006618758246461064,
+              "feasible_nominal": true,
+              "robust_score": 0.03609269709229447,
+              "feasible_robust": true,
+              "property_rank": 80.0,
+              "nominal_rank": 40.0,
+              "robust_rank": 34.0,
+              "ea_two_point_kj_mol": 60.21429745908197
+            },
+            {
+              "cid": "Candidate_0271",
+              "blend": "Polyol_D:20+Polyol_C:80",
+              "nco_oh": 1.8,
+              "mdi_parts": 60.489,
+              "mdi_fraction": 0.3769043361227249,
+              "eta80": 2.8754652221,
+              "eta120": 0.3619085685,
+              "ratio": 7.9452808601,
+              "property_score": 0.011730623695690993,
+              "feasible_nominal": true,
+              "robust_score": 0.04684838768091748,
+              "feasible_robust": true,
+              "property_rank": 122.0,
+              "nominal_rank": 62.0,
+              "robust_rank": 60.0,
+              "ea_two_point_kj_mol": 59.81396601167806
+            },
+            {
+              "cid": "Candidate_0353",
+              "blend": "Polyol_D:10+Polyol_C:90",
+              "nco_oh": 1.8,
+              "mdi_parts": 62.4195,
+              "mdi_fraction": 0.38431038145050317,
+              "eta80": 2.7337253322,
+              "eta120": 0.3491700699,
+              "ratio": 7.8292086509,
+              "property_score": 0.01841914338851158,
+              "feasible_nominal": true,
+              "robust_score": 0.059382497442335855,
+              "feasible_robust": true,
+              "property_rank": 169.0,
+              "nominal_rank": 81.0,
+              "robust_rank": 80.0,
+              "ea_two_point_kj_mol": 59.38924626962224
+            },
+            {
+              "cid": "Candidate_0015",
+              "blend": "Polyol_C:100",
+              "nco_oh": 1.8,
+              "mdi_parts": 64.35,
+              "mdi_fraction": 0.3915424399148159,
+              "eta80": 2.5888942856,
+              "eta120": 0.3363999373,
+              "ratio": 7.695882189,
+              "property_score": 0.027244661801243197,
+              "feasible_nominal": true,
+              "robust_score": 0.07375191069807206,
+              "feasible_robust": true,
+              "property_rank": 229.0,
+              "nominal_rank": 106.0,
+              "robust_rank": 99.0,
+              "ea_two_point_kj_mol": 58.89355123754534
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "final_json": {
+    "property_winner": "Candidate_0893",
+    "constrained_winner": "Candidate_0724",
+    "robust_winner": "Candidate_0525",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction",
+      "threshold": 0.35,
+      "candidate_value": 0.34062492272948314,
+      "evidence": "Candidate_0893 passes every other nominal hard constraint but fails the minimum MDI fraction constraint."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 1.771983672436161,
+      "nearest_reachable_grid_value": 1.8,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "Polyol_C",
+      "composition_direction": "decrease",
+      "notes": "At the robust-winner blend family, eta80 decreases as NCO:OH increases. At fixed NCO:OH = 1.8, eta80 also decreases as Polyol_C parts increase within the Polyol_C/Polyol_D family."
+    },
+    "evidence": [
+      "The property-only ranking identifies Candidate_0893 as rank 1 with property score 0.0000631517628986887.",
+      "Candidate_0893 is nominally infeasible only because its MDI fraction is 0.34062492272948314, below the 0.35 minimum.",
+      "The constrained ranking identifies Candidate_0724 as the nominal feasible winner.",
+      "The robust ranking identifies Candidate_0525 as robust rank 1 among 117 robust-feasible candidates.",
+      "For the Candidate_0893 blend, the continuous MDI-fraction threshold occurs at NCO:OH = 1.771983672436161; the first grid value at or above it is 1.8, corresponding to Candidate_0525.",
+      "Along the Polyol_D:50+Polyol_C:50 blend, eta80 decreases from 3.4259836391 at NCO:OH 1.7 to 3.3375893216 at 1.8 and continues decreasing.",
+      "At NCO:OH = 1.8, increasing Polyol_C from 0 to 100 parts decreases eta80 from 4.2866619823 to 2.5888942856."
+    ],
+    "final_reasoning_summary": "The unconstrained property optimum is Candidate_0893, but it is not deployable because its MDI fraction is below the frozen minimum. Solving the same blend's linear MDI-demand manifold gives a continuous threshold of NCO:OH = 1.771983672436161, which is reachable at the 1.8 grid point. The nominal constrained optimum is Candidate_0724, while the frozen worst-case interval robustness criterion selects Candidate_0525. At that final robust decision point, eta80 decreases with both increasing NCO:OH along the same blend and increasing Polyol_C composition along the defined composition axis.",
+    "confidence": 0.99,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "raw_final_text": "{\n  \"property_winner\": \"Candidate_0893\",\n  \"constrained_winner\": \"Candidate_0724\",\n  \"robust_winner\": \"Candidate_0525\",\n  \"robust_abstention_reason\": null,\n  \"active_constraint\": {\n    \"name\": \"mdi_fraction\",\n    \"threshold\": 0.35,\n    \"candidate_value\": 0.34062492272948314,\n    \"evidence\": \"Candidate_0893 passes every other nominal hard constraint but fails the minimum MDI fraction constraint.\"\n  },\n  \"backward_design\": {\n    \"variable\": \"nco_oh\",\n    \"continuous_threshold\": 1.771983672436161,\n    \"nearest_reachable_grid_value\": 1.8,\n    \"reachable\": true,\n    \"active_constraint\": \"mdi_fraction_min\"\n  },\n  \"local_trends\": {\n    \"nco_direction\": \"decrease\",\n    \"composition_axis\": \"Polyol_C\",\n    \"composition_direction\": \"decrease\",\n    \"notes\": \"At the robust-winner blend family, eta80 decreases as NCO:OH increases. At fixed NCO:OH = 1.8, eta80 also decreases as Polyol_C parts increase within the Polyol_C/Polyol_D family.\"\n  },\n  \"evidence\": [\n    \"The property-only ranking identifies Candidate_0893 as rank 1 with property score 0.0000631517628986887.\",\n    \"Candidate_0893 is nominally infeasible only because its MDI fraction is 0.34062492272948314, below the 0.35 minimum.\",\n    \"The constrained ranking identifies Candidate_0724 as the nominal feasible winner.\",\n    \"The robust ranking identifies Candidate_0525 as robust rank 1 among 117 robust-feasible candidates.\",\n    \"For the Candidate_0893 blend, the continuous MDI-fraction threshold occurs at NCO:OH = 1.771983672436161; the first grid value at or above it is 1.8, corresponding to Candidate_0525.\",\n    \"Along the Polyol_D:50+Polyol_C:50 blend, eta80 decreases from 3.4259836391 at NCO:OH 1.7 to 3.3375893216 at 1.8 and continues decreasing.\",\n    \"At NCO:OH = 1.8, increasing Polyol_C from 0 to 100 parts decreases eta80 from 4.2866619823 to 2.5888942856.\"\n  ],\n  \"final_reasoning_summary\": \"The unconstrained property optimum is Candidate_0893, but it is not deployable because its MDI fraction is below the frozen minimum. Solving the same blend's linear MDI-demand manifold gives a continuous threshold of NCO:OH = 1.771983672436161, which is reachable at the 1.8 grid point. The nominal constrained optimum is Candidate_0724, while the frozen worst-case interval robustness criterion selects Candidate_0525. At that final robust decision point, eta80 decreases with both increasing NCO:OH along the same blend and increasing Polyol_C composition along the defined composition axis.\",\n  \"confidence\": 0.99,\n  \"abstain\": false,\n  \"abstention_reason\": null\n}",
+  "usage": {
+    "total_tokens": 58827,
+    "prompt_tokens": 57794,
+    "completion_tokens": 1033,
+    "calls": 10
+  },
+  "api_response_ids": [
+    "chatcmpl-4c9db8b4-f9e0-409d-9ee6-2373a3f7b342",
+    "chatcmpl-a94ebaae-a24a-4b1c-887c-d53132efee8c",
+    "chatcmpl-75e2bb71-df17-4ed2-99a1-2e5f841c7843",
+    "chatcmpl-1d22ed89-90dd-4254-bfdd-c7432de3f32d",
+    "chatcmpl-47b1326f-909d-4154-8a58-6eb8881c3527",
+    "chatcmpl-037f52e9-26d4-41fe-847b-1764e7cea1e5",
+    "chatcmpl-50b5ab4d-19c3-4a49-9fa4-53e0882ceaef",
+    "chatcmpl-5149baf6-0151-4eb1-a19e-5d35b7b56a22",
+    "chatcmpl-8dacb840-528d-4c14-8b1a-2b5d465412c7",
+    "chatcmpl-faa85125-4060-4549-94bf-c8a0bbb8b630"
+  ],
+  "latency_s": 38.28002320000087,
+  "strategy_check": {
+    "complete": true,
+    "missing_stages": [],
+    "missing_tool_families": [],
+    "can_finalize": true,
+    "reason": "complete deterministic decision chain inspected"
+  },
+  "error": null,
+  "condition_description": "Baseline 2: deterministic tools available, no strategy enforcement, plain task prompt.",
+  "mode": "recover",
+  "fallback_transport_used": true,
+  "llm_rounds": 10,
+  "tools_available": [
+    "calculate_mdi_fraction",
+    "calculate_objective",
+    "check_reachability",
+    "compare_candidates",
+    "constraint_audit",
+    "dataset_summary",
+    "inspect_candidate",
+    "local_composition_sweep",
+    "local_nco_sweep",
+    "rank_constrained",
+    "rank_property",
+    "rank_robust",
+    "solve_backward_threshold"
+  ],
+  "decision_valid": true,
+  "final_json_named": {
+    "property_winner": "WO_INV_0419",
+    "constrained_winner": "WO_INV_0579",
+    "robust_winner": "WO_INV_0420",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction",
+      "threshold": 0.35,
+      "candidate_value": 0.34062492272948314,
+      "evidence": "Candidate_0893 passes every other nominal hard constraint but fails the minimum MDI fraction constraint."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 1.771983672436161,
+      "nearest_reachable_grid_value": 1.8,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "PPG700",
+      "composition_direction": "decrease",
+      "notes": "At the robust-winner blend family, eta80 decreases as NCO:OH increases. At fixed NCO:OH = 1.8, eta80 also decreases as Polyol_C parts increase within the Polyol_C/Polyol_D family."
+    },
+    "evidence": [
+      "The property-only ranking identifies Candidate_0893 as rank 1 with property score 0.0000631517628986887.",
+      "Candidate_0893 is nominally infeasible only because its MDI fraction is 0.34062492272948314, below the 0.35 minimum.",
+      "The constrained ranking identifies Candidate_0724 as the nominal feasible winner.",
+      "The robust ranking identifies Candidate_0525 as robust rank 1 among 117 robust-feasible candidates.",
+      "For the Candidate_0893 blend, the continuous MDI-fraction threshold occurs at NCO:OH = 1.771983672436161; the first grid value at or above it is 1.8, corresponding to Candidate_0525.",
+      "Along the Polyol_D:50+Polyol_C:50 blend, eta80 decreases from 3.4259836391 at NCO:OH 1.7 to 3.3375893216 at 1.8 and continues decreasing.",
+      "At NCO:OH = 1.8, increasing Polyol_C from 0 to 100 parts decreases eta80 from 4.2866619823 to 2.5888942856."
+    ],
+    "final_reasoning_summary": "The unconstrained property optimum is Candidate_0893, but it is not deployable because its MDI fraction is below the frozen minimum. Solving the same blend's linear MDI-demand manifold gives a continuous threshold of NCO:OH = 1.771983672436161, which is reachable at the 1.8 grid point. The nominal constrained optimum is Candidate_0724, while the frozen worst-case interval robustness criterion selects Candidate_0525. At that final robust decision point, eta80 decreases with both increasing NCO:OH along the same blend and increasing Polyol_C composition along the defined composition axis.",
+    "confidence": 0.99,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "evaluation": {
+    "property_winner_recovery": true,
+    "constrained_winner_recovery": true,
+    "robust_winner_recovery": true,
+    "active_constraint_recovery": true,
+    "backward_threshold_recovery": true,
+    "reachable_grid_recovery": true,
+    "reachability_recovery": true,
+    "nco_direction_recovery": true,
+    "composition_direction_recovery": true,
+    "top1_recovery": true,
+    "top3_recovery": true,
+    "top5_recovery": true,
+    "oracle_rank": 1,
+    "objective_regret": 0.0,
+    "hard_constraint_violation_rate": 0.0,
+    "backward_threshold_error": 0.0,
+    "explanation_fidelity": 1.0,
+    "abstained": false,
+    "complete_decision_recovery": true,
+    "decision_layer_scored": "robust_winner",
+    "invalid_output": false,
+    "tool_call_count": 9,
+    "input_tokens": 57794,
+    "output_tokens": 1033,
+    "api_calls": 10,
+    "latency_s": 38.28002320000087
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "run_id": "run_0001",
+  "timestamp_utc": "2026-09-11T05:32:41+00:00",
+  "benchmark_id": "PUR_RECOVER_V2",
+  "condition": "direct_llm",
+  "provider": "openai_compatible_chat",
+  "model": "gpt-5.6-luna",
+  "prompt_sha256": "9ba76ef17de4198421bd6a8076ef7fec6bfc483aad97a6ffb03b985bbd3c00c8",
+  "data_sha256": {
+    "candidates.csv": "6ca33d4e69889d9026ee87455629b0bb8bfdcce3bf74b1bf5a652614588b0444",
+    "benchmark_config.json": "73efc4370a9fd23e07a44ff1cde5b17c920bb401cb590c1ded6a571c706dfd79",
+    "task.json": "868342f51e4ca6794ac1e5c026fdfbef73a3433c88a13a2168992c6164658d80"
+  },
+  "config_sha256": "97673937992af4a95810f6d5a73ab143465dd6f9b05a408c0f86d7e4c5d65f82",
+  "anonymization_seed": 20260909,
+  "llm_seed": 3001,
+  "tool_call_count": 0,
+  "tool_trace": [],
+  "final_json": {
+    "property_winner": "Candidate_0639",
+    "constrained_winner": "Candidate_0639",
+    "robust_winner": "Candidate_0461",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction_min",
+      "threshold": 0.35,
+      "candidate_value": 0.35499,
+      "evidence": "Candidate_0639 has mdi_parts=55.055, giving 55.055/(100+55.055)=0.35499, the limiting nominal chemistry/process margin and the frozen backward-design constraint."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 2.1517,
+      "nearest_reachable_grid_value": 2.2,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "Polyol_D",
+      "composition_direction": "increase",
+      "notes": "At the robust decision point, increasing NCO:OH along the Polyol_D:50+Polyol_C:50 blend decreases eta80. At fixed NCO:OH within the Polyol_D/Polyol_C family, increasing the higher-MDI-demand Polyol_D component increases eta80 locally."
+    },
+    "evidence": [
+      "The preferred-window geometric centers are approximately eta80=3.4785 Pa s, eta120=0.4243 Pa s, and ratio=8.1548.",
+      "Candidate_0639 has eta80=3.8611 Pa s, eta120=0.41688 Pa s, and ratio=9.2618, giving the lowest nominal log-space objective among the candidates.",
+      "Candidate_0639 passes all nominal hard constraints, including eta80, eta120, ratio, NCO:OH, MDI fraction, chemistry-domain status, and domain-ratio bound.",
+      "Candidate_0461 has eta80=3.1676 Pa s, eta120=0.37248 Pa s, ratio=8.5039, uncertainty radius=0.0484, and domain_ratio=0.45; it gives the best worst-case robust score among robust-feasible candidates.",
+      "For Candidate_0639's blend manifold, mdi_parts/nco_oh=55.055/2.2=25.025 and the MDI-fraction threshold gives nco_oh=2.1517 continuously; the next reachable grid value is 2.2.",
+      "Along the Polyol_D:50+Polyol_C:50 family, eta80 decreases from 3.6099 at NCO:OH=1.5 to 2.4390 at NCO:OH=3.0.",
+      "At fixed NCO:OH in the Polyol_D/Polyol_C family, eta80 generally increases as the Polyol_D parts increase."
+    ],
+    "final_reasoning_summary": "The nominal log-space objective selects Candidate_0639. It also passes every nominal hard constraint, so the constrained winner is unchanged. Applying the frozen worst-case interval objective and robust-feasibility requirements shifts the decision to Candidate_0461. The frozen backward calculation for the property winner's MDI-fraction constraint gives a continuous minimum NCO:OH of 2.1517, with 2.2 as the nearest reachable grid value.",
+    "confidence": 0.84,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "raw_final_text": "{\n  \"property_winner\": \"Candidate_0639\",\n  \"constrained_winner\": \"Candidate_0639\",\n  \"robust_winner\": \"Candidate_0461\",\n  \"robust_abstention_reason\": null,\n  \"active_constraint\": {\n    \"name\": \"mdi_fraction_min\",\n    \"threshold\": 0.35,\n    \"candidate_value\": 0.35499,\n    \"evidence\": \"Candidate_0639 has mdi_parts=55.055, giving 55.055/(100+55.055)=0.35499, the limiting nominal chemistry/process margin and the frozen backward-design constraint.\"\n  },\n  \"backward_design\": {\n    \"variable\": \"nco_oh\",\n    \"continuous_threshold\": 2.1517,\n    \"nearest_reachable_grid_value\": 2.2,\n    \"reachable\": true,\n    \"active_constraint\": \"mdi_fraction_min\"\n  },\n  \"local_trends\": {\n    \"nco_direction\": \"decrease\",\n    \"composition_axis\": \"Polyol_D\",\n    \"composition_direction\": \"increase\",\n    \"notes\": \"At the robust decision point, increasing NCO:OH along the Polyol_D:50+Polyol_C:50 blend decreases eta80. At fixed NCO:OH within the Polyol_D/Polyol_C family, increasing the higher-MDI-demand Polyol_D component increases eta80 locally.\"\n  },\n  \"evidence\": [\n    \"The preferred-window geometric centers are approximately eta80=3.4785 Pa s, eta120=0.4243 Pa s, and ratio=8.1548.\",\n    \"Candidate_0639 has eta80=3.8611 Pa s, eta120=0.41688 Pa s, and ratio=9.2618, giving the lowest nominal log-space objective among the candidates.\",\n    \"Candidate_0639 passes all nominal hard constraints, including eta80, eta120, ratio, NCO:OH, MDI fraction, chemistry-domain status, and domain-ratio bound.\",\n    \"Candidate_0461 has eta80=3.1676 Pa s, eta120=0.37248 Pa s, ratio=8.5039, uncertainty radius=0.0484, and domain_ratio=0.45; it gives the best worst-case robust score among robust-feasible candidates.\",\n    \"For Candidate_0639's blend manifold, mdi_parts/nco_oh=55.055/2.2=25.025 and the MDI-fraction threshold gives nco_oh=2.1517 continuously; the next reachable grid value is 2.2.\",\n    \"Along the Polyol_D:50+Polyol_C:50 family, eta80 decreases from 3.6099 at NCO:OH=1.5 to 2.4390 at NCO:OH=3.0.\",\n    \"At fixed NCO:OH in the Polyol_D/Polyol_C family, eta80 generally increases as the Polyol_D parts increase.\"\n  ],\n  \"final_reasoning_summary\": \"The nominal log-space objective selects Candidate_0639. It also passes every nominal hard constraint, so the constrained winner is unchanged. Applying the frozen worst-case interval objective and robust-feasibility requirements shifts the decision to Candidate_0461. The frozen backward calculation for the property winner's MDI-fraction constraint gives a continuous minimum NCO:OH of 2.1517, with 2.2 as the nearest reachable grid value.\",\n  \"confidence\": 0.84,\n  \"abstain\": false,\n  \"abstention_reason\": null\n}",
+  "usage": {
+    "total_tokens": 55847,
+    "prompt_tokens": 49388,
+    "completion_tokens": 6459,
+    "calls": 1
+  },
+  "api_response_ids": [
+    "chatcmpl-5bbeda30-2b61-4cd8-9fec-1b8df7235252"
+  ],
+  "latency_s": 122.33109469999908,
+  "strategy_check": null,
+  "error": null,
+  "condition_description": "Baseline 1: compressed complete data in context, no deterministic tools.",
+  "mode": "recover",
+  "fallback_transport_used": true,
+  "llm_rounds": 1,
+  "tools_available": [],
+  "decision_valid": true,
+  "final_json_named": {
+    "property_winner": "WO_INV_0008",
+    "constrained_winner": "WO_INV_0008",
+    "robust_winner": "WO_INV_0422",
+    "robust_abstention_reason": null,
+    "active_constraint": {
+      "name": "mdi_fraction_min",
+      "threshold": 0.35,
+      "candidate_value": 0.35499,
+      "evidence": "Candidate_0639 has mdi_parts=55.055, giving 55.055/(100+55.055)=0.35499, the limiting nominal chemistry/process margin and the frozen backward-design constraint."
+    },
+    "backward_design": {
+      "variable": "nco_oh",
+      "continuous_threshold": 2.1517,
+      "nearest_reachable_grid_value": 2.2,
+      "reachable": true,
+      "active_constraint": "mdi_fraction_min"
+    },
+    "local_trends": {
+      "nco_direction": "decrease",
+      "composition_axis": "PPG1000",
+      "composition_direction": "increase",
+      "notes": "At the robust decision point, increasing NCO:OH along the Polyol_D:50+Polyol_C:50 blend decreases eta80. At fixed NCO:OH within the Polyol_D/Polyol_C family, increasing the higher-MDI-demand Polyol_D component increases eta80 locally."
+    },
+    "evidence": [
+      "The preferred-window geometric centers are approximately eta80=3.4785 Pa s, eta120=0.4243 Pa s, and ratio=8.1548.",
+      "Candidate_0639 has eta80=3.8611 Pa s, eta120=0.41688 Pa s, and ratio=9.2618, giving the lowest nominal log-space objective among the candidates.",
+      "Candidate_0639 passes all nominal hard constraints, including eta80, eta120, ratio, NCO:OH, MDI fraction, chemistry-domain status, and domain-ratio bound.",
+      "Candidate_0461 has eta80=3.1676 Pa s, eta120=0.37248 Pa s, ratio=8.5039, uncertainty radius=0.0484, and domain_ratio=0.45; it gives the best worst-case robust score among robust-feasible candidates.",
+      "For Candidate_0639's blend manifold, mdi_parts/nco_oh=55.055/2.2=25.025 and the MDI-fraction threshold gives nco_oh=2.1517 continuously; the next reachable grid value is 2.2.",
+      "Along the Polyol_D:50+Polyol_C:50 family, eta80 decreases from 3.6099 at NCO:OH=1.5 to 2.4390 at NCO:OH=3.0.",
+      "At fixed NCO:OH in the Polyol_D/Polyol_C family, eta80 generally increases as the Polyol_D parts increase."
+    ],
+    "final_reasoning_summary": "The nominal log-space objective selects Candidate_0639. It also passes every nominal hard constraint, so the constrained winner is unchanged. Applying the frozen worst-case interval objective and robust-feasibility requirements shifts the decision to Candidate_0461. The frozen backward calculation for the property winner's MDI-fraction constraint gives a continuous minimum NCO:OH of 2.1517, with 2.2 as the nearest reachable grid value.",
+    "confidence": 0.84,
+    "abstain": false,
+    "abstention_reason": null
+  },
+  "evaluation": {
+    "property_winner_recovery": false,
+    "constrained_winner_recovery": false,
+    "robust_winner_recovery": false,
+    "active_constraint_recovery": false,
+    "backward_threshold_recovery": false,
+    "reachable_grid_recovery": false,
+    "reachability_recovery": true,
+    "nco_direction_recovery": true,
+    "composition_direction_recovery": true,
+    "top1_recovery": false,
+    "top3_recovery": false,
+    "top5_recovery": false,
+    "oracle_rank": 22,
+    "objective_regret": 0.010272152629655217,
+    "hard_constraint_violation_rate": 0.0,
+    "backward_threshold_error": 0.3797163275638389,
+    "explanation_fidelity": 0.5,
+    "abstained": false,
+    "complete_decision_recovery": false,
+    "decision_layer_scored": "robust_winner",
+    "invalid_output": false,
+    "tool_call_count": 0,
+    "input_tokens": 49388,
+    "output_tokens": 6459,
+    "api_calls": 1,
+    "latency_s": 122.33109469999908
+  }
+}

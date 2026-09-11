@@ -1,0 +1,202 @@
+{
+  "manifest_status": "FROZEN",
+  "label": "pilot_v2_20260911",
+  "benchmark": "recover_v2",
+  "frozen_utc": "2026-09-11T05:30:28+00:00",
+  "note": "Small real-API V2 pilot: plumbing and comparability check, not a manuscript result. No prompts, tolerances or conditions may be tuned on it.",
+  "git": {
+    "commit": "beb59273d084b55da27ea0bade1e122df893d1f8",
+    "branch": "main",
+    "worktree_clean": true,
+    "dirty_files": []
+  },
+  "model": {
+    "model": "gpt-5.6-luna",
+    "provider": "auto",
+    "max_rounds": 40
+  },
+  "seed_schedule": {
+    "seed_base": 3000,
+    "runs_per_condition": 3,
+    "seeds": [
+      3001,
+      3002,
+      3003
+    ],
+    "policy": "identical run count and seed schedule across every comparable condition"
+  },
+  "hashes": {
+    "config_file_sha256": "eee285827e67996ea6f5d77b11745d589c975d133a3244c5f8ee2fc19f8fd84a",
+    "blind_candidates_sha256": "6ca33d4e69889d9026ee87455629b0bb8bfdcce3bf74b1bf5a652614588b0444",
+    "blind_config_sha256": "73efc4370a9fd23e07a44ff1cde5b17c920bb401cb590c1ded6a571c706dfd79",
+    "blind_task_sha256": "868342f51e4ca6794ac1e5c026fdfbef73a3433c88a13a2168992c6164658d80",
+    "pur_sim_v1_snapshot_sha256": "d8623116c6a2f60c9e022e52eeb6540573dd9434b5e507c79701abb55635bcd9",
+    "frontier_config_sha256": "63bd41f9c69d98e914a4819449008d0c1aeb7ac16b8592519772daa7d87b78f6",
+    "gold_sha256": "434154551dc45ec35d9c1083a0a01a17dfd95e97be37b9dff58e269cb51786c2",
+    "prompts": {
+      "direct_llm_system.txt": "9fce3eea00375239a8e0d543e3913dd0051c9ce190e48f83c56de7f4886408f5",
+      "recover_v1_system.txt": "77cc0bda6ab7fab18df1007c02db694ce4c30950eec260d127e7163dd05906b7",
+      "recover_v1_task.txt": "b5a4c213cbbf2e374a09b65c7a5c429df9b67a837b4dd4a9a523146f74608e96",
+      "recover_v2_system.txt": "e9b0afa8192e6792e608b43ec71b84be1df17e97d2f07bed0b6ddd5acd07fb4c",
+      "recover_v2_task.txt": "3fb7b8eccd38fb7006505885c2b9d741dcadd254dc89921f95ee2f0672acc6f9",
+      "tool_llm_system.txt": "676fcb245402e52bfaab1af27b3b28b3362ca5dfab5a277ad111cdb57e7a807f"
+    }
+  },
+  "anonymization_seed": 20260909,
+  "conditions": {
+    "direct_llm": {
+      "schema_version": "v1",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": false,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": false,
+      "require_evidence_plan": false,
+      "require_challenge": false,
+      "require_cross_path": false,
+      "enforce_certificate": false,
+      "system_prompt": "direct_llm_system.txt",
+      "task_prompt": "recover_v1_task.txt",
+      "include_provenance": true,
+      "inline_data": true
+    },
+    "tool_llm": {
+      "schema_version": "v1",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": false,
+      "require_evidence_plan": false,
+      "require_challenge": false,
+      "require_cross_path": false,
+      "enforce_certificate": false,
+      "system_prompt": "tool_llm_system.txt",
+      "task_prompt": "recover_v1_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent": {
+      "schema_version": "v1",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": true,
+      "require_evidence_plan": false,
+      "require_challenge": false,
+      "require_cross_path": false,
+      "enforce_certificate": false,
+      "system_prompt": "recover_v1_system.txt",
+      "task_prompt": "recover_v1_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent_v2": {
+      "schema_version": "v2",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": true,
+      "require_evidence_plan": true,
+      "require_challenge": true,
+      "require_cross_path": true,
+      "enforce_certificate": true,
+      "system_prompt": "recover_v2_system.txt",
+      "task_prompt": "recover_v2_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent_v2_no_evidence_planner": {
+      "schema_version": "v2",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": true,
+      "require_evidence_plan": false,
+      "require_challenge": true,
+      "require_cross_path": true,
+      "enforce_certificate": true,
+      "system_prompt": "recover_v2_system.txt",
+      "task_prompt": "recover_v2_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent_v2_no_challenge": {
+      "schema_version": "v2",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": [
+        "calculate_mdi_fraction",
+        "calculate_objective",
+        "check_reachability",
+        "compare_candidates",
+        "constraint_audit",
+        "dataset_summary",
+        "inspect_candidate",
+        "local_composition_sweep",
+        "local_nco_sweep",
+        "rank_constrained",
+        "rank_property",
+        "rank_robust",
+        "solve_backward_threshold"
+      ],
+      "enforce_strategy": true,
+      "require_evidence_plan": true,
+      "require_challenge": false,
+      "require_cross_path": true,
+      "enforce_certificate": true,
+      "system_prompt": "recover_v2_system.txt",
+      "task_prompt": "recover_v2_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent_v2_no_cross_path": {
+      "schema_version": "v2",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": true,
+      "require_evidence_plan": true,
+      "require_challenge": true,
+      "require_cross_path": false,
+      "enforce_certificate": true,
+      "system_prompt": "recover_v2_system.txt",
+      "task_prompt": "recover_v2_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    },
+    "pur_agent_v2_no_certificate": {
+      "schema_version": "v2",
+      "mode": "recover",
+      "uses_llm": true,
+      "use_tools": true,
+      "tool_policy": "all tools of the mode",
+      "enforce_strategy": false,
+      "require_evidence_plan": true,
+      "require_challenge": true,
+      "require_cross_path": true,
+      "enforce_certificate": false,
+      "system_prompt": "recover_v2_system.txt",
+      "task_prompt": "recover_v2_task.txt",
+      "include_provenance": true,
+      "inline_data": false
+    }
+  },
+  "retry_failure_policy": {
+    "transport_failures": "recorded in the run JSON with the error string; never retried silently, never deleted",
+    "invalid_json_or_schema": "recorded as decision_valid=false and scored as invalid_output",
+    "finalization_guard_retries": "at most 3 procedural corrective rounds per run (V1 strategy guard and V2 gate alike)",
+    "failed_runs": "immutable evidence; negative and transport/schema failures are kept"
+  },
+  "evaluator": {
+    "primary_metric": "complete_decision_recovery",
+    "gold_is_evaluator_only": true,
+    "tolerances_frozen_before_runs": true
+  },
+  "manifest_sha256": "baf31dacf08e202fcbb73d887db9caa2999d9966cdaf83bf2e3963570371e06f"
+}

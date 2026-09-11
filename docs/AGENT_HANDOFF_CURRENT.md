@@ -1,6 +1,8 @@
 # Current Agent handoff — PUR-RECOVER V1 / V2 design transition
 
-**Status (2026-09-11):** the V1 real-API pilot is complete and preserved. V2 orchestration is now **implemented** (see `docs/AGENT_WORKFLOW_V2.md` §16) and green under mock: `pytest -q` 129 passed, both blind bundles rebuilt, both leakage scans PASS. The real-API V2 pilot has **not** run — the configured endpoint `http://127.0.0.1:8788/v1` refuses connections — so there is no V2 API evidence yet and no claim of V2 superiority. Frozen science is unchanged.
+**Status (2026-09-11):** V2 orchestration is **implemented** (`docs/AGENT_WORKFLOW_V2.md` §16) and the **real-API V2 pilot has run**: 24 runs, 8 conditions, 0 transport errors, 0 invalid outputs, preserved under `results/recover_v2/pilot_v2_20260911/` with a frozen manifest. `pytest -q` 129 passed; both blind bundles rebuilt; both leakage scans PASS. Frozen science unchanged.
+
+The pilot's honest reading at n=3: the **canonical ontology** earned its place (`tool_llm` lost a run to the `mdi_fraction_min` interface defect while being 3/3 scientifically correct), and the **gating layer did not yet demonstrate anything** — every V2 gate passed on the first answer in all 15 V2 runs, so no ablation of a gate could degrade. See §17 of the workflow doc.
 
 ## Read this before touching Agent code
 
@@ -197,10 +199,10 @@ The V2 gold's scientific fields are identical to V1's; only `benchmark_id`, `con
 
 ## Immediate next steps
 
-1. Start the local model endpoint (`http://127.0.0.1:8788/v1`) and confirm it answers before spending runs.
-2. Run the small real-API V2 pilot (commands in `docs/PILOT_RUNBOOK.md`), keeping every failed, invalid and transport-error record.
-3. Compare `tool_llm` against `pur_agent_v2` on the primary metric **and** on the V2 diagnostics, reporting `first_answer_gate_clean_rate` alongside `schema_correctness_rate` so the gate's own contribution is visible.
-4. Freeze the run manifest with `scripts/freeze_run_manifest.py` on a clean worktree before the 30–50-run formal matrix.
-5. If `tool_llm` and `pur_agent_v2` stay indistinguishable, report that negative result rather than retuning anything.
+1. **Add a `tool_llm_v2_ontology` condition** — V2 toolbox, V1-style prompt, no machine gate. It is the only way to isolate how much of V2's interface reliability comes from the canonical ontology rather than from the prompt or the gate, and the pilot makes it the single most informative condition to add. Add it *before* the formal matrix, not after seeing results.
+2. **Decide what the formal matrix is meant to resolve.** At n=3 with `gpt-5.6-luna` every tool-using condition is at ceiling and every gate passed first time. Either raise the run count enough to resolve a low failure rate, or add a weaker model where the gate can actually bind. Running 30–50 more runs of the same eight conditions against the same model would mostly buy precision on a ceiling.
+3. Freeze the run manifest with `scripts/freeze_run_manifest.py` on a clean worktree before the formal matrix, then do not change any condition.
+4. Keep reporting the gating layer's negative result. Do not retune prompts, tolerances or conditions to rescue it.
+5. Fill `evaluation.pricing_usd_per_1k_tokens` in `configs/recover_v2.json` if the cost comparison is to appear in the manuscript; V2 currently costs ~3x the input tokens of `tool_llm`.
 
 Do not modify the wet-lab plan or frozen science merely to improve Agent benchmark performance.
