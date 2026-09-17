@@ -1,17 +1,15 @@
 # Wet-lab validation V7 — executed experiment-first result
 
-**Status:** replaces V6 as the current interpretation of the laboratory work. V6 is retained as the pre-result execution plan.
+**Status:** historical interpretation retained for provenance. This version promoted the executed wet-lab study to the main physical result, but it treated the follow-up primarily as a failure-aware closed-loop correction. It is now superseded by `VALIDATION_EXPERIMENT_V8_AGENT_GUIDED.md`, which preserves the same measurements while making the Agent recommendation / human execution boundary explicit and treating reaction history, hold time, and preparation perturbation as known process-state variables entering the design flow.
 
-## 1. Role of the experiment
+## 1. Role of the experiment in V7
 
-The executed wet-lab study is now the principal physical evidence in the paper rather than a pending secondary check.
+V7 established two useful distinctions that remain valid:
 
-Two validation stages must be distinguished:
+- the original local design supplies physical transfer and process-state evidence;
+- the final follow-up formulation has repeated 120 C measurements and should be compared to the original formulations on the shared 15-60 min window.
 
-- **Stage A — prospective external wet-lab validation:** the frozen local E1-E5 design is transferred to laboratory measurements after the computational design has been defined.
-- **Stage B — closed-loop follow-up validation:** the initial experiment reveals thermal-hold/process sensitivity; a corrected formulation is then proposed and measured twice. Because the correction uses feedback from Stage A, Stage B is not described as blind external validation.
-
-No further wet-lab experiment is required by the current paper plan.
+V8 refines the causal/decision narrative: the scientific Agent evaluates uncertainty and recommends points, while the human wet-lab operator physically executes them. The final repeated experiment can be used as prospective physical adjudication of an Agent recommendation when the pre-result recommendation provenance is attached.
 
 ## 2. Executed local design
 
@@ -25,30 +23,30 @@ No further wet-lab experiment is required by the current paper plan.
 
 The source sheet reports these amounts in grams for E1-E5.
 
-## 3. Experimental failure mode
+## 3. Process-state evidence
 
-The available 80-130 C sweeps show monotonic viscosity decrease with temperature but large absolute run-to-run spread in the original system. E2, for example, spans 9462-27350 at 80 C and 1955-6977 at 120 C across the GJJ/ZYX/CHH runs.
+The available 80-130 C sweeps show monotonic viscosity decrease with temperature but large absolute run-to-run spread in the original system. E2 spans 9462-27350 at 80 C and 1955-6977 at 120 C across the GJJ/ZYX/CHH runs.
 
-The 120 C hold experiment identifies the more consequential failure mode:
+At 120 C:
 
 | Formulation | eta15 | eta60 | eta90 | 15->60 | 15->90 |
 |---|---:|---:|---:|---:|---:|
 | E1 | 708.7 | 776.1 | 828.1 | +9.51% | +16.85% |
 | E5 | 2210 | 3349 | 4267 | +51.54% | +93.08% |
 
-Thus, formulation selection based only on a static viscosity target does not capture thermal-hold stability.
+V8 interprets these as explicit measurements of preparation/history and hold-time sensitivity rather than as the discovery of unknown hidden variables.
 
-## 4. Closed-loop correction and repeated confirmation
+## 4. Follow-up formulation and repeated measurements
 
-The supplied corrected formulation is:
+The supplied follow-up formulation is:
 
 | PPG2000 | PDP-70 | AC1920 | TK100 | MDI |
 |---:|---:|---:|---:|---:|
 | 39.60 | 39.60 | 17 | 5 | 20.19 |
 
-The source sheet labels these as parts. It does not explicitly report NCO:OH for this corrected row, so no NCO:OH value is inferred.
+The source sheet labels these as parts and does not explicitly report NCO:OH; no NCO:OH value is inferred.
 
-Two repeat runs of the same corrected formulation were measured at 120 C:
+Two repeat runs at 120 C are:
 
 | time | repeat 1 | repeat 2 | mean | two-run CV |
 |---:|---:|---:|---:|---:|
@@ -63,31 +61,10 @@ Two repeat runs of the same corrected formulation were measured at 120 C:
 - repeat 2: +3.04%
 - two-repeat mean profile: +1.47%
 
-For the matched 15-60 min window, the original E1 and E5 drifts are +9.51% and +51.54%, respectively. The corrected formulation therefore shows a substantially flatter time response in both repeated runs.
+For the matched 15-60 min window, the original E1 and E5 drifts are +9.51% and +51.54%, respectively.
 
-## 5. Revised scientific conclusion
+## 5. Current pointer
 
-The central experimental conclusion is:
+Use `VALIDATION_EXPERIMENT_V8_AGENT_GUIDED.md` for current manuscript wording and `AGENT_EXPERIMENT_INTERFACE_V1.md` for the Agent / human-actuation contract.
 
-> A static viscosity-targeting formulation workflow can transfer to the laboratory yet fail on process-time stability. Prospective wet-lab testing exposed a strong formulation-dependent viscosity build-up at 120 C. A failure-aware formulation correction that reduced the original reactive fraction and introduced AC1920/TK100 was followed by two repeated measurements with near-flat 15-60 min viscosity response. The experiment therefore converts a one-shot inverse-design workflow into a closed-loop, stability-aware formulation workflow.
-
-The data establish rheological stabilization. The proposed reduction in effective reactive fraction is retained as a mechanistic rationale, not claimed as direct kinetic proof.
-
-## 6. Workflow update
-
-```text
-source evidence / database
--> frozen local inverse-design decision
--> prospective wet-lab validation
--> quantify temperature response + process sensitivity
--> identify hold-stability failure
--> correction proposal
--> repeated wet-lab confirmation
--> add hold-stability term to next design objective
-```
-
-The blind Agent recovery benchmark remains isolated from these experimental records.
-
-## 7. Manuscript consequence
-
-The wet-lab results move to the front of Results and Discussion. Public-source rheology and deterministic FRONTIER analyses become mechanistic/contextual support; the Agent benchmark becomes the methodological audit layer. Figure numbering should be revised accordingly during v0.4 assembly.
+No measured values were changed by the V7 -> V8 reframing.
