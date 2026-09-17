@@ -4,19 +4,65 @@ This directory contains the versioned manuscript source for PUR-Essay.
 
 ## Active manuscript state
 
-Title: **From Temperature-Amplified Rheology to Auditable Formulation Decisions in Polyurethane Prepolymers**
+Working title: **From Temperature-Amplified Rheology to Auditable Formulation Decisions in Polyurethane Prepolymers**
+
+The paper is now being reorganized around the executed wet-lab study rather than treating experiment as a future appendix-style validation.
 
 - v0.2: source-grounded rheology + pre-FRONTIER draft.
 - v0.3: first fully frozen PUR-FRONTIER V1 decision manuscript.
-- `NON_AGENT_RESULTS_V2.md`: **authoritative replacement text for the non-Agent Results core**; this will be merged into manuscript v0.4 before the formal Agent benchmark is reported.
+- `NON_AGENT_RESULTS_V2.md`: authoritative non-Agent computational/source-grounded Results replacement text.
+- `EXPERIMENTAL_RESULTS_V1.md`: **authoritative experiment-first wet-lab Results core for the next full manuscript revision.**
 
 The old v0.3 passages that describe Pugar-derived 80/120 °C comparisons are superseded. The current source-grounded analysis uses 45/75 °C values inside the experimental source range; 120 °C extrapolations are not reported as experimental measurements.
 
-## Deterministic paper core now available
+## Revised paper hierarchy
+
+The evidence is now ordered by scientific role rather than by when the code modules were built:
+
+```text
+1. prospective local wet-lab validation
+2. experimentally observed stability/process-sensitivity failure
+3. formulation correction
+4. repeated wet-lab confirmation of corrected stability
+5. public/source-grounded rheology as external scientific context
+6. frozen inverse/backward-design benchmark and decision-frontier analysis
+7. blinded PUR-RECOVER Agent benchmark as an audit of decision recovery
+```
+
+The experiment is therefore the physical centre of the article. The synthetic `PUR_SIM_V1` benchmark remains clearly labelled as synthetic and is used for deterministic decision analysis and Agent evaluation only.
+
+## Primary wet-lab result now available
+
+The supplied experiment contains the original PPG2000/PDP-70/4,4'-MDI local design and a failure-aware corrected formulation.
+
+### Original design
+
+- E1/E2/E3 vary NCO:OH = 1.70/1.80/1.90 at PPG2000/PDP-70 = 50/50.
+- E4/E5 vary PPG2000/PDP-70 = 60/40 and 40/60 at NCO:OH = 1.80.
+- Recorded 80-130 °C sweeps decrease monotonically with temperature.
+- E2 repeated runs show large absolute-level dispersion: max/min ≈ 2.89× at 80 °C and 3.57× at 120 °C.
+- At 120 °C, E1 rises by 9.51% over 15-60 min and 16.85% over 15-90 min.
+- E5 rises by 51.54% over 15-60 min and 93.08% over 15-90 min.
+
+### Corrected formulation
+
+The supplied correction uses PPG2000/PDP-70/AC1920/TK100/MDI = 39.60/39.60/17/5/20.19 on the source-reported parts basis.
+
+Two repeat runs of this **same corrected formulation** give 120 °C viscosity drifts of -0.16% and +3.04% from 15 to 60 min. Their mean profile changes by ~1.47%, and the pointwise two-run CV is ~2.87-5.11%.
+
+The fair original-versus-corrected comparison is the shared 15-60 min interval. No 90-min corrected measurement is fabricated or implied.
+
+## External-validation terminology
+
+The initial E1-E5 study can be described as **prospective external wet-lab validation** of the frozen computational design only insofar as these laboratory values were withheld from model fitting/decision freezing before the experiment.
+
+The formulation correction is different. Because it was selected after observing the experimental failure mode, it is a **closed-loop follow-up validation**, not a blind external validation. This distinction is preserved throughout the manuscript.
+
+## Deterministic paper core retained
 
 ### Source-grounded rheology
 
-- 39 prepolymers / 4,559 usable temperature–viscosity points.
+- 39 prepolymers / 4,559 usable temperature-viscosity points.
 - Andrade median R² = 0.9967; 37/39 at R² >= 0.98.
 - apparent activation energy spans 34.74–94.15 kJ mol⁻¹.
 - matched free-NCO families: median viscosity multiplier per +1 wt%-point NCO ≈ 0.709 at 45 °C and 0.736 at 75 °C; median dEa/dNCO ≈ −0.81 kJ mol⁻¹ per wt%-point.
@@ -58,53 +104,40 @@ Backward design from `WO_INV_0419` gives the MDI-fraction boundary at NCO:OH = 1
 
 ### FRONTIER-DEPTH V1
 
-The frozen decision is now accompanied by decision-stability analysis rather than reported as an isolated winner:
+The frozen decision remains accompanied by decision-stability analysis:
 
-- **constraint phase map:** varying the MDI lower bound creates discrete nominal and robust winner regimes;
-- **uncertainty crossover:** `WO_INV_0579 -> WO_INV_0420` at uncertainty scale `s ≈ 0.3637`;
-- **robustness cliff:** no broad-window robust state remains above `s ≈ 1.8063`;
-- **terminal bottleneck:** viscosity ratio / thermal sensitivity;
-- **objective-weight stability:** 50,000 sampled weight vectors; nominal basin led by 0579 (~79.8%), robust basin led by 0420 (~44.2%) and 0341 (~36.3%);
-- **Pareto opportunity set:** 44/117 robust-admissible candidates are non-dominated under the five-objective audit;
-- **objective geometry:** eta80, eta120 and eta80/eta120 contain only two independent response degrees of freedom; the frozen three-term objective induces a 3:1 principal metric anisotropy. An independent two-DOF state materially reorders the robust frontier and yields alternative-state L2 = `WO_INV_0404`;
-- **prospective model-structure hypothesis:** real rheological stoichiometric sensitivity is likely chemistry-dependent, whereas PUR_SIM_V1 intentionally uses an almost blend-invariant NCO:OH sensitivity.
+- constraint phase map with discrete nominal and robust winner regimes;
+- uncertainty crossover `WO_INV_0579 -> WO_INV_0420` at uncertainty scale `s ≈ 0.3637`;
+- robustness cliff above `s ≈ 1.8063`;
+- viscosity ratio / thermal sensitivity as the terminal bottleneck;
+- 50,000 objective-weight samples;
+- 44/117 robust-admissible candidates non-dominated under the five-objective audit;
+- objective-geometry sensitivity demonstrating that the three-term rheology objective contains two independent response degrees of freedom.
 
-## Figure status
+These computational analyses now support the experimental story rather than define the paper's only central result.
 
-- **Figure 2** — final R/PNG/PDF/SVG; 45–75 °C source-range Andrade response.
-- **Figure 3** — final R/PNG/PDF/SVG; free-NCO coupling at 45/75 °C.
-- **Figure 4** — final R/PNG/PDF/SVG; chemistry amplification + patent context interaction + direct rank reversal.
-- **Figure 5** — final R/PNG/PDF/SVG; MDI constraint phase map + nominal-to-robust rank inversion.
-- **Figure 6** — final R/PNG/PDF/SVG; uncertainty phase map + robustness cliff + objective-geometry sensitivity.
-- **Figure 7** — reserved for formal repeated PUR-RECOVER API benchmark.
-- **Figure 8** — reserved for prospective wet-lab validation.
+## Revised figure priority
 
-Figures 5–6 are not schematics. Their R workflow reconstructs the frozen 928-row response snapshot, recomputes PUR-FRONTIER V1 and FRONTIER-DEPTH V1, verifies the gold state, and only then renders publication outputs.
+- **Figure 1** — overall experimental-first closed-loop workflow.
+- **Figure 2** — local wet-lab 80-130 °C viscosity response and repeat/run sensitivity.
+- **Figure 3** — 120 °C hold-stability failure and repeated corrected-formulation response.
+- **Figure 4** — experimental stability/repeatability summary and stability-aware objective update.
+- Existing source-grounded/computational figures are shifted later in the article and renumbered during the full v0.4 assembly.
+- Formal PUR-RECOVER Agent performance remains a later figure and is rendered only from repeated real-model benchmark results.
 
-## Intentionally pending
+## Data files for the experiment-first revision
 
-1. **PUR-RECOVER V1 formal API benchmark:** repeated real-model trials, baselines and ablations on the frozen anonymized bundle.
-2. **Figure 7:** render only after the repeated Agent benchmark is complete.
-3. **Prospective wet-lab validation:** test target-window transfer and the stronger chemistry × stoichiometry interaction hypothesis.
-4. **Manuscript v0.4:** merge `NON_AGENT_RESULTS_V2.md` into the full article, update Abstract/Methods/Discussion and renumber the Agent/experiment sections.
-5. Authors, affiliations, acknowledgements, journal formatting and final reference pass.
-
-Mock Agent runs are infrastructure tests and must not be reported as model performance.
+- `../data/prospective_validation/experimental_formulations_v1.csv`
+- `../data/prospective_validation/experimental_viscosity_v1.csv`
+- `../data/prospective_validation/experimental_summary_v1.csv`
 
 ## Claim boundary
 
-- Experimental/public rheology evidence supports the physical conclusions in the source-grounded rheology sections.
-- `PUR_SIM_V1` is a synthetic finite-space decision benchmark; it supports deterministic ranking propagation, decision-phase analysis, robustness, backward design and Agent evaluation only.
-- The objective-geometry alternative is a sensitivity analysis and does not overwrite the frozen FRONTIER V1 gold rule.
-- Historical PUR-ORACLE V2 remains frozen for provenance.
-- Agent performance and prospective wet-lab results remain independent of the deterministic answer definition.
+- The wet-lab data directly support temperature dependence, run/process sensitivity, thermal-hold viscosity build-up, and suppression of that build-up after formulation correction.
+- The explanation that the correction works by lowering the effective reactive fraction is a mechanistic interpretation consistent with the formulation change; it is not presented as direct kinetic proof.
+- `PUR_SIM_V1` remains a synthetic finite-space decision benchmark and is not relabelled as experimental data.
+- The primary blind Agent benchmark remains isolated from `data/prospective_validation/` to avoid experimental-answer leakage.
 
-## Reproduction
+## Next manuscript integration task
 
-```bash
-python scripts/freeze_frontier_v1.py
-python scripts/analyze_frontier_depth_v1.py
-Rscript figures/R/render_all_figures.R
-```
-
-GitHub Actions executes the same pipeline and stores PNG/PDF/SVG outputs plus the frozen deterministic analysis artifacts.
+Assemble manuscript v0.4 by placing `EXPERIMENTAL_RESULTS_V1.md` ahead of the source-grounded rheology and FRONTIER sections, then update Abstract/Introduction/Methods/Discussion to match the new hierarchy. No additional wet-lab experiment is required by the current manuscript plan; the focus is analysis, figure production, and writing from the existing repeated measurements.
