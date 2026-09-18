@@ -1,5 +1,6 @@
 # Shared visual system for PUR manuscript figures.
 # Keep semantic colors stable across figures.
+# Figures 2-3 use this file as the single visual-style source.
 
 pur_pal <- c(
   core = "#1F3A5F",
