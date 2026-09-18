@@ -1,0 +1,7 @@
+formulation_id,stage,design_role,ppg_pdp_ratio,nco_oh,PPG2000_amount,PDP70_amount,AC1920_amount,TK100_amount,MDI_amount,amount_basis,source_note
+E1,initial_validation,stoichiometry_low,50/50,1.70,121.07,121.07,,,57.86,g,"Frozen five-formulation validation design"
+E2,initial_validation,centre_reference,50/50,1.80,119.71,119.71,,,60.57,g,"Frozen five-formulation validation design"
+E3,initial_validation,stoichiometry_high,50/50,1.90,118.39,118.39,,,63.23,g,"Frozen five-formulation validation design"
+E4,initial_validation,PPG2000_rich,60/40,1.80,144.30,96.20,,,59.50,g,"Frozen five-formulation validation design"
+E5,initial_validation,PDP70_rich,40/60,1.80,95.35,143.02,,,61.63,g,"Frozen five-formulation validation design"
+AI_CORR,closed_loop_correction,failure_aware_correction,50/50,,39.60,39.60,17,5,20.19,source_reported_parts,"Same corrected formulation used for replicate runs 1 and 2; NCO/OH not explicitly reported in the supplied experiment sheet"

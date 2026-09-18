@@ -1,14 +1,64 @@
 # data/prospective_validation
 
-Reserved for future wet-lab results of the local validation design around the frozen
-decision point (N-, OPT, N+, C-, C+; pre-MDI blend and prepolymer; 80/90/100/110/120 C;
-Ea; %NCO).
+This directory contains the executed wet-lab records used for the experimental validation layer.
 
-`agent_access = false` (see `access_policy.json`). Nothing in this directory may be read by
-the primary blind Agent benchmark. The runtime guard in `pur_agent.data_access` refuses any
-path under this directory. A separate, secondary post-experiment Agent task may be defined
-later with its own bundle builder; it must not reuse the primary benchmark ID.
+## Scientific role
 
-The experiment validates whether the frozen computational decision transfers to reality.
-The blind Agent benchmark validates whether the frozen decision is reproducible from the
-admissible data. These are two independent lines and are never merged.
+The current paper uses a **human-in-the-loop Agent-guided validation** architecture:
+
+```text
+computational / source evidence
+-> chemistry + process-state uncertainty
+-> Agent recommendation
+-> frozen recommendation
+-> human wet-lab execution
+-> physical measurement
+-> adjudication
+```
+
+The Agent is not a physical actuator. It may evaluate uncertainty and recommend formulation/measurement points; human operators synthesize the material, impose the thermal history, and perform rheology measurements.
+
+## Process-state variables
+
+The next design layer explicitly carries:
+
+```text
+reaction_history
+thermal_hold_time
+preparation_perturbation
+```
+
+These are known process-relevant variables. The present measurements quantify their importance in this system so that they can be represented explicitly rather than being absorbed into an undifferentiated error term.
+
+## Current files
+
+- `experimental_formulations_v1.csv` — E1-E5 plus the supplied follow-up formulation.
+- `experimental_viscosity_v1.csv` — temperature-sweep, thermal-hold, repeat and one-day observations transcribed from the supplied experiment sheet.
+- `experimental_summary_v1.csv` — derived stability/repeatability summaries used in the manuscript.
+
+## Agent-validation terminology
+
+A measured point may be described as **prospective physical validation/adjudication of an Agent recommendation** only if the recommendation was frozen before that point's result was inspected.
+
+The final manuscript should therefore pair the final repeated wet-lab result with an immutable pre-result recommendation record containing at least:
+
+```text
+recommendation_id
+recommended formulation / condition
+uncertainty or decision rationale
+acceptance or falsification criterion
+generation timestamp
+git commit or run ID
+result_inspection_status
+human execution reference
+```
+
+The schema for new recommendation records is `../../configs/agent_experiment_recommendation_v1.schema.json`.
+
+Do not fabricate a preregistration after seeing results. If the relevant historical recommendation trace exists, attach it as provenance; if chronology cannot be demonstrated, describe the measurement as closed-loop follow-up evidence rather than prospective Agent validation.
+
+## Separation from PUR-RECOVER
+
+These data remain excluded from the primary blind PUR-RECOVER Agent benchmark. PUR-RECOVER audits recovery of the frozen deterministic decision chain; this directory contains physical experimental evidence.
+
+The two evidence lines may be discussed in the same paper, but they must not leak into each other's gold/input definitions.

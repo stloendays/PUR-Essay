@@ -1,71 +1,76 @@
-# Current Agent handoff — PUR-RECOVER V1 / V2 design transition
+# Current Agent handoff — experimental recommender + PUR-RECOVER audit
 
-**Status (2026-09-11):** V2 orchestration is **implemented** (`docs/AGENT_WORKFLOW_V2.md` §16) and the **real-API V2 pilot has run**: 24 runs, 8 conditions, 0 transport errors, 0 invalid outputs, preserved under `results/recover_v2/pilot_v2_20260911/` with a frozen manifest. `pytest -q` 129 passed; both blind bundles rebuilt; both leakage scans PASS. Frozen science unchanged.
+**Status (2026-09-17):** the project now distinguishes two Agent roles that share scientific infrastructure but answer different questions. Do not merge their data paths or claims.
 
-The pilot's honest reading at n=3: the **canonical ontology** earned its place (`tool_llm` lost a run to the `mdi_fraction_min` interface defect while being 3/3 scientifically correct), and the **gating layer did not yet demonstrate anything** — every V2 gate passed on the first answer in all 15 V2 runs, so no ablation of a gate could degrade. See §17 of the workflow doc.
+## 1. Two Agent roles
 
-## Read this before touching Agent code
+### A. Experimental recommendation Agent
 
-The paper no longer uses an Agent to select experiments, maximize information gain, or define the scientific optimum. The deterministic science layer is frozen first. The Agent is then tested on whether it can recover the already-frozen decision chain while the answer is hidden.
+Purpose:
+
+```text
+chemistry + process-state evidence
+-> uncertainty / robustness evaluation
+-> recommend formulation and measurement point(s)
+-> freeze recommendation
+-> human wet-lab execution
+-> physical adjudication
+```
+
+The Agent is a recommender, not an actuator. It may quantify uncertainty, compare robust alternatives, and recommend what should be tested. It does not weigh materials, control synthesis, impose a hold time, or operate the rheometer.
+
+The current process-state block to be carried into the design flow is
+
+```text
+z_proc = {
+  reaction_history,
+  thermal_hold_time,
+  preparation_perturbation
+}
+```
+
+These are known process-relevant variables. The experiment quantifies their practical impact and turns them into explicit design/uncertainty coordinates; it does not claim to discover their existence.
+
+Paper-facing interface specification:
+
+- `docs/AGENT_EXPERIMENT_INTERFACE_V1.md`
+- `configs/agent_experiment_recommendation_v1.schema.json`
+- `docs/VALIDATION_EXPERIMENT_V8_AGENT_GUIDED.md`
+
+A wet-lab point may be described as prospective validation of an Agent recommendation only when an immutable recommendation record predates inspection of that point's result.
+
+### B. PUR-RECOVER benchmark Agent
+
+Purpose:
 
 ```text
 real/source-grounded rheology
-  -> deterministic PUR-FRONTIER V1
-  -> freeze gold
-  -> build anonymised blind bundle
-  -> PUR-RECOVER Agent / baselines / ablations
-  -> evaluator-only comparison with frozen gold
-  -> prospective wet-lab validation remains separate
+-> deterministic PUR-FRONTIER V1
+-> freeze gold
+-> build anonymised blind bundle
+-> PUR-RECOVER Agent / baselines / ablations
+-> evaluator-only comparison with frozen gold
 ```
 
-The first real-API pilot is already preserved under `results/recover_v1/pilot_20260910_b/` (commit `9dc5ae2`). It showed that deterministic tool grounding clearly improves over direct LLM reasoning, while `tool_llm` and the current `pur_agent` were indistinguishable at n=3. Therefore the next Agent phase must test a genuinely more distinctive orchestration layer rather than adding decorative complexity.
+PUR-RECOVER does **not** own the experimental recommendation claim. It is the independent benchmark for reproducible recovery, challenge, certification, and explanation of an already-frozen deterministic decision chain.
 
-## Canonical current Agent code
+Wet-lab measurements remain excluded from the primary PUR-RECOVER benchmark input.
 
-Use these paths:
+## 2. PUR-RECOVER current status
 
-- `src/pur_agent/`
-- `src/pur_science/`
-- `configs/frontier_v1.json`
-- `configs/recover_v1.json`
-- `docs/AGENT_STRATEGY_V1.md`
-- `docs/AGENT_WORKFLOW_V2.md`  **<- post-pilot orchestration upgrade spec**
-- `docs/FRONTIER_V1.md`
-- `docs/FRONTIER_DEPTH_V1.md`
-- `docs/PUR_SIM_V1_RECOVERY_AUDIT.md`
-- `prompts/recover_v1_system.txt`
-- `prompts/recover_v1_task.txt`
-- `prompts/direct_llm_system.txt`
-- `prompts/tool_llm_system.txt`
-- `scripts/build_blind_bundle.py`
-- `scripts/run_agent_once.py`
-- `scripts/run_agent_benchmark.py`
-- `scripts/run_baselines.py`
-- `scripts/evaluate_agent_runs.py`
-- `scripts/summarize_benchmark.py`
-- `scripts/verify_no_leakage.py`
-- `tests/test_recover_v1.py`
-- `tests/test_no_gold_leakage.py`
+V2 orchestration is implemented. The real-API V2 pilot ran 24 runs across 8 conditions with no transport errors or invalid outputs; outputs are preserved under `results/recover_v2/pilot_v2_20260911/`.
 
-### Historical code that is NOT the current paper Agent
+The pilot's honest reading remains unchanged: the canonical ontology fixed a real interface failure mode, while the additional V2 gates did not yet show measurable advantage at n=3 because all V2 gates passed on the first answer. Do not retune the benchmark to manufacture a positive Agent result.
 
-Do not extend the current paper from `src/pur_bridge/agent.py`.
+The V2 orchestration remains:
 
-That module belongs to the historical E6 / active-learning / information-gain pathway and contains concepts such as:
+```text
+PLAN -> SOLVE -> CHALLENGE -> CERTIFY -> EXPLAIN
+```
 
-- `E6_star`;
-- experiment selection;
-- information gain;
-- material-equivalence gating as the primary Agent action;
-- post-E6 adaptive decisions.
+## 3. Frozen PUR-RECOVER scientific contract
 
-It is retained for provenance/legacy compatibility only. It is not PUR-RECOVER.
-
-## Frozen scientific contract
-
-The Agent is a **blinded scientific decision-recovery system**, not an optimizer that owns the answer.
-
-Evaluator-side frozen decision chain:
+The evaluator-side deterministic decision chain remains:
 
 ```text
 L0 property winner      WO_INV_0419
@@ -76,11 +81,20 @@ continuous threshold    NCO:OH = 1.7719836724
 first reachable grid    NCO:OH = 1.8
 ```
 
-These source IDs and evaluator-only outputs must never be placed in the primary Agent prompt or blind candidate table.
+Do not change:
 
-The primary Agent may receive only the generated contents of `benchmark/recover_v1/blind/` plus approved prompts/tools. It must not read evaluator mapping/gold, source IDs, stored oracle ranks/scores, ordered gold rankings, `results/frontier_v1/`, `results/frontier_depth_v1/`, `data/prospective_validation/`, or manuscript passages that explicitly reveal the gold decision during a primary blind run.
+- `PUR_SIM_V1` candidate responses;
+- `configs/frontier_v1.json` objective or constraints;
+- L0/L1/L2 semantics;
+- robust uncertainty propagation;
+- backward threshold definition;
+- evaluator tolerances to rescue a model;
+- blind-bundle anonymisation;
+- gold separation.
 
-## Primary task
+The 928-candidate benchmark remains an algorithmic/decision benchmark, not empirical rheology evidence.
+
+## 4. Primary PUR-RECOVER task
 
 A complete successful run must recover, in anonymised candidate labels:
 
@@ -93,61 +107,120 @@ A complete successful run must recover, in anonymised candidate labels:
 7. local NCO direction;
 8. local composition direction.
 
-A lucky top-1 guess is not complete success. The primary metric remains `complete_decision_recovery`.
+A lucky Top-1 guess is not complete success. The primary metric remains `complete_decision_recovery`.
 
-## Post-pilot V2 orchestration target
+## 5. Experimental application contract
 
-The frozen science above does not change. Only the way the Agent reaches, challenges, certifies, and explains the same answer is upgraded.
+The experimental recommendation path is allowed to use process-state uncertainty and recommend measurements, but it must preserve a recommendation/execution boundary.
+
+Minimum record for any paper-facing recommended point:
 
 ```text
-PLAN -> SOLVE -> CHALLENGE -> CERTIFY -> EXPLAIN
+recommendation_id
+candidate/formulation identity
+recommended condition
+uncertainty / decision rationale
+expected direction or acceptance criterion
+generation timestamp
+git commit or immutable run ID
+result_inspection_status
+human execution reference
+post-result adjudication
 ```
 
-Required V2 features are specified in `docs/AGENT_WORKFLOW_V2.md`:
+Use `configs/agent_experiment_recommendation_v1.schema.json` for new records.
 
-- claim-level minimum-sufficient evidence planning;
-- deterministic numerical solve;
-- counterfactual scientific challenge before finalization;
-- dual-path verification for critical quantities such as the backward threshold;
-- canonical constraint ontology (`quantity`, `operator`, `threshold`);
-- deterministic machine-auditable decision certificate;
-- structured conflict/abstention when tools disagree;
-- continued strict separation from prospective wet-lab data.
+The physical experiment may return one of:
 
-Do **not** assume V2 is superior. Implement it as a separate benchmark condition/version and test it against `tool_llm` and current V1-style baselines.
+```text
+supported
+partially_supported
+falsified
+out_of_domain
+```
 
-## Benchmark conditions to preserve
+A falsified recommendation is still scientifically useful and must not be rewritten after the fact.
 
-Existing pilot conditions remain immutable evidence:
+## 6. Current wet-lab interpretation
 
-- `oracle`;
-- `direct_llm`;
-- `tool_llm`;
-- `pur_agent`;
-- `pur_agent_no_backward`;
-- `pur_agent_no_constraint_checker`;
-- `pur_agent_no_provenance`;
-- `pur_agent_single_pass`.
+The original PPG2000 / STEPANPOL PDP-70 / 4,4'-MDI local design provides process-state characterization and physical transfer evidence.
 
-For the V2 formal matrix, these separately versioned conditions are now registered:
+Key observations already recorded:
 
-- `pur_agent_v2`;
-- `pur_agent_v2_no_evidence_planner`;
-- `pur_agent_v2_no_challenge`;
-- `pur_agent_v2_no_cross_path`;
-- `pur_agent_v2_no_certificate`.
+- E2 max/min spread: approximately 2.89x at 80 C and 3.57x at 120 C;
+- E1 120 C drift over 15-60 min: +9.51%;
+- E5 120 C drift over 15-60 min: +51.54%;
+- follow-up formulation repeat 1: -0.16% over 15-60 min;
+- follow-up formulation repeat 2: +3.04% over 15-60 min;
+- follow-up mean profile: approximately +1.47%;
+- pointwise two-run CV: approximately 2.87-5.11%.
 
-Do not overwrite or reinterpret the existing pilot records.
+The preferred paper narrative is:
 
-## Wet-lab rule
+> the Agent evaluates uncertainty and recommends a point; the human laboratory executes the recommendation; the final repeated experiment physically adjudicates the recommendation.
 
-The PPG2000 / STEPANPOL PDP-70 / 4,4'-MDI five-point experiment has already started. Do not redesign it to fit the Agent.
+Do not say that the Agent directly operated the lab.
 
-Before any experimental result is used to modify Agent logic, freeze only genuinely pre-result predictions and falsification criteria. If any result has already been inspected, record the timing truthfully and do not retroactively call a prediction preregistered. Wet-lab measurements remain excluded from the primary PUR-RECOVER Agent input.
+## 7. Historical code and provenance
 
-## API and secret handling
+`src/pur_bridge/agent.py` remains historical provenance for an earlier experiment-selection / information-gain pathway. It should not be silently renamed as PUR-RECOVER.
 
-The repository must never contain a real API credential. Read credentials only from environment variables:
+The current paper may use an experimental recommendation layer, but it must be versioned explicitly and kept conceptually separate from the blind PUR-RECOVER benchmark.
+
+The existing `configs/prospective_adjudication_schema.json` also remains historical for the earlier design in which the running experiment was not changed by the Agent. New uncertainty-aware recommendation records use the separately versioned `configs/agent_experiment_recommendation_v1.schema.json`.
+
+## 8. Canonical PUR-RECOVER code
+
+Use:
+
+- `src/pur_agent/`
+- `src/pur_science/`
+- `configs/frontier_v1.json`
+- `configs/recover_v1.json`
+- `configs/recover_v2.json`
+- `docs/AGENT_STRATEGY_V1.md`
+- `docs/AGENT_WORKFLOW_V2.md`
+- `docs/FRONTIER_V1.md`
+- `docs/FRONTIER_DEPTH_V1.md`
+- `prompts/recover_v1_system.txt`
+- `prompts/recover_v1_task.txt`
+- `prompts/recover_v2_system.txt`
+- `prompts/recover_v2_task.txt`
+- `scripts/run_agent_once.py`
+- `scripts/run_agent_benchmark.py`
+- `scripts/evaluate_agent_runs.py`
+- `scripts/verify_no_leakage.py`
+
+## 9. Benchmark conditions to preserve
+
+Existing evidence remains immutable:
+
+```text
+oracle
+direct_llm
+tool_llm
+pur_agent
+pur_agent_no_backward
+pur_agent_no_constraint_checker
+pur_agent_no_provenance
+pur_agent_single_pass
+```
+
+V2 conditions remain separately versioned:
+
+```text
+pur_agent_v2
+pur_agent_v2_no_evidence_planner
+pur_agent_v2_no_challenge
+pur_agent_v2_no_cross_path
+pur_agent_v2_no_certificate
+```
+
+Do not overwrite old pilot records to fit the new experimental framing.
+
+## 10. Secret handling
+
+Never commit a real API credential. Use environment variables only:
 
 ```text
 OPENAI_API_KEY
@@ -156,53 +229,10 @@ OPENAI_MODEL
 OPENAI_PROVIDER
 ```
 
-Do not print keys to logs or save them in run JSON. `.env` and local secret files remain ignored.
+## 11. Immediate next steps
 
-## What may be changed now
-
-It is acceptable to change:
-
-- Agent orchestration and policy;
-- claim-evidence planning structures;
-- challenge/counterfactual wrappers that reuse frozen science;
-- cross-path consistency checks;
-- canonical ontology helpers;
-- deterministic certificate generation;
-- JSON schema extensions, logging, metrics and V2 evaluator diagnostics;
-- benchmark orchestration and tests.
-
-Do not change:
-
-- `PUR_SIM_V1` responses;
-- `configs/frontier_v1.json` objective/constraints;
-- L0/L1/L2 definition;
-- robust uncertainty rule;
-- backward threshold definition;
-- evaluator tolerances to rescue a model;
-- anonymisation to leak chemistry identities;
-- wet-lab results into the primary Agent input.
-
-If a scientific-contract bug is independently demonstrated, version the benchmark and rerun all affected conditions rather than silently patching the current task.
-
-## V2 artefacts
-
-The V2 benchmark is versioned separately and shares the blind candidate table byte-for-byte with V1 (`blind_candidate_sha256 = 6ca33d4e…`), so the two are directly comparable:
-
-- config: `configs/recover_v2.json` (science still inherited from `configs/frontier_v1.json`);
-- bundle: `benchmark/recover_v2/blind/`, gold: `benchmark/recover_v2/evaluator_only/` and `gold/recover_v2/`;
-- prompts: `prompts/recover_v2_system.txt`, `prompts/recover_v2_task.txt`;
-- code: `ontology.py`, `evidence.py`, `challenge_tools.py`, `crosspath.py`, `certificate.py`, `tools_v2.py`, `mock_llm_v2.py`;
-- tests: `tests/test_agent_v2.py`;
-- manifest freezer: `scripts/freeze_run_manifest.py`.
-
-The V2 gold's scientific fields are identical to V1's; only `benchmark_id`, `config_sha256` and `frozen_utc` differ.
-
-## Immediate next steps
-
-1. **Add a `tool_llm_v2_ontology` condition** — V2 toolbox, V1-style prompt, no machine gate. It is the only way to isolate how much of V2's interface reliability comes from the canonical ontology rather than from the prompt or the gate, and the pilot makes it the single most informative condition to add. Add it *before* the formal matrix, not after seeing results.
-2. **Decide what the formal matrix is meant to resolve.** At n=3 with `gpt-5.6-luna` every tool-using condition is at ceiling and every gate passed first time. Either raise the run count enough to resolve a low failure rate, or add a weaker model where the gate can actually bind. Running 30–50 more runs of the same eight conditions against the same model would mostly buy precision on a ceiling.
-3. Freeze the run manifest with `scripts/freeze_run_manifest.py` on a clean worktree before the formal matrix, then do not change any condition.
-4. Keep reporting the gating layer's negative result. Do not retune prompts, tolerances or conditions to rescue it.
-5. Fill `evaluation.pricing_usd_per_1k_tokens` in `configs/recover_v2.json` if the cost comparison is to appear in the manuscript; V2 currently costs ~3x the input tokens of `tool_llm`.
-
-Do not modify the wet-lab plan or frozen science merely to improve Agent benchmark performance.
+1. Recover and attach the immutable pre-result Agent recommendation record for the final wet-lab point so the prospective-adjudication claim has auditable chronology.
+2. Keep reaction history, thermal hold time, and preparation perturbation as explicit process-state variables in the next design layer.
+3. Build the revised experiment/Agent figures from the existing wet-lab measurements; no additional wet-lab experiment is required by the current manuscript plan.
+4. Keep the PUR-RECOVER formal benchmark independent of wet-lab data and report the formal matrix without retuning after results.
+5. Assemble manuscript v0.4 around the recommendation -> human execution -> physical validation architecture.

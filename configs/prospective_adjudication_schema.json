@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pur-essay/prospective_adjudication_schema.json",
-  "title": "Prospective prediction / adjudication record",
-  "description": "Machine schema for docs/PROSPECTIVE_PREDICTION_TEMPLATE.md. This file is a schema, not a frozen prediction. A record may call itself prospective only when result_inspection_status is 'no_results_inspected'; any other value makes it a post hoc analysis. Wet-lab observations remain excluded from the primary PUR-RECOVER benchmark input.",
+  "title": "Prospective prediction / adjudication record (legacy fixed-design schema)",
+  "description": "Historical schema for the earlier fixed-running-experiment design. It remains valid for records in which the Agent did not alter/recommend the running experimental design. New uncertainty-aware Agent recommendation records must use configs/agent_experiment_recommendation_v1.schema.json. A record may call itself prospective only when result_inspection_status is 'no_results_inspected'. Wet-lab observations remain excluded from the primary PUR-RECOVER benchmark input.",
   "type": "object",
   "required": ["record_status", "result_inspection_status", "inspection_statement", "experiment", "provenance", "predictions"],
   "additionalProperties": false,
@@ -24,7 +24,7 @@
         "n_independent_batches": {"type": "integer", "minimum": 1},
         "design_changed_by_this_record": {
           "const": false,
-          "description": "The running experiment is never redesigned to fit the Agent."
+          "description": "Legacy fixed-design contract: the running experiment was not redesigned by this record. Use agent_experiment_recommendation_v1.schema.json for Agent-recommended experimental points."
         }
       }
     },
